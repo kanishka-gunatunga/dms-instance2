@@ -21,7 +21,7 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
-          { key: 'Access-Control-Allow-Origin', value: 'https://dms-instance1.vercel.app' },
+          { key: 'Access-Control-Allow-Origin', value: 'https://dms-instance2.vercel.app' },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
