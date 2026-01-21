@@ -3,7 +3,7 @@ import { getWithAuth } from "./apiClient";
 // import Cookies from "js-cookie";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://dms1.genaitech.dev/api/";
+  "https://dms3.genaitech.dev/api/";
 // process.env.NEXT_PUBLIC_API_BASE_URL ||
 // "http://localhost:8000/api/";
 

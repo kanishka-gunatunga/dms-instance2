@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'kodetech.co', 'dms1.genaitech.dev'],
+    domains: ['localhost', 'kodetech.co', 'dms3.genaitech.dev'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -10,7 +10,7 @@ const nextConfig = {
       },
       {
         protocol: 'http',
-        hostname: 'dms1.genaitech.dev',
+        hostname: 'dms3.genaitech.dev',
         pathname: '/dms-backend/uploads/**',
       },
     ],
@@ -32,12 +32,12 @@ const nextConfig = {
             default-src 'self';
             base-uri 'self';
             object-src 'none';
-            connect-src 'self' https://dms1.genaitech.dev;
+            connect-src 'self' https://dms3.genaitech.dev;
             img-src 'self' data: https:;
             script-src 'self' 'unsafe-inline' 'unsafe-eval';
             style-src 'self' 'unsafe-inline' https:;
             font-src 'self' https: data:;
-            frame-src https://dms1.genaitech.dev https://view.officeapps.live.com;
+            frame-src https://dms3.genaitech.dev https://view.officeapps.live.com;
             frame-ancestors 'self';
         `.replace(/\s{2,}/g, ' ')
           },
