@@ -14,7 +14,7 @@ import useAuth from "@/hooks/useAuth";
 import { CommentItem, UserDropdownItem, RoleDropdownItem, VersionHistoryItem } from "@/types/types";
 import { deleteWithAuth, getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { fetchCategoryData, fetchDocumentsData, fetchAndMapUserData, fetchRoleData, fetchVersionHistory } from "@/utils/dataFetchFunctions";
-import { handleDownload } from "@/utils/documentFunctions";
+import { handleDownload, handleViewOldDocument } from "@/utils/documentFunctions";
 import { hasPermission } from "@/utils/permission";
 import { Button, Checkbox, DatePicker, DatePickerProps, Input, Radio, RadioChangeEvent } from "antd";
 import dayjs from "dayjs";
@@ -210,6 +210,7 @@ export default function AllDocTable() {
     deleteBulkFileModel: false,
     allDocShareModel: false,
     viewModel: false,
+    viewOldDocumentModel: false,
   });
   const [generatedLink, setGeneratedLink] = useState<string>("");
 const [generatedID, setGeneratedID] =useState<number>(0);
@@ -250,6 +251,9 @@ const [generatedID, setGeneratedID] =useState<number>(0);
   const [shareableLinkDataSetting, setShareableLinkDataSetting] = useState(initialLinkData);
 
   const [viewDocument, setViewDocument] = useState<ViewDocumentItem | null>(
+    null
+  );
+  const [oldVersionDocument, setOldVersionDocument] = useState<ViewDocumentItem | null>(
     null
   );
   const [attributes, setAttributes] = useState<Attribute[]>([]);
@@ -2710,8 +2714,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                         <p className="mb-0 me-3">{item.created_by}</p>
                       </div>
 
-                      <div className="col-12 col-lg-2 d-flex justify-content-lg-end">
-                        {" "}
+                      <div className="col-12 col-lg-2 d-flex justify-content-lg-end gap-2">
                         {isLatestVersion && (
                           <span
                             className="bg-success px-3 py-1 rounded-pill text-white mb-0 d-flex justify-content-center align-items-center"
@@ -2720,6 +2723,12 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                             Current Version
                           </span>
                         )}
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => handleViewOldDocument(item.id)}
+                        >
+                          View
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -4696,6 +4705,95 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
+          </Modal.Footer>
+        </Modal>
+
+        {/* View Old Document Version Modal */}
+        <Modal
+          show={modalStates.viewOldDocumentModel}
+          fullscreen
+          onHide={() => {
+            handleCloseModal("viewOldDocumentModel");
+            setOldVersionDocument(null);
+          }}
+        >
+          <Modal.Header>
+            <div className="d-flex w-100 justify-content-end">
+              <div className="col-11 d-flex flex-row">
+                <p className="mb-0" style={{ fontSize: "16px", color: "#333" }}>
+                  View Document Version : {oldVersionDocument?.name || ""}
+                </p>
+              </div>
+              <div className="col-1 d-flex  justify-content-end">
+                <IoClose
+                  fontSize={20}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    handleCloseModal("viewOldDocumentModel");
+                    setOldVersionDocument(null);
+                  }}
+                />
+              </div>
+            </div>
+          </Modal.Header>
+          <Modal.Body className="p-2 p-lg-4">
+            <div className="d-flex preview-container">
+              {oldVersionDocument && (
+                <>
+                  {/* Image Preview */}
+                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
+                    <Image
+                      src={oldVersionDocument.url}
+                      alt={oldVersionDocument.name}
+                      width={600}
+                      height={600}
+                    />
+                  ) : 
+                  /* TXT / CSV / LOG Preview */
+                  ["txt", "csv", "log"].includes(oldVersionDocument.type) ? (
+                    <div className="text-preview" style={{ width: "100%" }}>
+                      <iframe
+                        src={oldVersionDocument.url}
+                        title="Text Preview"
+                        style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
+                      ></iframe>
+                    </div>
+                  ) : 
+                  /* PDF or Office Docs */
+                  (oldVersionDocument.type === "pdf" || oldVersionDocument.enable_external_file_view === 1) ? (
+                    <div
+                      className="iframe-container"
+                      data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
+                    >
+                      <iframe
+                        src={
+                          oldVersionDocument.type === "pdf"
+                            ? oldVersionDocument.url
+                            : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(oldVersionDocument.url)}`
+                        }
+                        title="Document Preview"
+                        style={{ width: "100%", height: "500px", border: "none" }}
+                      ></iframe>
+                    </div>
+                  ) : (
+                    <p>No preview available for this document type.</p>
+                  )}
+                </>
+              )}
+            </div>
+
+          
+          </Modal.Body>
+          <Modal.Footer>
+            <button
+              onClick={() => {
+                handleCloseModal("viewOldDocumentModel");
+                setOldVersionDocument(null);
+              }}
+              className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+            >
+              <MdOutlineCancel fontSize={16} className="me-1" /> Close
+            </button>
           </Modal.Footer>
         </Modal>
 
