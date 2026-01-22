@@ -64,6 +64,7 @@ interface TableItem {
   created_date: string;
   created_by: string;
   document_preview: string;
+  attributes: string;
 }
 
 interface ShareItem {
@@ -208,7 +209,7 @@ export default function AllDocTable() {
     viewModel: false,
   });
   const [generatedLink, setGeneratedLink] = useState<string>("");
-const [generatedID, setGeneratedID] =useState<number>(0);
+  const [generatedID, setGeneratedID] = useState<number>(0);
   const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(
     null
   );
@@ -796,7 +797,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
 
   const handleDeleteComment = async (id: string) => {
     try {
-      const response = await  getWithAuth(`delete-comment/${id}/${userId}`);
+      const response = await getWithAuth(`delete-comment/${id}/${userId}`);
       if (response.status === "success") {
         setToastType("success");
         fetchComments(selectedDocumentId!);
@@ -938,7 +939,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
 
   const handleDeleteShareableLink = async (id: number) => {
     try {
-      const response = await  getWithAuth(`delete-shareble-link/${id}/${userId}`);
+      const response = await getWithAuth(`delete-shareble-link/${id}/${userId}`);
       if (response.status === "success") {
         setToastType("success");
         setToastMessage("The link was deleted successfully!");
@@ -1037,7 +1038,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
     }
 
     try {
-      const response = await  getWithAuth(`delete-document/${id}/${userId}`);
+      const response = await getWithAuth(`delete-document/${id}/${userId}`);
 
       if (response.status === "success") {
         handleCloseModal("deleteFileModel");
@@ -1464,7 +1465,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
     }
 
     try {
-      const response = await  getWithAuth(`delete-share/${selectedShareDocUserType}/${selectedShareDocId}`);
+      const response = await getWithAuth(`delete-share/${selectedShareDocUserType}/${selectedShareDocId}`);
       if (response.status === "success") {
         handleCloseModal("shareDeleteModel");
         setToastType("success");
@@ -1611,55 +1612,55 @@ const [generatedID, setGeneratedID] =useState<number>(0);
 
 
   const handleDeleteSelectedDoc = async () => {
-      try {
-  
-        console.log("JSON.stringify(selectedItems) : ", JSON.stringify(selectedItems))
-        const formData = new FormData();
-        formData.append("documents", JSON.stringify(selectedItems));
-  
-        const response = await postWithAuth(
-          `bulk-delete-documents`, formData
-        );
-  
-        if (response.status === "success") {
-          setToastType("success");
-          setToastMessage("Document bulk deleted successfully!");
-          setShowToast(true);
-          setTimeout(() => {
-            setShowToast(false);
-          }, 5000);
-          handleCloseModal("deleteBulkFileModel");
-          fetchDocumentsData(setDummyData);
-          setAllShareData([])
-        } else if (response.status === "fail") {
-          setToastType("error");
-          setToastMessage("An error occurred while deleting the document bulk!");
-          setShowToast(true);
-          setTimeout(() => {
-            setShowToast(false);
-          }, 5000);
-          fetchDocumentsData(setDummyData);
-          setAllShareData([])
-        } else {
-          setToastType("error");
-          setToastMessage("An error occurred while deleting the document bulk!");
-          setShowToast(true);
-          fetchDocumentsData(setDummyData);
-          setTimeout(() => {
-            setShowToast(false);
-          }, 5000);
-        }
-      } catch (error) {
+    try {
+
+      console.log("JSON.stringify(selectedItems) : ", JSON.stringify(selectedItems))
+      const formData = new FormData();
+      formData.append("documents", JSON.stringify(selectedItems));
+
+      const response = await postWithAuth(
+        `bulk-delete-documents`, formData
+      );
+
+      if (response.status === "success") {
+        setToastType("success");
+        setToastMessage("Document bulk deleted successfully!");
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
+        handleCloseModal("deleteBulkFileModel");
+        fetchDocumentsData(setDummyData);
+        setAllShareData([])
+      } else if (response.status === "fail") {
         setToastType("error");
-        setToastMessage("An error occurred while sharing the document bulk!");
+        setToastMessage("An error occurred while deleting the document bulk!");
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
+        fetchDocumentsData(setDummyData);
+        setAllShareData([])
+      } else {
+        setToastType("error");
+        setToastMessage("An error occurred while deleting the document bulk!");
         setShowToast(true);
         fetchDocumentsData(setDummyData);
         setTimeout(() => {
           setShowToast(false);
         }, 5000);
-        // console.error("Error new version updating:", error);
       }
-    };
+    } catch (error) {
+      setToastType("error");
+      setToastMessage("An error occurred while sharing the document bulk!");
+      setShowToast(true);
+      fetchDocumentsData(setDummyData);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 5000);
+      // console.error("Error new version updating:", error);
+    }
+  };
 
   if (!isAuthenticated) {
     return <LoadingSpinner />;
@@ -1826,6 +1827,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                       )}
                     </th>
                     <th className="text-start">Created By</th>
+                    <th className="text-start">Attributes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2093,6 +2095,19 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                           )}
                         </td>
                         <td>{item.created_by}</td>
+                        <td>
+                          {(() => {
+                            try {
+                              const parsedAttributes = JSON.parse(item.attributes || "[]");
+                              if (parsedAttributes.length === 0) return "-";
+                              return parsedAttributes
+                                .map((attr: Attribute) => `${attr.attribute}: ${attr.value}`)
+                                .join(", ");
+                            } catch {
+                              return "-";
+                            }
+                          })()}
+                        </td>
                       </tr>
                     ))
                   ) : (
@@ -4809,36 +4824,36 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                       width={600}
                       height={600}
                     />
-                  ) : 
-                  /* TXT / CSV / LOG Preview */
-                  ["txt", "csv", "log"].includes(viewDocument.type) ? (
-                    <div className="text-preview" style={{ width: "100%" }}>
-                      <iframe
-                        src={viewDocument.url}
-                        title="Text Preview"
-                        style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
-                      ></iframe>
-                    </div>
-                  ) : 
-                  /* PDF or Office Docs */
-                  (viewDocument.type === "pdf" || viewDocument.enable_external_file_view === 1) ? (
-                    <div
-                      className="iframe-container"
-                      data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
-                    >
-                      <iframe
-                        src={
-                          viewDocument.type === "pdf"
-                            ? viewDocument.url
-                            : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(viewDocument.url)}`
-                        }
-                        title="Document Preview"
-                        style={{ width: "100%", height: "500px", border: "none" }}
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <p>No preview available for this document type.</p>
-                  )}
+                  ) :
+                    /* TXT / CSV / LOG Preview */
+                    ["txt", "csv", "log"].includes(viewDocument.type) ? (
+                      <div className="text-preview" style={{ width: "100%" }}>
+                        <iframe
+                          src={viewDocument.url}
+                          title="Text Preview"
+                          style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
+                        ></iframe>
+                      </div>
+                    ) :
+                      /* PDF or Office Docs */
+                      (viewDocument.type === "pdf" || viewDocument.enable_external_file_view === 1) ? (
+                        <div
+                          className="iframe-container"
+                          data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
+                        >
+                          <iframe
+                            src={
+                              viewDocument.type === "pdf"
+                                ? viewDocument.url
+                                : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(viewDocument.url)}`
+                            }
+                            title="Document Preview"
+                            style={{ width: "100%", height: "500px", border: "none" }}
+                          ></iframe>
+                        </div>
+                      ) : (
+                        <p>No preview available for this document type.</p>
+                      )}
                 </>
               )}
             </div>
