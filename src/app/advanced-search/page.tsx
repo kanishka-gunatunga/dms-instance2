@@ -3098,12 +3098,20 @@ export default function AllDocTable() {
                             Current Version
                           </span>
                         )}
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleViewOldDocument(item.id)}
-                        >
-                          View
-                        </button>
+                        {!isLatestVersion && (
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={async () => {
+                              const data = await handleViewOldDocument(item.id);
+                              if (data) {
+                                setOldVersionDocument(data);
+                                handleOpenModal("viewOldDocumentModel");
+                              }
+                            }}
+                          >
+                            View
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -5123,41 +5131,41 @@ export default function AllDocTable() {
                       width={600}
                       height={600}
                     />
-                  ) : 
-                  /* TXT / CSV / LOG Preview */
-                  ["txt", "csv", "log"].includes(oldVersionDocument.type) ? (
-                    <div className="text-preview" style={{ width: "100%" }}>
-                      <iframe
-                        src={oldVersionDocument.url}
-                        title="Text Preview"
-                        style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
-                      ></iframe>
-                    </div>
-                  ) : 
-                  /* PDF or Office Docs */
-                  (oldVersionDocument.type === "pdf" || oldVersionDocument.enable_external_file_view === 1) ? (
-                    <div
-                      className="iframe-container"
-                      data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
-                    >
-                      <iframe
-                        src={
-                          oldVersionDocument.type === "pdf"
-                            ? oldVersionDocument.url
-                            : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(oldVersionDocument.url)}`
-                        }
-                        title="Document Preview"
-                        style={{ width: "100%", height: "500px", border: "none" }}
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <p>No preview available for this document type.</p>
-                  )}
+                  ) :
+                    /* TXT / CSV / LOG Preview */
+                    ["txt", "csv", "log"].includes(oldVersionDocument.type) ? (
+                      <div className="text-preview" style={{ width: "100%" }}>
+                        <iframe
+                          src={oldVersionDocument.url}
+                          title="Text Preview"
+                          style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
+                        ></iframe>
+                      </div>
+                    ) :
+                      /* PDF or Office Docs */
+                      (oldVersionDocument.type === "pdf" || oldVersionDocument.enable_external_file_view === 1) ? (
+                        <div
+                          className="iframe-container"
+                          data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
+                        >
+                          <iframe
+                            src={
+                              oldVersionDocument.type === "pdf"
+                                ? oldVersionDocument.url
+                                : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(oldVersionDocument.url)}`
+                            }
+                            title="Document Preview"
+                            style={{ width: "100%", height: "500px", border: "none" }}
+                          ></iframe>
+                        </div>
+                      ) : (
+                        <p>No preview available for this document type.</p>
+                      )}
                 </>
               )}
             </div>
 
-           
+
           </Modal.Body>
           <Modal.Footer>
             <button

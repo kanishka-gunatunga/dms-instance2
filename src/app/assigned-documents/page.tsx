@@ -247,7 +247,7 @@ export default function AllDocTable() {
   });
 
   const [generatedLink, setGeneratedLink] = useState<string>("");
-  const [generatedID, setGeneratedID] =useState<number>(0);
+  const [generatedID, setGeneratedID] = useState<number>(0);
   const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(
     null
   );
@@ -655,8 +655,8 @@ export default function AllDocTable() {
 
   // const paginatedData = dummyData.slice(startIndex, endIndex);
   const paginatedData = Array.isArray(dummyData)
-  ? dummyData.slice(startIndex, endIndex)
-  : [];
+    ? dummyData.slice(startIndex, endIndex)
+    : [];
 
 
 
@@ -990,7 +990,7 @@ export default function AllDocTable() {
 
   const handleDeleteComment = async (id: string) => {
     try {
-      const response = await  getWithAuth(`delete-comment/${id}/${userId}`);
+      const response = await getWithAuth(`delete-comment/${id}/${userId}`);
       if (response.status === "success") {
         setToastType("success");
         fetchComments(selectedDocumentId!);
@@ -1140,7 +1140,7 @@ export default function AllDocTable() {
 
   const handleDeleteShareableLink = async (id: number) => {
     try {
-      const response = await  getWithAuth(`delete-shareble-link/${id}/${userId}`);
+      const response = await getWithAuth(`delete-shareble-link/${id}/${userId}`);
       if (response.status === "success") {
         setToastType("success");
         setToastMessage("The link was deleted successfully!");
@@ -1243,7 +1243,7 @@ export default function AllDocTable() {
     }
 
     try {
-      const response = await  getWithAuth(`delete-document/${id}/${userId}`);
+      const response = await getWithAuth(`delete-document/${id}/${userId}`);
 
       if (response.status === "success") {
         handleCloseModal("deleteFileModel");
@@ -1680,7 +1680,7 @@ export default function AllDocTable() {
     }
 
     try {
-      const response = await  getWithAuth(`delete-share/${selectedShareDocUserType}/${selectedShareDocId}`);
+      const response = await getWithAuth(`delete-share/${selectedShareDocUserType}/${selectedShareDocId}`);
 
       if (response.status === "success") {
         handleCloseModal("shareDeleteModel");
@@ -1713,7 +1713,7 @@ export default function AllDocTable() {
   const handleDeleteReminder = async (id: any) => {
 
     try {
-      const response = await  getWithAuth(`delete-reminder/${id}`);
+      const response = await getWithAuth(`delete-reminder/${id}`);
 
       if (response.status === "success") {
         handleCloseModal("reminderDeleteModel");
@@ -3384,12 +3384,20 @@ export default function AllDocTable() {
                             Current Version
                           </span>
                         )}
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleViewOldDocument(item.id)}
-                        >
-                          View
-                        </button>
+                        {!isLatestVersion && (
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={async () => {
+                              const data = await handleViewOldDocument(item.id);
+                              if (data) {
+                                setOldVersionDocument(data);
+                                handleOpenModal("viewOldDocumentModel");
+                              }
+                            }}
+                          >
+                            View
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -5584,36 +5592,36 @@ export default function AllDocTable() {
                       width={600}
                       height={600}
                     />
-                  ) : 
-                  /* TXT / CSV / LOG Preview */
-                  ["txt", "csv", "log"].includes(viewDocument.type) ? (
-                    <div className="text-preview" style={{ width: "100%" }}>
-                      <iframe
-                        src={viewDocument.url}
-                        title="Text Preview"
-                        style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
-                      ></iframe>
-                    </div>
-                  ) : 
-                  /* PDF or Office Docs */
-                  (viewDocument.type === "pdf" || viewDocument.enable_external_file_view === 1) ? (
-                    <div
-                      className="iframe-container"
-                      data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
-                    >
-                      <iframe
-                        src={
-                          viewDocument.type === "pdf"
-                            ? viewDocument.url
-                            : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(viewDocument.url)}`
-                        }
-                        title="Document Preview"
-                        style={{ width: "100%", height: "500px", border: "none" }}
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <p>No preview available for this document type.</p>
-                  )}
+                  ) :
+                    /* TXT / CSV / LOG Preview */
+                    ["txt", "csv", "log"].includes(viewDocument.type) ? (
+                      <div className="text-preview" style={{ width: "100%" }}>
+                        <iframe
+                          src={viewDocument.url}
+                          title="Text Preview"
+                          style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
+                        ></iframe>
+                      </div>
+                    ) :
+                      /* PDF or Office Docs */
+                      (viewDocument.type === "pdf" || viewDocument.enable_external_file_view === 1) ? (
+                        <div
+                          className="iframe-container"
+                          data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
+                        >
+                          <iframe
+                            src={
+                              viewDocument.type === "pdf"
+                                ? viewDocument.url
+                                : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(viewDocument.url)}`
+                            }
+                            title="Document Preview"
+                            style={{ width: "100%", height: "500px", border: "none" }}
+                          ></iframe>
+                        </div>
+                      ) : (
+                        <p>No preview available for this document type.</p>
+                      )}
                 </>
               )}
             </div>
@@ -5873,41 +5881,41 @@ export default function AllDocTable() {
                       width={600}
                       height={600}
                     />
-                  ) : 
-                  /* TXT / CSV / LOG Preview */
-                  ["txt", "csv", "log"].includes(oldVersionDocument.type) ? (
-                    <div className="text-preview" style={{ width: "100%" }}>
-                      <iframe
-                        src={oldVersionDocument.url}
-                        title="Text Preview"
-                        style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
-                      ></iframe>
-                    </div>
-                  ) : 
-                  /* PDF or Office Docs */
-                  (oldVersionDocument.type === "pdf" || oldVersionDocument.enable_external_file_view === 1) ? (
-                    <div
-                      className="iframe-container"
-                      data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
-                    >
-                      <iframe
-                        src={
-                          oldVersionDocument.type === "pdf"
-                            ? oldVersionDocument.url
-                            : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(oldVersionDocument.url)}`
-                        }
-                        title="Document Preview"
-                        style={{ width: "100%", height: "500px", border: "none" }}
-                      ></iframe>
-                    </div>
-                  ) : (
-                    <p>No preview available for this document type.</p>
-                  )}
+                  ) :
+                    /* TXT / CSV / LOG Preview */
+                    ["txt", "csv", "log"].includes(oldVersionDocument.type) ? (
+                      <div className="text-preview" style={{ width: "100%" }}>
+                        <iframe
+                          src={oldVersionDocument.url}
+                          title="Text Preview"
+                          style={{ width: "100%", height: "500px", border: "1px solid #ccc", background: "#fff" }}
+                        ></iframe>
+                      </div>
+                    ) :
+                      /* PDF or Office Docs */
+                      (oldVersionDocument.type === "pdf" || oldVersionDocument.enable_external_file_view === 1) ? (
+                        <div
+                          className="iframe-container"
+                          data-watermark={`Confidential\nDo Not Copy\n${userName}\n${currentDateTime}`}
+                        >
+                          <iframe
+                            src={
+                              oldVersionDocument.type === "pdf"
+                                ? oldVersionDocument.url
+                                : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(oldVersionDocument.url)}`
+                            }
+                            title="Document Preview"
+                            style={{ width: "100%", height: "500px", border: "none" }}
+                          ></iframe>
+                        </div>
+                      ) : (
+                        <p>No preview available for this document type.</p>
+                      )}
                 </>
               )}
             </div>
 
-           
+
           </Modal.Body>
           <Modal.Footer>
             <button
