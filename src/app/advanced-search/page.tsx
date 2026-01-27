@@ -167,6 +167,9 @@ export default function AllDocTable() {
   const [newVersionDocument, setNewVersionDocument] = useState<File | null>(
     null
   );
+  const [newVersionDocumentPreview, setNewVersionDocumentPreview] = useState<File | null>(
+    null
+  );
   const [sendEmailData, setSendEmailData] = useState<{
     subject: string;
     body: string;
@@ -376,7 +379,7 @@ export default function AllDocTable() {
     }
   };
 
-   const handleCategoryEditSelect = (categoryId: string) => {
+  const handleCategoryEditSelect = (categoryId: string) => {
     const selectedCategory = categoryDropDownData.find(
       (category) => category.id.toString() === categoryId
     );
@@ -412,6 +415,13 @@ export default function AllDocTable() {
   ) => {
     const file = e.target.files?.[0] || null;
     setNewVersionDocument(file);
+  };
+
+  const handleNewVersionPreviewChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0] || null;
+    setNewVersionDocumentPreview(file);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -663,27 +673,27 @@ export default function AllDocTable() {
   };
 
   // Attribute functions for edit modal
-    const handleGetEditAttributes = async (id: string) => {
-      try {
-        const response = await getWithAuth(`attribute-by-category/${id}`);
-        const parsedAttributes = JSON.parse(response.attributes);
-        setEditAttributes(parsedAttributes);
-      } catch (error) {
-        console.error("Error getting attributes:", error);
+  const handleGetEditAttributes = async (id: string) => {
+    try {
+      const response = await getWithAuth(`attribute-by-category/${id}`);
+      const parsedAttributes = JSON.parse(response.attributes);
+      setEditAttributes(parsedAttributes);
+    } catch (error) {
+      console.error("Error getting attributes:", error);
+    }
+  };
+
+  const handleEditAttributeInputChange = (attribute: string, value: string) => {
+    setEditFormAttributeData((prevData) => {
+      const existingIndex = prevData.findIndex((item) => item.attribute === attribute);
+      if (existingIndex !== -1) {
+        const updatedData = [...prevData];
+        updatedData[existingIndex] = { attribute, value };
+        return updatedData;
       }
-    };
-  
-    const handleEditAttributeInputChange = (attribute: string, value: string) => {
-      setEditFormAttributeData((prevData) => {
-        const existingIndex = prevData.findIndex((item) => item.attribute === attribute);
-        if (existingIndex !== -1) {
-          const updatedData = [...prevData];
-          updatedData[existingIndex] = { attribute, value };
-          return updatedData;
-        }
-        return [...prevData, { attribute, value }];
-      });
-    };
+      return [...prevData, { attribute, value }];
+    });
+  };
 
 
   // functions with api calls
@@ -794,6 +804,7 @@ export default function AllDocTable() {
     try {
       const formData = new FormData();
       formData.append("document", newVersionDocument || "");
+      formData.append("document_preview", newVersionDocumentPreview || "");
       formData.append("user", userId);
       const response = await postWithAuth(
         `document-upload-new-version/${id}`,
@@ -5245,6 +5256,91 @@ export default function AllDocTable() {
             >
               <MdOutlineCancel fontSize={16} className="me-1" /> Close
             </button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* new version upload model */}
+        <Modal
+          centered
+          show={modalStates.uploadNewVersionFileModel}
+          onHide={() => {
+            handleCloseModal("uploadNewVersionFileModel");
+            setSelectedDocumentId(null);
+            setSelectedDocumentName(null);
+          }}
+        >
+          <Modal.Header>
+            <div className="d-flex w-100 justify-content-end">
+              <div className="col-11 d-flex flex-row">
+                <IoFolder fontSize={20} className="me-2" />
+                <p className="mb-0" style={{ fontSize: "16px", color: "#333" }}>
+                  Upload New Version file
+                </p>
+              </div>
+              <div className="col-1 d-flex justify-content-end">
+                <IoClose
+                  fontSize={20}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleCloseModal("uploadNewVersionFileModel")}
+                />
+              </div>
+            </div>
+          </Modal.Header>
+          <Modal.Body className="py-3">
+            <div
+              className="d-flex flex-column custom-scroll mb-3"
+              style={{ maxHeight: "200px", overflowY: "auto" }}
+            >
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                Document Upload
+              </p>
+              <div className="input-group">
+                <input
+                  type="file"
+                  className="form-control p-1"
+                  id="newVersionDocument"
+                  accept=".pdf,.doc,.docx,.png,.jpg"
+                  onChange={handleNewVersionFileChange}
+                  required
+                ></input>
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                Preview Image
+              </p>
+              <div className="input-group">
+                <input
+                  type="file"
+                  className="form-control p-1"
+                  id="newVersionDocumentPreview"
+                  accept=".png,.jpg,.jpeg,.tiff,.tif"
+                  onChange={handleNewVersionPreviewChange}
+                ></input>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <div className="d-flex flex-row">
+              <button
+                onClick={() =>
+                  handleUploadNewVersion(selectedDocumentId!, userId!)
+                }
+                className="custom-icon-button button-success px-3 py-1 rounded me-2"
+              >
+                <IoSaveOutline fontSize={16} className="me-1" /> Save
+              </button>
+              <button
+                onClick={() => {
+                  handleCloseModal("uploadNewVersionFileModel");
+                  setSelectedDocumentId(null);
+                  setSelectedDocumentName(null);
+                }}
+                className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+              >
+                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              </button>
+            </div>
           </Modal.Footer>
         </Modal>
 

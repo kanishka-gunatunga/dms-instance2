@@ -215,6 +215,9 @@ export default function AllDocTable() {
   const [newVersionDocument, setNewVersionDocument] = useState<File | null>(
     null
   );
+  const [newVersionDocumentPreview, setNewVersionDocumentPreview] = useState<File | null>(
+    null
+  );
   const [sendEmailData, setSendEmailData] = useState<{
     subject: string;
     body: string;
@@ -456,6 +459,13 @@ export default function AllDocTable() {
   ) => {
     const file = e.target.files?.[0] || null;
     setNewVersionDocument(file);
+  };
+
+  const handleNewVersionPreviewChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0] || null;
+    setNewVersionDocumentPreview(file);
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -954,6 +964,7 @@ export default function AllDocTable() {
     try {
       const formData = new FormData();
       formData.append("document", newVersionDocument || "");
+      formData.append("document_preview", newVersionDocumentPreview || "");
       formData.append("user", userId);
       const response = await postWithAuth(
         `document-upload-new-version/${id}`,
@@ -3805,6 +3816,20 @@ export default function AllDocTable() {
                   accept=".pdf,.doc,.docx,.png,.jpg"
                   onChange={handleNewVersionFileChange}
                   required
+                ></input>
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                Preview Image
+              </p>
+              <div className="input-group">
+                <input
+                  type="file"
+                  className="form-control p-1"
+                  id="newVersionDocumentPreview"
+                  accept=".png,.jpg,.jpeg,.tiff,.tif"
+                  onChange={handleNewVersionPreviewChange}
                 ></input>
               </div>
             </div>
