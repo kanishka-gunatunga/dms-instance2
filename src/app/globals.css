@@ -1143,3 +1143,39 @@ iframe #WordViewerStatusBar {
 /*:where(.css-dev-only-do-not-override-49qm).ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {*/
 /*    color: #CA3500;*/
 /*}*/
+
+/* Document signing – shared UI */
+.signature-modal .modal-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+}
+
+.signature-modal .modal-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 0.75rem 1.25rem;
+}
+
+.signature-modal .modal-body {
+  background: #f9fafb;
+}
+
+.signature-pad-container {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.signature-pad-container canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+  border-radius: 0.5rem;
+}
+
+.signature-pad-container .btn-outline-danger {
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+}

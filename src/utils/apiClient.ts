@@ -127,6 +127,28 @@ export async function getWithAuth(endpoint: string): Promise<any> {
   }
 }
 
+export async function getBlobWithAuth(endpoint: string): Promise<Blob> {
+  const token = Cookies.get("authToken");
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token || ""}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GET request to ${endpoint} failed with status ${response.status}`);
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("Error during GET blob request:", error);
+    throw error;
+  }
+}
+
 
 export async function deleteWithAuth(endpoint: string): Promise<any> {
   const token = Cookies.get("authToken");

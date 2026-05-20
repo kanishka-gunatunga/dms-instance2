@@ -4,16 +4,18 @@
 import Heading from "@/components/common/Heading";
 import DashboardLayout from "@/components/DashboardLayout";
 import useAuth from "@/hooks/useAuth";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import { getWithAuth, postWithAuth } from "@/utils/apiClient";
+import { getWithAuth, postWithAuth, getBlobWithAuth, API_BASE_URL } from "@/utils/apiClient";
 import { useRouter } from "next/navigation";
-import { IoSaveOutline } from "react-icons/io5";
+import { IoSaveOutline, IoImageOutline, IoCreateOutline } from "react-icons/io5";
 import { MdOutlineCancel } from "react-icons/md";
 import ToastMessage from "@/components/common/Toast";
 import { useUserContext } from "@/context/userContext";
 import { FaKey } from "react-icons/fa6";
-import { Modal } from "react-bootstrap";
+import { Modal, Tabs, Tab } from "react-bootstrap";
+import SignaturePad from "@/components/common/SignaturePad";
+import styles from "./my-profile.module.css";
 
 type Params = {
     id: string;
@@ -39,33 +41,112 @@ export default function AllDocTable({ }: Props) {
     const [lastName, setLastName] = useState<string>("");
     const [mobileNumber, setMobileNumber] = useState<string>("");
     const [myEmail, setMyEmail] = useState<string>(email || '');
+    const [signature, setSignature] = useState("");
+    const [signatureMode, setSignatureMode] = useState<"upload" | "draw">("upload");
+    const [signatureFile, setSignatureFile] = useState<File | null>(null);
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [showToast, setShowToast] = useState(false);
     const [toastType, setToastType] = useState<"success" | "error">("success");
     const [toastMessage, setToastMessage] = useState("");
     const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState<string>("general");
     const [password, setPassword] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [show, setShow] = useState(false);
 
+    const signatureInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
+
+    const triggerSignatureInput = () => {
+        signatureInputRef.current?.click();
+    };
+
+    const handleSignatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSignatureFile(file);
+            const signatureURL = URL.createObjectURL(file);
+            setSignature(prev => {
+                if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                return signatureURL;
+            });
+        }
+    };
+
+    const handleSignatureDraw = (dataUrl: string) => {
+        if (dataUrl) {
+            setSignature(dataUrl);
+            const file = dataURLtoFile(dataUrl, "signature.png");
+            setSignatureFile(file);
+        } else {
+            setSignature("");
+            setSignatureFile(null);
+        }
+    };
+
+    const dataURLtoFile = (dataurl: string, filename: string) => {
+        const arr = dataurl.split(",");
+        const mime = arr[0].match(/:(.*?);/)?.[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+    };
+
+    const fetchSignature = async () => {
+        try {
+            let signatureSource = "";
+            try {
+                const data = await getWithAuth("get-signature");
+                if (data && (data.signature_url || data.signature || (data.data && data.data.signature))) {
+                    signatureSource = data.signature_url || data.signature || data.data.signature;
+                } else if (data && typeof data === 'string' && data.startsWith('http')) {
+                    signatureSource = data;
+                }
+            } catch {
+                // fall through to blob fetch
+            }
+
+            if (signatureSource) {
+                if (!signatureSource.startsWith("http") && !signatureSource.startsWith("data:") && !signatureSource.startsWith("blob:")) {
+                    const apiOrigin = new URL(API_BASE_URL).origin;
+                    signatureSource = `${apiOrigin}${signatureSource.startsWith("/") ? "" : "/"}${signatureSource}`;
+                }
+
+                setSignature(prev => {
+                    if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                    return signatureSource;
+                });
+                return;
+            }
+
+            const blob = await getBlobWithAuth("get-signature");
+            if (blob.size > 0 && blob.type.startsWith("image/")) {
+                const url = URL.createObjectURL(blob);
+                setSignature(prev => {
+                    if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+                    return url;
+                });
+            }
+        } catch (error) {
+            console.error("Failed to fetch signature:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchUserDetails = async () => {
             try {
                 const response = await getWithAuth(`user-details/${userId}`);
-                // console.log("user details : ", response);
                 setFirstName(response.user_details.first_name || "");
-                // console.log("user details f : ", response.user_details.first_name);
                 setLastName(response.user_details.last_name || "");
-                // console.log("user details l : ", response.user_details.last_name);
                 setMobileNumber(response.user_details.mobile_no?.toString() || "");
-                setMyEmail(response.email || "");
-                // console.log("user roles : ", response.role);
+                setMyEmail(response.user_details?.email || response.email || "");
                 const roleIds = parseRoles(response.role);
-
                 setSelectedRoleIds(roleIds);
             } catch (error) {
                 console.error("Failed to fetch profile data:", error);
@@ -74,7 +155,17 @@ export default function AllDocTable({ }: Props) {
 
         if (userId) {
             fetchUserDetails();
+            fetchSignature();
         }
+
+        return () => {
+            setSignature(prev => {
+                if (prev.startsWith("blob:")) {
+                    URL.revokeObjectURL(prev);
+                }
+                return prev;
+            });
+        };
     }, [userId]);
 
     const parseRoles = (roleData: any): string[] => {
@@ -102,46 +193,77 @@ export default function AllDocTable({ }: Props) {
 
         return newErrors;
     };
+
     const handleSubmit = async () => {
-        const fieldErrors = validateFields();
-        if (Object.keys(fieldErrors).length > 0) {
-            setErrors(fieldErrors);
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("first_name", firstName);
-        formData.append("last_name", lastName);
-        formData.append("mobile_no", mobileNumber);
-        formData.append("email", myEmail);
-        formData.append("role", JSON.stringify(selectedRoleIds));
-
-        // for (const [key, value] of formData.entries()) {
-        //     console.log(`Document share: ${key}: ${value}`);
-        // }
-        try {
-            const response = await postWithAuth(`user-details/${userId}`, formData);
-            // console.log("Form submitted successfully:", response);
-            if (response.status === "fail") {
-                setToastType("error");
-                setToastMessage("Failed to update user!");
-                setShowToast(true);
-                setTimeout(() => {
-                    setShowToast(false);
-                }, 5000);
+        if (activeTab === "general") {
+            const fieldErrors = validateFields();
+            if (Object.keys(fieldErrors).length > 0) {
+                setErrors(fieldErrors);
+                return;
             }
-            setToastType("success");
-            setToastMessage("User Updated successfully!");
-            setShowToast(true);
-            setTimeout(() => {
-                setShowToast(false);
-            }, 5000);
-            // setSuccess("Form submitted successfully");
-        } catch (error) {
-            console.error("Error submitting form:", error);
-        }
-    };
 
+            try {
+                const formData = new FormData();
+                formData.append("first_name", firstName);
+                formData.append("last_name", lastName);
+                formData.append("mobile_no", mobileNumber);
+                formData.append("email", myEmail);
+                formData.append("role", JSON.stringify(selectedRoleIds));
+
+                const response = await postWithAuth(`user-details/${userId}`, formData);
+
+                if (response.status === "fail") {
+                    setToastType("error");
+                    setToastMessage(response.message || "Failed to update profile details!");
+                    setShowToast(true);
+                } else {
+                    setToastType("success");
+                    setToastMessage("Profile updated successfully!");
+                    setShowToast(true);
+                }
+            } catch (error) {
+                console.error("Error submitting profile form:", error);
+                setToastType("error");
+                setToastMessage("An error occurred while saving profile changes.");
+                setShowToast(true);
+            }
+        } else if (activeTab === "signature") {
+            if (!signatureFile) {
+                setToastType("error");
+                setToastMessage("Please upload or draw a signature first.");
+                setShowToast(true);
+                return;
+            }
+
+            try {
+                const sigFormData = new FormData();
+                sigFormData.append("signature", signatureFile);
+
+                const sigResponse = await postWithAuth("update-signature", sigFormData);
+
+                if (sigResponse.status === "success" || sigResponse.message === "success") {
+                    setToastType("success");
+                    setToastMessage("Signature updated successfully!");
+                    setShowToast(true);
+                    setSignatureFile(null);
+                    await fetchSignature();
+                } else {
+                    setToastType("error");
+                    setToastMessage(sigResponse.message || "Failed to update signature!");
+                    setShowToast(true);
+                }
+            } catch (error) {
+                console.error("Error submitting signature form:", error);
+                setToastType("error");
+                setToastMessage("An error occurred while saving the signature.");
+                setShowToast(true);
+            }
+        }
+
+        setTimeout(() => {
+            setShowToast(false);
+        }, 5000);
+    };
 
     const handleShow = () => {
         setShow(true);
@@ -184,7 +306,6 @@ export default function AllDocTable({ }: Props) {
 
             try {
                 const response = await postWithAuth("update-password", formData);
-                // console.log("Form submitted successfully:", response);
                 if (response.status === "fail") {
                     setToastType("error");
                     setToastMessage("Failed to reset password!");
@@ -207,113 +328,165 @@ export default function AllDocTable({ }: Props) {
             }
         }
     };
+
     return (
         <>
             <DashboardLayout>
-
-                <div className="d-flex justify-content-between align-items-center pt-2">
-                    <div className="d-flex flex-row align-items-center">
-                        <Heading text="Profile" color="#444" />
-                    </div>
-                    <div className="d-flex flex-row">
-                        <button
-                            onClick={() => handleShow()}
-                            className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                        >
-                            <FaKey className="me-1" /> Change Password
-                        </button>
-                    </div>
-                </div>
-
-                <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-                    <div
-                        style={{ maxHeight: "380px", overflowY: "auto" }}
-                        className="custom-scroll"
-                    >
-                        <div className="p-0 row row-cols-1 row-cols-md-2 overflow-hidden w-100">
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    First Name
-                                </p>
-                                <div className="input-group mb-3 pe-lg-4">
-                                    <input
-                                        type="text"
-                                        value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                        className={`${errors.first_name ? "is-invalid" : ""
-                                            } form-control`}
-                                    />
-                                    {errors.first_name && (
-                                        <div className="invalid-feedback">{errors.first_name}</div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Last Name
-                                </p>
-                                <div className="input-group mb-3 pe-lg-4">
-                                    <input
-                                        type="text"
-                                        className={`${errors.last_name ? "is-invalid" : ""
-                                            } form-control`}
-                                        value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
-                                    />
-                                    {errors.last_name && (
-                                        <div className="invalid-feedback">{errors.last_name}</div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Mobile Number
-                                </p>
-                                <div className="input-group mb-3 pe-lg-4">
-                                    <input
-                                        type="number"
-                                        className={`${errors.mobile_no ? "is-invalid" : ""
-                                            } form-control`}
-                                        value={mobileNumber}
-                                        onChange={(e) => setMobileNumber(e.target.value)}
-                                    />
-                                    {errors.mobile_no && (
-                                        <div className="invalid-feedback">{errors.mobile_no}</div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Email
-                                </p>
-                                <div className="input-group mb-3 pe-lg-4">
-                                    <input
-                                        type="email"
-                                        className={`${errors.email ? "is-invalid" : ""
-                                            } form-control`}
-                                        value={myEmail}
-                                        onChange={(e) => setMyEmail(e.target.value)}
-                                    />
-                                    {errors.email && (
-                                        <div className="invalid-feedback">{errors.email}</div>
-                                    )}
-                                </div>
-                            </div>
+                <div className={styles.pageWrapper}>
+                    <div className={styles.pageHeader}>
+                        <div className="d-flex flex-row align-items-center">
+                            <Heading text="Profile" color="#444" />
+                        </div>
+                        <div className="d-flex flex-row">
+                            <button
+                                onClick={() => handleShow()}
+                                className={styles.btnChangePassword}
+                            >
+                                <FaKey className="me-1" /> Change Password
+                            </button>
                         </div>
                     </div>
-                    <div className="d-flex flex-row mt-5">
-                        <button
-                            onClick={handleSubmit}
-                            className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                        >
-                            <IoSaveOutline fontSize={16} className="me-1" /> Save
-                        </button>
-                        <button
-                            onClick={() => router.push("/")}
-                            className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                        >
-                            <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
-                        </button>
+
+                    <div className={styles.card}>
+                        <div className={`${styles.scrollContent} custom-scroll`}>
+                            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || "general")} id="profile-tabs" className="mb-3">
+                                <Tab eventKey="general" title="General">
+                                    <div className="p-0 row row-cols-1 row-cols-md-2 overflow-hidden w-100 mt-2">
+                                        <div className="d-flex flex-column pe-md-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>First Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={firstName}
+                                                    onChange={(e) => setFirstName(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.first_name ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.first_name && <div className={styles.errorText}>{errors.first_name}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={lastName}
+                                                    onChange={(e) => setLastName(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.last_name ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.last_name && <div className={styles.errorText}>{errors.last_name}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3 mt-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Mobile Number</label>
+                                                <input
+                                                    type="number"
+                                                    value={mobileNumber}
+                                                    onChange={(e) => setMobileNumber(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.mobile_no ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.mobile_no && <div className={styles.errorText}>{errors.mobile_no}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3 mt-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={myEmail}
+                                                    onChange={(e) => setMyEmail(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.email ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.email && <div className={styles.errorText}>{errors.email}</div>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Tab>
+
+                                <Tab eventKey="signature" title="Digital Signature">
+                                    <div className="d-flex flex-column gap-4 mt-2">
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                type="button"
+                                                className={`${styles.btnToggle} ${signatureMode === "upload" ? styles.active : ""}`}
+                                                onClick={() => setSignatureMode("upload")}
+                                            >
+                                                <IoImageOutline fontSize={16} /> Upload PNG
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`${styles.btnToggle} ${signatureMode === "draw" ? styles.active : ""}`}
+                                                onClick={() => setSignatureMode("draw")}
+                                            >
+                                                <IoCreateOutline fontSize={16} /> Draw Signature
+                                            </button>
+                                        </div>
+
+                                        {signatureMode === "upload" ? (
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className={styles.imageCard}>
+                                                    {signature ? (
+                                                        <img
+                                                            src={signature}
+                                                            alt="Digital Signature"
+                                                            className="card-img-top w-100"
+                                                            style={{
+                                                                maxHeight: '120px',
+                                                                objectFit: 'contain',
+                                                                borderRadius: '0.5rem',
+                                                                backgroundColor: '#f9fafb'
+                                                            }}
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="d-flex align-items-center justify-content-center bg-light rounded" style={{ height: "120px" }}>
+                                                            <span className="text-muted">No signature uploaded</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="pt-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={triggerSignatureInput}
+                                                            className={styles.btnSave}
+                                                            style={{ width: '100%' }}
+                                                        >
+                                                            <IoImageOutline fontSize={16} /> Change Signature
+                                                        </button>
+                                                        <input
+                                                            type="file"
+                                                            ref={signatureInputRef}
+                                                            accept="image/png"
+                                                            style={{ display: "none" }}
+                                                            onChange={handleSignatureChange}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="col-12 col-lg-8">
+                                                <div className="border rounded p-3 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                                                    <p className={styles.formLabel}>Draw your signature</p>
+                                                    <SignaturePad onSave={handleSignatureDraw} />
+                                                    <p className="text-muted mt-2 small">Your signature will be saved as a transparent PNG.</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Tab>
+                            </Tabs>
+                        </div>
+
+                        <div className={styles.formActions}>
+                            <button onClick={handleSubmit} className={styles.btnSave}>
+                                <IoSaveOutline fontSize={16} /> Save Changes
+                            </button>
+                            <button onClick={() => router.push("/")} className={styles.btnCancel}>
+                                <MdOutlineCancel fontSize={16} /> Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             </DashboardLayout>
@@ -326,85 +499,59 @@ export default function AllDocTable({ }: Props) {
                 <Modal.Header closeButton>
                     <Modal.Title>
                         <div className="d-flex flex-row align-items-center">
-                            <Heading text="Reset Password" color="#444" />{" "}
+                            <Heading text="Reset Password" color="#444" />
                         </div>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <div
-                        className="custom-scroll"
-                        style={{ maxHeight: "70vh", overflowY: "scroll" }}
-                    >
+                    <div className="custom-scroll" style={{ maxHeight: "70vh", overflowY: "auto" }}>
                         <div className="d-flex flex-column w-100">
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Email
-                                </p>
-                                <div className="input-group mb-3">
-                                    <input
-                                        type="email"
-                                        className="form-control"
-                                        value={myEmail || ""}
-                                        onChange={(e) => setMyEmail(e.target.value)}
-                                    />
-                                </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Email</label>
+                                <input
+                                    type="email"
+                                    className={styles.formInput}
+                                    value={myEmail || ""}
+                                    onChange={(e) => setMyEmail(e.target.value)}
+                                />
                             </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Current Password
-                                </p>
-                                <div className="input-group mb-3">
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        onChange={(e) => setCurrentPassword(e.target.value)}
-                                    />
-                                </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Current Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                />
                             </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Password
-                                </p>
-                                <div className="input-group mb-3">
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>New Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
                             </div>
-                            <div className="d-flex flex-column">
-                                <p className="mb-1" style={{ fontSize: "14px" }}>
-                                    Confirm Password
-                                </p>
-                                <div className="input-group mb-3">
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                    />
-                                </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Confirm Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
                             </div>
                         </div>
-                        {error && <p className="text-danger">{error}</p>}
-                        <div className="d-flex flex-row mt-2">
-                            <button
-                                onClick={handleResetPassword}
-                                className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                            >
-                                <IoSaveOutline fontSize={16} className="me-1" /> Save
+                        {error && <p className="text-danger small mt-2">{error}</p>}
+                        <div className={styles.formActions + " mt-4"}>
+                            <button onClick={handleResetPassword} className={styles.btnSave}>
+                                <IoSaveOutline fontSize={16} /> Update Password
                             </button>
-                            <button
-                                onClick={handleClose}
-                                className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                            >
-                                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                            <button onClick={handleClose} className={styles.btnCancel}>
+                                <MdOutlineCancel fontSize={16} /> Cancel
                             </button>
                         </div>
                     </div>
                 </Modal.Body>
             </Modal>
-            {/* toast message */}
             <ToastMessage
                 message={toastMessage}
                 show={showToast}

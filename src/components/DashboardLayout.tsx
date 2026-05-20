@@ -27,6 +27,7 @@ import LoadingSpinner from "./common/LoadingSpinner";
 import {HiDocumentReport} from "react-icons/hi";
 import ChatWindow from "./chat/ChatWindow";
 import {AiOutlineMenu} from "react-icons/ai";
+import {FaPenNib} from "react-icons/fa";
 // import { notification } from 'antd';
 
 import dayjs from 'dayjs';
@@ -55,6 +56,20 @@ import Link from "next/link";
 //   )
 // }
 
+interface SubItem {
+    name: string;
+    url: string;
+    icon?: React.ReactNode;
+    permission?: { group: string; action?: string };
+}
+
+interface NavItem {
+    name: string;
+    url: string;
+    icon?: React.ReactNode;
+    permission?: { group: string; action?: string };
+    subItems?: SubItem[];
+}
 
 const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({
                                                                       children,
@@ -131,7 +146,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({
     const {date, time} = useCurrentTime();
 
 
-    const navItems = [
+    const navItems: NavItem[] = [
         {
             name: "Dashboard",
             url: "/",
@@ -142,6 +157,7 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({
             name: "Assigned Documents",
             url: "/assigned-documents",
             icon: <IoListOutline/>,
+            permission: {group: "Assigned Documents"},
         },
         {
             name: "All Documents",
@@ -196,6 +212,21 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({
             url: "/reminders",
             icon: <FiBell/>,
             permission: {group: "Reminder", action: "View Reminders"},
+        },
+        {
+            name: "Signatures",
+            url: "#",
+            icon: <FaPenNib/>,
+            subItems: [
+                {
+                    name: "Sign Approval",
+                    url: "/signatures/sign-approval",
+                },
+                {
+                    name: "Sign Requests",
+                    url: "/signatures/sign-requests",
+                },
+            ],
         },
         {
             name: "User Management",

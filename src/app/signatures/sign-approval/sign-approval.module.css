@@ -1,0 +1,199 @@
+/* Sign Approval page – theme-aligned modern UI */
+/* Theme: primary #EA580C, light #FFF4E8, text #0A0A0A, muted #717182 */
+
+.pageWrapper {
+  padding-bottom: 1.5rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+@media (min-width: 992px) {
+  .pageHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.pageTitle {
+  color: #0A0A0A !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+.card {
+  background: #ffffff !important;
+  border-radius: 1rem;
+  padding: 1.5rem !important;
+  margin-top: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.categoryCard {
+  background: #FFF4E8;
+  border: 1px solid #FFD8A8;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.categoryCard:hover {
+  background: #FFE8CC;
+  border-color: #EA580C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
+}
+
+.categoryIcon {
+  font-size: 2rem;
+  color: #EA580C;
+  margin-bottom: 0.75rem;
+}
+
+.categoryName {
+  font-weight: 600;
+  color: #0A0A0A;
+  font-size: 1rem;
+}
+
+.docCount {
+  font-size: 0.75rem;
+  color: #717182;
+  margin-top: 0.25rem;
+}
+
+.tableWrapper {
+  max-height: 500px;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  margin-top: 1rem;
+}
+
+.tableWrapper :global(.table) {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+
+.tableWrapper :global(.table thead th) {
+  background: #FFF4E8 !important;
+  color: #0A0A0A;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  text-align: left !important;
+}
+
+.tableWrapper :global(.table tbody td) {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  color: #EA580C;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  color: #c24a0a;
+}
+
+.btnAssign {
+  background: #EA580C !important;
+  border-color: #EA580C !important;
+  color: #fff !important;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btnAssign:hover {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+}
+
+.btnView {
+  background: transparent !important;
+  border: 1px solid #EA580C !important;
+  color: #EA580C !important;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.btnView:hover {
+  background: #FFF4E8 !important;
+  color: #c24a0a !important;
+}
+
+.statusBadgeSigned {
+  display: inline-flex;
+  padding: 0.35em 0.75em;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.noDataContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.noDataIcon {
+  font-size: 3rem;
+  color: #D1D5DB;
+  margin-bottom: 1rem;
+}
+
+.noDataText {
+  color: #6B7280;
+  font-size: 1rem;
+}

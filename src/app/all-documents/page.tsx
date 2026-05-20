@@ -104,6 +104,7 @@ interface TableItem {
   type: string;
   created_by: string;
   document_preview: string;
+  sector_category: number;
 }
 
 interface ShareItem {
@@ -2095,11 +2096,7 @@ export default function AllDocTable() {
                             color: "#000",
                           }}
                         >
-                          {hasPermission(
-                            permissions,
-                            "All Documents",
-                            "Share Document"
-                          ) && (
+                          {hasPermission(permissions, "All Documents", "Share Document") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal("allDocShareModel")
@@ -2110,11 +2107,7 @@ export default function AllDocTable() {
                                 Share
                               </Dropdown.Item>
                             )}
-                          {hasPermission(
-                            permissions,
-                            "All Documents",
-                            "Delete Document"
-                          ) && (
+                          {hasPermission(permissions, "All Documents", "Delete Document") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal("deleteBulkFileModel")
@@ -2194,7 +2187,7 @@ export default function AllDocTable() {
                             className="no-caret position-static"
                             style={{ zIndex: "99999" }}
                           >
-                            {/* {hasPermission(permissions, "All Documents", "View Documents") && (
+                            {/* {hasPermission(permissions, "All Documents", "View Documents", item?.sector_category) && (
                               <Dropdown.Item
                                 href="#"
                                 className="py-2"
@@ -2204,11 +2197,7 @@ export default function AllDocTable() {
                                 View
                               </Dropdown.Item>
                             )} */}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "View Documents"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "View Documents", item?.sector_category) && (
                                 <Dropdown.Item
                                   className="py-2"
                                   onClick={() =>
@@ -2223,11 +2212,7 @@ export default function AllDocTable() {
                                   View
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Edit Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Edit Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2246,11 +2231,7 @@ export default function AllDocTable() {
                             {["pdf", "docx", "xlsx", "pptx", "txt"].includes(
                               item.type
                             ) &&
-                              hasPermission(
-                                permissions,
-                                "All Documents",
-                                "Edit Document"
-                              ) && (
+                              hasPermission(permissions, "All Documents", "Edit Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onMouseEnter={(e) => {
                                     setAnchorEl(e.currentTarget);
@@ -2419,11 +2400,7 @@ export default function AllDocTable() {
                               )}
                             </Dropdown.Item> */}
 
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Share Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Share Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2438,11 +2415,7 @@ export default function AllDocTable() {
                                   Share
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Manage Sharable Link"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Manage Sharable Link", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleGetShareableLinkModel(item.id)
@@ -2453,11 +2426,7 @@ export default function AllDocTable() {
                                   Get Shareable Link
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Download Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Download Document", item?.sector_category) && (
                                 <Dropdown.Item className="py-2">
                                   <Link
                                     href={"#"}
@@ -2471,11 +2440,7 @@ export default function AllDocTable() {
                                   </Link>
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Upload New Version file"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Upload New Version file", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2490,11 +2455,7 @@ export default function AllDocTable() {
                                   Upload New Version file
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Version History"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Version History", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2509,11 +2470,7 @@ export default function AllDocTable() {
                                   Version History
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Comment"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Comment", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2528,11 +2485,7 @@ export default function AllDocTable() {
                                   Comment
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Add Reminder"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Add Reminder", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2547,11 +2500,7 @@ export default function AllDocTable() {
                                   Add Reminder
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Send Email"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Send Email", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2566,11 +2515,7 @@ export default function AllDocTable() {
                                   Send Email
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Download Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Download Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2585,11 +2530,7 @@ export default function AllDocTable() {
                                   Remove From Search
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Archive Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Archive Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -2604,11 +2545,7 @@ export default function AllDocTable() {
                                   Archive
                                 </Dropdown.Item>
                               )}
-                            {hasPermission(
-                              permissions,
-                              "All Documents",
-                              "Delete Document"
-                            ) && (
+                            {hasPermission(permissions, "All Documents", "Delete Document", item?.sector_category) && (
                                 <Dropdown.Item
                                   onClick={() =>
                                     handleOpenModal(
@@ -3813,7 +3750,7 @@ export default function AllDocTable() {
                   type="file"
                   className="form-control p-1"
                   id="newVersionDocument"
-                  accept=".pdf,.doc,.docx,.png,.jpg"
+                  accept=".pdf,.doc,.docx,.png,.jpg,.mp4,.webm,.avi,.mov,.wmv,.mkv,.mp3,.wav,.flac,.ogg"
                   onChange={handleNewVersionFileChange}
                   required
                 ></input>
@@ -5701,8 +5638,26 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {viewDocument && (
                 <>
-                  {/* Image Preview */}
-                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(viewDocument.type) ? (
+                  {/* Video Preview */}
+                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
+                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
+                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
+                                                    <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        ) : 
+                                        /* Audio Preview */
+                                        ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
+                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
+                                                <audio controls style={{ width: "100%" }}>
+                                                    <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        ) : 
+                                        /* Image Preview */
+                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(viewDocument.type) ? (
                     <Image
                       src={viewDocument.url}
                       alt={viewDocument.name}
@@ -5813,11 +5768,7 @@ export default function AllDocTable() {
                   Edit
                 </button>
               )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Share Document"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Share Document") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -5832,11 +5783,7 @@ export default function AllDocTable() {
                     Share
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Manage Sharable Link"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Manage Sharable Link") && (
                   <button
                     onClick={() =>
                       handleGetShareableLinkModel(viewDocument?.id || 0)
@@ -5847,11 +5794,7 @@ export default function AllDocTable() {
                     Get Shareable Link
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Download Document"
-              ) &&
+              {hasPermission(permissions, "All Documents", "Download Document") &&
                 viewDocument?.id && (
                   <button
                     onClick={() =>
@@ -5863,11 +5806,7 @@ export default function AllDocTable() {
                     Download
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Upload New Version file"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Upload New Version file") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -5882,11 +5821,7 @@ export default function AllDocTable() {
                     Upload New Version file
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Version History"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Version History") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -5946,11 +5881,7 @@ export default function AllDocTable() {
                   Send Email
                 </button>
               )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Remove From Search"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Remove From Search") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -5965,11 +5896,7 @@ export default function AllDocTable() {
                     Remove From Search
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Archive Document"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Archive Document") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -5984,11 +5911,7 @@ export default function AllDocTable() {
                     Archive
                   </button>
                 )}
-              {hasPermission(
-                permissions,
-                "All Documents",
-                "Delete Document"
-              ) && (
+              {hasPermission(permissions, "All Documents", "Delete Document") && (
                   <button
                     onClick={() =>
                       handleOpenModal(
@@ -6060,8 +5983,26 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {oldVersionDocument && (
                 <>
-                  {/* Image Preview */}
-                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
+                  {/* Video Preview */}
+                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(oldVersionDocument.type?.toLowerCase()) ? (
+                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
+                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
+                                                    <source src={oldVersionDocument.url} type={`video/${oldVersionDocument.type.toLowerCase() === 'mkv' ? 'webm' : oldVersionDocument.type.toLowerCase()}`} />
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        ) : 
+                                        /* Audio Preview */
+                                        ["mp3", "wav", "flac"].includes(oldVersionDocument.type?.toLowerCase()) ? (
+                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
+                                                <audio controls style={{ width: "100%" }}>
+                                                    <source src={oldVersionDocument.url} type={`audio/${oldVersionDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : oldVersionDocument.type.toLowerCase()}`} />
+                                                    Your browser does not support the audio element.
+                                                </audio>
+                                            </div>
+                                        ) : 
+                                        /* Image Preview */
+                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
                     <Image
                       src={oldVersionDocument.url}
                       alt={oldVersionDocument.name}

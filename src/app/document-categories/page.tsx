@@ -17,7 +17,7 @@ import {
   Pagination,
   Table,
 } from "react-bootstrap";
-import { CategoryDropdownItem } from "@/types/types";
+import { CategoryDropdownItem, UserDropdownItem, RoleDropdownItem } from "@/types/types";
 import { AiOutlineDelete } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa6";
 import ToastMessage from "@/components/common/Toast";
@@ -31,11 +31,14 @@ import { MdOutlineCancel } from "react-icons/md";
 import {
   fetchCategoryChildrenData,
   fetchCategoryData,
+  fetchRoleData,
+  fetchAndMapUserData,
 } from "@/utils/dataFetchFunctions";
 import { deleteWithAuth, getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { usePermissions } from "@/context/userPermissions";
 import { hasPermission } from "@/utils/permission";
 import { IoMdCloudDownload } from "react-icons/io";
+import styles from "./document-categories.module.css";
 
 interface Category {
   id: number;
@@ -79,6 +82,12 @@ export default function AllDocTable() {
   const [excelGenerated, setExcelGenerated] = useState(false);
   const [excelGeneratedLink, setExcelGeneratedLink] = useState("");
   const [errors, setErrors] = useState<any>({});
+  const [userDropDownData, setUserDropDownData] = useState<UserDropdownItem[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [users, setUsers] = useState<string[]>([]);
+  const [roleDropDownData, setRoleDropDownData] = useState<RoleDropdownItem[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+  const [roles, setRoles] = useState<string[]>([]);
 
   const [modalStates, setModalStates] = useState({
     addCategory: false,
@@ -90,6 +99,8 @@ export default function AllDocTable() {
   useEffect(() => {
     fetchCategoryChildrenData(setDummyData);
     fetchCategoryData(setCategoryDropDownData);
+    fetchAndMapUserData(setUserDropDownData);
+    fetchRoleData(setRoleDropDownData);
   }, []);
 
   useEffect(() => {
@@ -109,6 +120,112 @@ export default function AllDocTable() {
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
   };
+
+  const resetSigningAssignment = () => {
+    setSelectedUserIds([]);
+    setUsers([]);
+    setSelectedRoleIds([]);
+    setRoles([]);
+  };
+
+  const handleRoleSelect = (roleId: string) => {
+    const selectedRole = roleDropDownData.find((role) => role.id.toString() === roleId);
+    if (selectedRole && !selectedRoleIds.includes(roleId)) {
+      setSelectedRoleIds([...selectedRoleIds, roleId]);
+      setRoles([...roles, selectedRole.role_name]);
+    }
+  };
+
+  const handleRemoveRole = (roleName: string) => {
+    const roleToRemove = roleDropDownData.find((role) => role.role_name === roleName);
+    if (roleToRemove) {
+      setSelectedRoleIds(selectedRoleIds.filter((id) => id !== roleToRemove.id.toString()));
+      setRoles(roles.filter((r) => r !== roleName));
+    }
+  };
+
+  const handleUserSelect = (userId: string) => {
+    const selectedUser = userDropDownData.find((user) => user.id.toString() === userId);
+    if (selectedUser && !selectedUserIds.includes(userId)) {
+      setSelectedUserIds([...selectedUserIds, userId]);
+      setUsers([...users, selectedUser.user_name]);
+    }
+  };
+
+  const handleUserRole = (userName: string) => {
+    const userToRemove = userDropDownData.find((user) => user.user_name === userName);
+    if (userToRemove) {
+      setSelectedUserIds(selectedUserIds.filter((id) => id !== userToRemove.id.toString()));
+      setUsers(users.filter((r) => r !== userName));
+    }
+  };
+
+  const renderSigningAssignmentFields = (idSuffix: string) => (
+    <>
+      <div className={`col-12 col-lg-12 d-flex flex-column pe-2 ${styles.formGroup}`}>
+        <label className={styles.formLabel}>Assign roles</label>
+        <div className="d-flex flex-column position-relative">
+          <DropdownButton
+            id={`dropdown-roles-button-${idSuffix}`}
+            title={roles.length > 0 ? roles.join(", ") : "Select Roles"}
+            className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
+            onSelect={(value) => {
+              if (value) handleRoleSelect(value);
+            }}
+          >
+            {roleDropDownData.length > 0 ? (
+              roleDropDownData.map((role) => (
+                <Dropdown.Item key={role.id} eventKey={role.id.toString()}>
+                  {role.role_name}
+                </Dropdown.Item>
+              ))
+            ) : (
+              <Dropdown.Item disabled>No Roles available</Dropdown.Item>
+            )}
+          </DropdownButton>
+          <div className="mt-1">
+            {roles.map((role, index) => (
+              <span key={index} className={styles.badge}>
+                {role}
+                <IoClose className={styles.badgeClose} onClick={() => handleRemoveRole(role)} />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className={`col-12 col-lg-12 d-flex flex-column pe-2 ${styles.formGroup}`}>
+        <label className={styles.formLabel}>Assign Users</label>
+        <div className="d-flex flex-column position-relative">
+          <DropdownButton
+            id={`dropdown-users-button-${idSuffix}`}
+            title={users.length > 0 ? users.join(", ") : "Select Users"}
+            className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
+            onSelect={(value) => {
+              if (value) handleUserSelect(value);
+            }}
+          >
+            {userDropDownData.length > 0 ? (
+              userDropDownData.map((user) => (
+                <Dropdown.Item key={user.id} eventKey={user.id.toString()}>
+                  {user.user_name}
+                </Dropdown.Item>
+              ))
+            ) : (
+              <Dropdown.Item disabled>No users available</Dropdown.Item>
+            )}
+          </DropdownButton>
+          <div className="mt-1">
+            {users.map((user, index) => (
+              <span key={index} className={styles.badge}>
+                {user}
+                <IoClose className={styles.badgeClose} onClick={() => handleUserRole(user)} />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   const handleEditCategorySelect = (value: string) => {
     if (value === "none") {
@@ -213,7 +330,9 @@ export default function AllDocTable() {
     formData.append("parent_category", selectedCategoryId);
     formData.append("category_name", category_name || "");
     formData.append("description", description);
-    formData.append("attribute_data", JSON.stringify(attributeData))
+    formData.append("attribute_data", JSON.stringify(attributeData));
+    formData.append("signing_roles", JSON.stringify(selectedRoleIds));
+    formData.append("signing_users", JSON.stringify(selectedUserIds));
 
     try {
 
@@ -245,6 +364,7 @@ export default function AllDocTable() {
         setCategoryName("")
         setSelectedCategoryId("none")
         setDescription("")
+        resetSigningAssignment();
         setEditData(initialState)
         setToastType("error");
         setToastMessage("Failed to add category!");
@@ -287,11 +407,9 @@ export default function AllDocTable() {
       formData.append("category_name", category_name || "");
       formData.append("description", description);
 
-      formData.append("attribute_data", JSON.stringify(attributeData))
-
-      // formData.forEach((value, key) => {
-      //   console.log(`${key}: ${value}`);
-      // });
+      formData.append("attribute_data", JSON.stringify(attributeData));
+      formData.append("signing_roles", JSON.stringify(selectedRoleIds));
+      formData.append("signing_users", JSON.stringify(selectedUserIds));
 
       setErrors({});
       const response = await postWithAuth(`add-category`, formData);
@@ -317,6 +435,7 @@ export default function AllDocTable() {
         setCategoryName("")
         setSelectedCategoryId("none")
         setDescription("")
+        resetSigningAssignment();
         setEditData(initialState)
         setToastType("error");
         setToastMessage("Failed to add child category!");
@@ -370,6 +489,41 @@ export default function AllDocTable() {
 
         setattributeData(parsedAttributes);
         setEditData(response);
+
+        if (response.signing_roles) {
+          try {
+            const roleIds = typeof response.signing_roles === "string"
+              ? JSON.parse(response.signing_roles)
+              : response.signing_roles;
+            if (Array.isArray(roleIds)) {
+              setSelectedRoleIds(roleIds);
+              const mappedRoles = roleIds.map((id) =>
+                roleDropDownData.find((r) => r.id.toString() === id.toString())?.role_name
+              ).filter(Boolean) as string[];
+              setRoles(mappedRoles);
+            }
+          } catch (e) {
+            console.error("Failed to parse signing_roles:", e);
+          }
+        }
+
+        if (response.signing_users) {
+          try {
+            const userIds = typeof response.signing_users === "string"
+              ? JSON.parse(response.signing_users)
+              : response.signing_users;
+            if (Array.isArray(userIds)) {
+              setSelectedUserIds(userIds);
+              const mappedUsers = userIds.map((id) =>
+                userDropDownData.find((u) => u.id.toString() === id.toString())?.user_name
+              ).filter(Boolean) as string[];
+              setUsers(mappedUsers);
+            }
+          } catch (e) {
+            console.error("Failed to parse signing_users:", e);
+          }
+        }
+
         console.log("category data::: ", response);
       }
     } catch (error) {
@@ -395,6 +549,8 @@ export default function AllDocTable() {
       formData.append("category_name", editData.category_name || "");
       formData.append("description", editData.description);
       formData.append("attribute_data", JSON.stringify(attributeData));
+      formData.append("signing_roles", JSON.stringify(selectedRoleIds));
+      formData.append("signing_users", JSON.stringify(selectedUserIds));
 
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
@@ -410,6 +566,7 @@ export default function AllDocTable() {
         setCategoryName("")
         setSelectedCategoryId("none")
         setDescription("")
+        resetSigningAssignment();
         setEditData(initialState)
 
         setToastType("success");
@@ -428,6 +585,7 @@ export default function AllDocTable() {
         setCategoryName("")
         setSelectedCategoryId("none")
         setDescription("")
+        resetSigningAssignment();
         setEditData(initialState)
 
         setToastType("error");
@@ -810,8 +968,9 @@ export default function AllDocTable() {
           setcurrentAttribue('')
           setCategoryName("")
           setSelectedCategoryId("none")
-          setDescription("")
-          setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
         }}
       >
         <Modal.Header>
@@ -832,8 +991,9 @@ export default function AllDocTable() {
                   setcurrentAttribue('')
                   setCategoryName("")
                   setSelectedCategoryId("none")
-                  setDescription("")
-                  setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
                 }}
               />
             </div>
@@ -910,6 +1070,7 @@ export default function AllDocTable() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+            {renderSigningAssignmentFields("add")}
             <div className="col-12 col-lg-12 d-flex flex-column">
               <p
                 className="mb-1 text-start w-100"
@@ -1032,8 +1193,9 @@ export default function AllDocTable() {
                 setcurrentAttribue('')
                 setCategoryName("")
                 setSelectedCategoryId("none")
-                setDescription("")
-                setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
@@ -1053,8 +1215,9 @@ export default function AllDocTable() {
           setcurrentAttribue('')
           setCategoryName("")
           setSelectedCategoryId("none")
-          setDescription("")
-          setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
         }}
       >
         <Modal.Header>
@@ -1075,8 +1238,9 @@ export default function AllDocTable() {
                   setcurrentAttribue('')
                   setCategoryName("")
                   setSelectedCategoryId("none")
-                  setDescription("")
-                  setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
                 }}
               />
             </div>
@@ -1155,6 +1319,7 @@ export default function AllDocTable() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+            {renderSigningAssignmentFields("child")}
             <div className="col-12 col-lg-12 d-flex flex-column ps-lg-2 pe-2">
               <p
                 className="mb-1 text-start w-100"
@@ -1277,8 +1442,9 @@ export default function AllDocTable() {
                 setcurrentAttribue('')
                 setCategoryName("")
                 setSelectedCategoryId("none")
-                setDescription("")
-                setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
@@ -1298,8 +1464,9 @@ export default function AllDocTable() {
           setcurrentAttribue('')
           setCategoryName("")
           setSelectedCategoryId("none")
-          setDescription("")
-          setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
         }}
       >
         <Modal.Header>
@@ -1320,8 +1487,9 @@ export default function AllDocTable() {
                   setcurrentAttribue('')
                   setCategoryName("")
                   setSelectedCategoryId("none")
-                  setDescription("")
-                  setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
                 }}
               />
             </div>
@@ -1410,6 +1578,7 @@ export default function AllDocTable() {
                 }
               />
             </div>
+            {renderSigningAssignmentFields("edit")}
             <div className="col-12 col-lg-12 d-flex flex-column ps-lg-2">
               <p
                 className="mb-1 text-start w-100"
@@ -1533,8 +1702,9 @@ export default function AllDocTable() {
                 setcurrentAttribue('')
                 setCategoryName("")
                 setSelectedCategoryId("none")
-                setDescription("")
-                setEditData(initialState)
+        setDescription("")
+        resetSigningAssignment();
+        setEditData(initialState)
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
