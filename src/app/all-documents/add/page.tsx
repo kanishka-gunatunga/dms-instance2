@@ -53,7 +53,6 @@ export default function AllDocTable() {
 
   const [metaTags, setMetaTags] = useState<string[]>([]);
   const [currentMeta, setCurrentMeta] = useState<string>("");
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
   const [isTimeLimited, setIsTimeLimited] = useState<boolean>(false);
   const [roles, setRoles] = useState<string[]>([]);
@@ -108,31 +107,7 @@ export default function AllDocTable() {
     fetchCategoryData(setCategoryDropDownData);
     fetchRoleData(setRoleDropDownData);
     fetchAndMapUserData(setUserDropDownData);
-    fetchSectors(setSectorDropDownData);
-
-    const fetchTags = async () => {
-      try {
-        const response = await getWithAuth("get-all-meta-tags");
-        if (Array.isArray(response)) {
-          const tags = response.map((t: any) => {
-            if (typeof t === "string") return t;
-            if (t.tag_name) return t.tag_name;
-            if (t.name) return t.name;
-            if (t.meta_tag) return t.meta_tag;
-            if (t.tag) return t.tag;
-            const values = Object.values(t);
-            return values.find(v => typeof v === "string");
-          }).filter(Boolean);
-          setSuggestedTags(tags);
-        } else if (response && Array.isArray(response.data)) {
-          const tags = response.data.map((t: any) => typeof t === "string" ? t : t.tag_name || t.name || t.meta_tag || t.tag).filter(Boolean);
-          setSuggestedTags(tags);
-        }
-      } catch (err) {
-        console.error("Failed to fetch meta tags:", err);
-      }
-    };
-    fetchTags();
+    fetchSectors(setSectorDropDownData)
   }, []);
 
 
@@ -314,7 +289,7 @@ export default function AllDocTable() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || formSubmitted) return;
-    
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -481,44 +456,44 @@ export default function AllDocTable() {
                     Category
                   </p>
                   <DropdownButton
-                        id="dropdown-category-button"
-                        title={
-                          selectedCategoryId
-                            ? categoryDropDownData.find(
-                                (item) => item.id.toString() === selectedCategoryId
-                              )?.category_name
-                            : "Select Category"
-                        }
-                        className="custom-dropdown-text-start text-start w-100"
-                        onSelect={(value) => handleCategorySelect(value || "")}
-                      >
-                        {categoryDropDownData
-                          .filter((category) => category.parent_category === "none") // Get only parent categories
-                          .map((parentCategory) => (
-                            <React.Fragment key={parentCategory.id}>
+                    id="dropdown-category-button"
+                    title={
+                      selectedCategoryId
+                        ? categoryDropDownData.find(
+                          (item) => item.id.toString() === selectedCategoryId
+                        )?.category_name
+                        : "Select Category"
+                    }
+                    className="custom-dropdown-text-start text-start w-100"
+                    onSelect={(value) => handleCategorySelect(value || "")}
+                  >
+                    {categoryDropDownData
+                      .filter((category) => category.parent_category === "none") // Get only parent categories
+                      .map((parentCategory) => (
+                        <React.Fragment key={parentCategory.id}>
+                          <Dropdown.Item
+                            eventKey={parentCategory.id.toString()}
+                            style={{ fontWeight: "bold", paddingLeft: "10px" }}
+                          >
+                            {parentCategory.category_name}
+                          </Dropdown.Item>
+                          {categoryDropDownData
+                            .filter(
+                              (childCategory) =>
+                                childCategory.parent_category.toString() === parentCategory.id.toString()
+                            )
+                            .map((childCategory) => (
                               <Dropdown.Item
-                                eventKey={parentCategory.id.toString()}
-                                style={{ fontWeight: "bold", paddingLeft: "10px" }}
+                                key={childCategory.id}
+                                eventKey={childCategory.id.toString()}
+                                style={{ paddingLeft: "20px" }} // Indent child categories
                               >
-                                {parentCategory.category_name}
+                                {childCategory.category_name}
                               </Dropdown.Item>
-                              {categoryDropDownData
-                                .filter(
-                                  (childCategory) =>
-                                    childCategory.parent_category.toString() === parentCategory.id.toString()
-                                )
-                                .map((childCategory) => (
-                                  <Dropdown.Item
-                                    key={childCategory.id}
-                                    eventKey={childCategory.id.toString()}
-                                    style={{ paddingLeft: "20px" }} // Indent child categories
-                                  >
-                                    {childCategory.category_name}
-                                  </Dropdown.Item>
-                                ))}
-                            </React.Fragment>
-                          ))}
-                      </DropdownButton>
+                            ))}
+                        </React.Fragment>
+                      ))}
+                  </DropdownButton>
 
                   {errors.category && <div style={{ color: "red" }}>{errors.category}</div>}
                 </div>
@@ -599,91 +574,41 @@ export default function AllDocTable() {
                   </p>
                   <div className="col-12">
                     <div
-                      style={{ marginBottom: "10px", position: "relative" }}
-                      className="w-100 d-flex flex-column"
+                      style={{ marginBottom: "10px" }}
+                      className="w-100 d-flex metaBorder"
                     >
-                      <div className="w-100 d-flex metaBorder">
-                        <input
-                          type="text"
-                          value={currentMeta}
-                          onChange={(e) => setCurrentMeta(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          placeholder="Enter a meta tag"
-                          style={{
-                            flex: 1,
-                            padding: "6px 10px",
-                            border: "1px solid #ccc",
-                            borderTopRightRadius: "0 !important",
-                            borderBottomRightRadius: "0 !important",
-                            backgroundColor: 'transparent',
-                            color: "#333",
-                          }}
-                        />
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            addMetaTag();
-                          }}
-                          className="successButton"
-                          style={{
-                            padding: "10px",
-                            backgroundColor: "#4CAF50",
-                            color: "white",
-                            border: "1px solid #4CAF50",
-                            borderLeft: "none",
-                            borderTopRightRadius: "4px",
-                            borderBottomRightRadius: "4px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <IoAdd />
-                        </button>
-                      </div>
-
-                      {currentMeta.trim() !== "" && suggestedTags.filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag)).length > 0 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "100%",
-                            left: 0,
-                            right: "42px",
-                            backgroundColor: "#fff",
-                            border: "1px solid #ccc",
-                            borderTop: "none",
-                            borderBottomLeftRadius: "4px",
-                            borderBottomRightRadius: "4px",
-                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                            zIndex: 10,
-                            maxHeight: "150px",
-                            overflowY: "auto",
-                          }}
-                        >
-                          {suggestedTags
-                            .filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag))
-                            .map((tag, idx) => (
-                              <div
-                                key={idx}
-                                onClick={() => {
-                                  setMetaTags((prev) => [...prev, tag]);
-                                  setCurrentMeta("");
-                                }}
-                                style={{
-                                  padding: "8px 12px",
-                                  cursor: "pointer",
-                                  fontSize: "14px",
-                                  color: "#333",
-                                  borderBottom: "1px solid #f9f9f9",
-                                  transition: "background-color 0.2s",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f1f1")}
-                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                              >
-                                {tag}
-                              </div>
-                            ))}
-                        </div>
-                      )}
+                      <input
+                        type="text"
+                        value={currentMeta}
+                        onChange={(e) => setCurrentMeta(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Enter a meta tag"
+                        style={{
+                          flex: 1,
+                          padding: "6px 10px",
+                          border: "1px solid #ccc",
+                          borderTopRightRadius: "0 !important",
+                          borderBottomRightRadius: "0 !important",
+                          backgroundColor: 'transparent',
+                          color: "#333",
+                        }}
+                      />
+                      <button
+                        onClick={addMetaTag}
+                        className="successButton"
+                        style={{
+                          padding: "10px",
+                          backgroundColor: "#4CAF50",
+                          color: "white",
+                          border: "1px solid #4CAF50",
+                          borderLeft: "none",
+                          borderTopRightRadius: "4px",
+                          borderBottomRightRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <IoAdd />
+                      </button>
                     </div>
                     <div>
                       {metaTags.map((tag, index) => (

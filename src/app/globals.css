@@ -69,10 +69,10 @@ textarea {
 /*}*/
 
 .navLogo {
-    height: 90px !important;
-    width: auto !important;
-    max-width: 120px;
-    object-fit: contain;
+  height: 90px !important;
+  width: auto !important;
+  max-width: 120px;
+  object-fit: contain;
 }
 
 .loginLogo {
@@ -553,10 +553,11 @@ table {
   .companyProfileTabs .tab-content {
     padding: 10px;
   }
+
   .preview-image {
     display: none !important;
   }
-  
+
   .preview-image img {
     display: none !important;
   }
@@ -724,7 +725,7 @@ textarea:focus {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  white-space: pre-line; 
+  white-space: pre-line;
   font-size: 20px;
   color: rgba(0, 0, 0, 0.2);
   z-index: 2;
@@ -893,13 +894,14 @@ iframe #WordViewerStatusBar {
 }
 
 
-.dropdown-toggle-bulk button{
+.dropdown-toggle-bulk button {
   padding: 0px !important;
   background-color: transparent !important;
-  color: #000  !important;
+  color: #000 !important;
   border: none !important;
 }
-.searched-text em{
+
+.searched-text em {
   background-color: #ece92d;
 }
 
@@ -909,53 +911,53 @@ iframe #WordViewerStatusBar {
 /*-----------------------*/
 
 .navbarAside a span {
-    color: #8B4513 !important;
-    font-size: 14px !important;
+  color: #8B4513 !important;
+  font-size: 14px !important;
 }
 
 .navbarAside a svg {
-    color: #8B4513 !important;
+  color: #8B4513 !important;
 }
 
 
 
 .statCard {
-    /*border: none;*/
-    border-radius: 14px;
-    border: 1px solid #0000001A;
-    transition: transform 0.2s ease-in-out;
+  /*border: none;*/
+  border-radius: 14px;
+  border: 1px solid #0000001A;
+  transition: transform 0.2s ease-in-out;
 }
 
 .statCard:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 
 .iconWrapper {
-    background-color: #FFF4E8;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background-color: #FFF4E8;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon {
-    font-size: 1.75rem;
-    color: #FD7E14;
+  font-size: 1.75rem;
+  color: #FD7E14;
 }
 
 .positiveChange {
-    color: #00A63E;
+  color: #00A63E;
 }
 
 .noChange {
-    color: #6A7282;
+  color: #6A7282;
 }
 
 
 .recharts-legend-wrapper {
-    bottom: 30px !important;
-    margin-top: -50px !important;
+  bottom: 30px !important;
+  margin-top: -50px !important;
 }
 
 
@@ -965,76 +967,81 @@ iframe #WordViewerStatusBar {
 
 /* Main container for the entire component */
 .calendarWrapper {
-    background-color: white !important;
-    padding: 1rem 1.5rem !important;
-    border-radius: 1.25rem !important;
-    /*box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);*/
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  background-color: white !important;
+  padding: 1rem 1.5rem !important;
+  border-radius: 1.25rem !important;
+  /*box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);*/
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Style for each event item in a cell */
 .eventItem {
-    display: flex !important;
-    align-items: center !important;
-    margin-bottom: 2px !important;
-    padding: 2px 4px !important;
-    border-radius: 4px !important;
-    cursor: pointer !important;
-    font-size: 0.8rem !important;
-    /*transition: background-color 0.2s ease !important;*/
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 2px !important;
+  padding: 2px 4px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 0.8rem !important;
+  /*transition: background-color 0.2s ease !important;*/
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .eventItem:hover {
-    background-color: #f0f0f0 !important;
+  background-color: #f0f0f0 !important;
 }
 
 /* The colored dot for the event */
 .eventDot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-right: 6px;
-    flex-shrink: 0; /* Prevents the dot from shrinking */
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  /* Prevents the dot from shrinking */
 }
 
 /* Overriding Ant Design's default styles */
 :global(.ant-picker-calendar-full .ant-picker-panel .ant-picker-body) {
-    padding: 0 !important;
+  padding: 0 !important;
 }
 
 :global(.ant-picker-calendar-full .ant-picker-cell) {
-    border-top: none !important; /* Remove default lines */
+  border-top: none !important;
+  /* Remove default lines */
 }
 
 :global(.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner) {
-    background-color: #FFF4E8 !important; /* Highlight color for selected date */
-    border-radius: 0.75rem !important;
+  background-color: #FFF4E8 !important;
+  /* Highlight color for selected date */
+  border-radius: 0.75rem !important;
 }
 
 :global(.ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before) {
-    border: none !important; /* Remove default "today" border */
+  border: none !important;
+  /* Remove default "today" border */
 }
 
 :global(.ant-picker-calendar-header) {
-    padding: 0 0 1rem 0 !important; /* Adjust header padding */
+  padding: 0 0 1rem 0 !important;
+  /* Adjust header padding */
 }
 
 :where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-calendar-date {
-    border-top: 0 !important;
-    border: 2px solid rgba(5, 5, 5, 0.06) !important;
-    border-radius: 10px !important;
+  border-top: 0 !important;
+  border: 2px solid rgba(5, 5, 5, 0.06) !important;
+  border-radius: 10px !important;
 }
 
 .ant-picker-cell {
-    padding-top: 8px !important;
-    padding-bottom: 0 !important;
+  padding-top: 8px !important;
+  padding-bottom: 0 !important;
 }
 
 .ant-picker-content th {
-    background-color: white !important;
+  background-color: white !important;
 }
 
 
@@ -1042,140 +1049,109 @@ iframe #WordViewerStatusBar {
 /* styles/Documents.module.css */
 
 .documentCard {
-    background-color: white;
-    padding: 1.25rem;
-    border: 1px solid #f0f0f0;
-    border-radius: 0.75rem;
-    transition: box-shadow 0.2s ease-in-out;
+  background-color: white;
+  padding: 1.25rem;
+  border: 1px solid #f0f0f0;
+  border-radius: 0.75rem;
+  transition: box-shadow 0.2s ease-in-out;
 }
 
 .documentCard:not(:last-child) {
-    margin-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .documentCard:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .daysLeft {
-    color: #E7000B; /* Red color for urgency */
-    font-weight: 600;
+  color: #E7000B;
+  /* Red color for urgency */
+  font-weight: 600;
 }
 
 .documentMeta {
-    font-size: 0.75rem;
-    color: #717182;
-    display: flex;
-    gap: 1rem;
+  font-size: 0.75rem;
+  color: #717182;
+  display: flex;
+  gap: 1rem;
 }
 
 
 
 .sectorCard {
-    background-color: #FED7AA4D; /* Light orange background */
-    /*border: 1px solid #FFE6CF;*/
+  background-color: #FED7AA4D;
+  /* Light orange background */
+  /*border: 1px solid #FFE6CF;*/
 }
 
 .sectorIconWrapper {
-    background-color: #EA580C;
-    border-radius: 16px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    font-size: 1.25rem;
-    color: #FFFFFF; /* Ant Design Orange */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: #EA580C;
+  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1.25rem;
+  color: #FFFFFF;
+  /* Ant Design Orange */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Override PieChartCard default white background */
 :global(.statCard) {
-    border-radius: 1.25rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 
 .newRow {
-    background-color: #FED7AA1A !important; /* Light orange for new files */
+  background-color: #FED7AA1A !important;
+  /* Light orange for new files */
 }
 
 /* Optional: To make the row stand out more on hover */
-.newRow:hover > td {
-    background-color: #fde6d0 !important;
+.newRow:hover>td {
+  background-color: #fde6d0 !important;
 }
 
 .ant-table-thead tr {
-    border: 1px solid #E5E7EB !important;
+  border: 1px solid #E5E7EB !important;
 }
 
 .ant-table-thead th {
-    background-color: #F5F5F580 !important;
-    border-bottom: 1px solid #E5E7EB !important;
-    border-top: 1px solid #E5E7EB !important;
-    align-items: start;
-    text-align: left !important;
+  background-color: #F5F5F580 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+  border-top: 1px solid #E5E7EB !important;
+  align-items: start;
+  text-align: left !important;
 }
 
 .ant-picker-calendar-date-content {
-    align-content: flex-end;
+  align-content: flex-end;
 }
 
 
 :where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-panel {
-    text-align: center !important;
-    align-content: center !important;
+  text-align: center !important;
+  align-content: center !important;
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-calendar-date{
-    background: #FFEDD4;
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-calendar-date {
+  background: #FFEDD4;
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected .ant-picker-calendar-date .ant-picker-calendar-date-value, :where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected:hover .ant-picker-calendar-date .ant-picker-calendar-date-value {
-    color: #CA3500;
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected .ant-picker-calendar-date .ant-picker-calendar-date-value,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected:hover .ant-picker-calendar-date .ant-picker-calendar-date-value {
+  color: #CA3500;
 }
 
 :where(.css-dev-only-do-not-override-49qm).ant-picker-calendar .ant-picker-calendar-header {
-    margin-top: -50px;
+  margin-top: -50px;
 }
 
 /*:where(.css-dev-only-do-not-override-49qm).ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {*/
 /*    color: #CA3500;*/
 /*}*/
-
-/* Document signing – shared UI */
-.signature-modal .modal-header {
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem 1.25rem;
-}
-
-.signature-modal .modal-footer {
-  border-top: 1px solid #e5e7eb;
-  padding: 0.75rem 1.25rem;
-}
-
-.signature-modal .modal-body {
-  background: #f9fafb;
-}
-
-.signature-pad-container {
-  position: relative;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #fff;
-  overflow: hidden;
-}
-
-.signature-pad-container canvas {
-  display: block;
-  width: 100%;
-  height: auto;
-  cursor: crosshair;
-  border-radius: 0.5rem;
-}
-
-.signature-pad-container .btn-outline-danger {
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-}

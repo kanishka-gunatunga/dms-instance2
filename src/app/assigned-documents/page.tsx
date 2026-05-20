@@ -406,7 +406,7 @@ export default function AllDocTable() {
     fetchCategoryData(setCategoryDropDownData);
     fetchAssignedDocumentsData((data) => {
       const filtered = data.filter((item: any) =>
-        hasPermission(permissions, "All Documents", "View Documents", item.sector_category)
+        hasPermission(permissions, "All Documents", "View Documents")
       );
       setDummyData(filtered);
     });
@@ -775,7 +775,7 @@ export default function AllDocTable() {
     if (formData.entries().next().done) {
       fetchAssignedDocumentsData((data) => {
         const filtered = data.filter((item: any) =>
-          hasPermission(permissions, "All Documents", "View Documents", item.sector_category)
+          hasPermission(permissions, "All Documents", "View Documents")
         );
         setDummyData(filtered);
       });
@@ -787,7 +787,7 @@ export default function AllDocTable() {
     try {
       const response = await postWithAuth("filter-assigned-documents", formData);
       const filteredResponse = response.filter((item: any) =>
-        hasPermission(permissions, "All Documents", "View Documents", item.sector_category)
+        hasPermission(permissions, "All Documents", "View Documents")
       );
       setDummyData(filteredResponse);
       setIsLoadingTable(false)
@@ -2215,7 +2215,7 @@ export default function AllDocTable() {
                             className="no-caret position-static"
                             style={{ zIndex: "99999" }}
                           >
-                            {hasPermission(permissions, "All Documents", "View Documents", item?.sector_category) && (
+                            {hasPermission(permissions, "All Documents", "View Documents") && (
                               <Dropdown.Item
                                 className="py-2"
                                 onClick={() =>
@@ -2227,7 +2227,7 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
-                            {hasPermission(permissions, "Assigned Documents", "Edit Document", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal("editModel", item.id, item.name)
@@ -2239,7 +2239,7 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
-                            {hasPermission(permissions, "Assigned Documents", "Share Document", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Share Document") && (
                               <Dropdown.Item onClick={() =>
                                 handleOpenModal(
                                   "shareDocumentModel",
@@ -2252,7 +2252,7 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
-                            {hasPermission(permissions, "Assigned Documents", "Manage Sharable Link", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Manage Sharable Link") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleGetShareableLinkModel(item?.id)
@@ -2263,7 +2263,7 @@ export default function AllDocTable() {
                                 Get Shareable Link
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Download", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Download") && (
                               <Dropdown.Item className="py-2">
                                 <Link
                                   href={"#"}
@@ -2275,7 +2275,7 @@ export default function AllDocTable() {
                                 </Link>
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Upload New Version file", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Upload New Version file") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2290,7 +2290,7 @@ export default function AllDocTable() {
                                 Upload New Version file
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Version History", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Version History") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2305,7 +2305,7 @@ export default function AllDocTable() {
                                 Version History
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Comment", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Comment") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2320,7 +2320,7 @@ export default function AllDocTable() {
                                 Comment
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Add Reminder", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Add Reminder") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2335,7 +2335,7 @@ export default function AllDocTable() {
                                 Add Reminder
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Send Email", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Send Email") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2350,7 +2350,7 @@ export default function AllDocTable() {
                                 Send Email
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Remove From Search", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Remove From Search") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2365,7 +2365,7 @@ export default function AllDocTable() {
                                 Remove From Search
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "Assigned Documents", "Archive", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Archive") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2381,7 +2381,7 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
-                            {hasPermission(permissions, "Assigned Documents", "Delete Document", item?.sector_category) && (
+                            {hasPermission(permissions, "Assigned Documents", "Delete Document") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -5794,7 +5794,7 @@ export default function AllDocTable() {
             </div>
 
             <div className="d-flex flex-wrap gap-3 py-3">
-              {hasPermission(permissions, "All Documents", "Edit Document", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Edit Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal("editModel", viewDocument?.id, viewDocument?.name)
@@ -5805,7 +5805,7 @@ export default function AllDocTable() {
                   Edit
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Share Document", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Share Document") && (
                 <button onClick={() =>
                   handleOpenModal(
                     "shareDocumentModel",
@@ -5816,7 +5816,7 @@ export default function AllDocTable() {
                   Share
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Manage Sharable Link", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Manage Sharable Link") && (
                 <button onClick={() =>
                   handleGetShareableLinkModel(viewDocument?.id || 0)
                 }
@@ -5825,7 +5825,7 @@ export default function AllDocTable() {
                   Get Shareable Link
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Download Document", viewDocument?.sector_category) && viewDocument?.id && (
+              {hasPermission(permissions, "All Documents", "Download Document") && viewDocument?.id && (
                 <button
                   onClick={() => handleDownload(viewDocument?.id || 0, userId)}
                   className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1">
@@ -5834,7 +5834,7 @@ export default function AllDocTable() {
                 </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Upload New Version file", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Upload New Version file") && (
                 <button
                 onClick={() =>
                   handleOpenModal(
@@ -5848,7 +5848,7 @@ export default function AllDocTable() {
                 Upload New Version file
               </button>
               )}
-              {hasPermission(permissions, "All Documents", "Version History", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Version History") && (
                 <button
                 onClick={() =>
                   handleOpenModal(
@@ -5862,7 +5862,7 @@ export default function AllDocTable() {
                 Version History
               </button>
               )}
-              {hasPermission(permissions, "All Documents", "Comment", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Comment") && (
                 <button
                 onClick={() =>
                   handleOpenModal(
@@ -5877,7 +5877,7 @@ export default function AllDocTable() {
               </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Add Reminder", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Add Reminder") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5891,7 +5891,7 @@ export default function AllDocTable() {
                   Add Reminder
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Send Email", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Send Email") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5905,7 +5905,7 @@ export default function AllDocTable() {
                   Send Email
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Remove From Search", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Remove From Search") && (
                 <button
                 onClick={() =>
                   handleOpenModal(
@@ -5920,7 +5920,7 @@ export default function AllDocTable() {
               </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Archive Document", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Archive Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5934,7 +5934,7 @@ export default function AllDocTable() {
                   Archive
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Delete Document", viewDocument?.sector_category) && (
+              {hasPermission(permissions, "All Documents", "Delete Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
