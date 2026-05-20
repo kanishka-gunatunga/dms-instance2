@@ -15,9 +15,9 @@ import { useUserContext } from "@/context/userContext";
 import { formatDateForSQL } from "@/utils/commonFunctions";
 import {
   fetchAndMapUserData,
-  fetchCategoryData,
+  fetchCategoriesBySector,
   fetchRoleData,
-  fetchSectors,
+  fetchSectorsByUserRole,
 } from "@/utils/dataFetchFunctions";
 import {
   CategoryDropdownItem,
@@ -53,6 +53,7 @@ export default function AllDocTable() {
 
   const [metaTags, setMetaTags] = useState<string[]>([]);
   const [currentMeta, setCurrentMeta] = useState<string>("");
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
   const [isTimeLimited, setIsTimeLimited] = useState<boolean>(false);
   const [roles, setRoles] = useState<string[]>([]);
@@ -104,10 +105,34 @@ export default function AllDocTable() {
 
 
   useEffect(() => {
-    fetchCategoryData(setCategoryDropDownData);
+    // fetchCategoryData(setCategoryDropDownData); // Removed global fetch
     fetchRoleData(setRoleDropDownData);
     fetchAndMapUserData(setUserDropDownData);
-    fetchSectors(setSectorDropDownData)
+    fetchSectorsByUserRole(setSectorDropDownData);;
+
+    const fetchTags = async () => {
+      try {
+        const response = await getWithAuth("get-all-meta-tags");
+        if (Array.isArray(response)) {
+          const tags = response.map((t: any) => {
+            if (typeof t === "string") return t;
+            if (t.tag_name) return t.tag_name;
+            if (t.name) return t.name;
+            if (t.meta_tag) return t.meta_tag;
+            if (t.tag) return t.tag;
+            const values = Object.values(t);
+            return values.find(v => typeof v === "string");
+          }).filter(Boolean);
+          setSuggestedTags(tags);
+        } else if (response && Array.isArray(response.data)) {
+          const tags = response.data.map((t: any) => typeof t === "string" ? t : t.tag_name || t.name || t.meta_tag || t.tag).filter(Boolean);
+          setSuggestedTags(tags);
+        }
+      } catch (err) {
+        console.error("Failed to fetch meta tags:", err);
+      }
+    };
+    fetchTags();
   }, []);
 
 
@@ -123,6 +148,14 @@ export default function AllDocTable() {
 
   const handleSectorSelect = (sectorId: string) => {
     setSelectedSectorId(sectorId);
+    setSelectedCategoryId(""); // Clear existing category
+    setAttributes([]); // Clear attributes
+    setFormAttributeData([]); // Clear attribute form data
+    if (sectorId) {
+      fetchCategoriesBySector(sectorId, setCategoryDropDownData);
+    } else {
+      setCategoryDropDownData([]);
+    }
   };
 
 
@@ -289,7 +322,7 @@ export default function AllDocTable() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || formSubmitted) return;
-    
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -417,8 +450,8 @@ export default function AllDocTable() {
             className="custom-scroll"
           >
             <div className="d-flex flex-column">
-              <div className="row row-cols-1 row-cols-lg-4 d-flex justify-content-around px-lg-3 mb-lg-3">
-                <div className="col d-flex flex-column  justify-content-center align-items-center p-0 px-3 px-lg-0">
+              <div className="row row-cols-1 row-cols-lg-5 d-flex justify-content-around px-lg-3 mb-lg-3">
+                <div className="col d-flex flex-column justify-content-center align-items-center p-0 px-3 px-lg-0">
                   <p
                     className="mb-1 text-start w-100"
                     style={{ fontSize: "14px" }}
@@ -453,6 +486,48 @@ export default function AllDocTable() {
                     className="mb-1 text-start w-100"
                     style={{ fontSize: "14px" }}
                   >
+                    Sector
+                  </p>
+                  <DropdownButton
+                    id="dropdown-sector-button"
+                    title={
+                      selectedSectorId
+                        ? sectorDropDownData.find((item) => item.id.toString() === selectedSectorId)?.sector_name
+                        : "Select Sector"
+                    }
+                    className="custom-dropdown-text-start text-start w-100"
+                    onSelect={(value) => handleSectorSelect(value || "")}
+                  >
+                    {sectorDropDownData
+                      .filter((sector) => sector.parent_sector === "none")
+                      .map((parentSector) => (
+                        <React.Fragment key={parentSector.id}>
+                          <Dropdown.Item
+                            eventKey={parentSector.id.toString()}
+                            style={{ fontWeight: "bold", paddingLeft: "10px" }}
+                          >
+                            {parentSector.sector_name}
+                          </Dropdown.Item>
+                          {sectorDropDownData
+                            .filter((sector) => sector.parent_sector === parentSector.id.toString())
+                            .map((childSector) => (
+                              <Dropdown.Item
+                                key={childSector.id}
+                                eventKey={childSector.id.toString()}
+                                style={{ paddingLeft: "30px" }}
+                              >
+                                {childSector.sector_name}
+                              </Dropdown.Item>
+                            ))}
+                        </React.Fragment>
+                      ))}
+                  </DropdownButton>
+                </div>
+                <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2 px-3 px-lg-0">
+                  <p
+                    className="mb-1 text-start w-100"
+                    style={{ fontSize: "14px" }}
+                  >
                     Category
                   </p>
                   <DropdownButton
@@ -462,10 +537,11 @@ export default function AllDocTable() {
                             ? categoryDropDownData.find(
                                 (item) => item.id.toString() === selectedCategoryId
                               )?.category_name
-                            : "Select Category"
+                            : (selectedSectorId ? "Select Category" : "Select Sector First")
                         }
                         className="custom-dropdown-text-start text-start w-100"
                         onSelect={(value) => handleCategorySelect(value || "")}
+                        disabled={!selectedSectorId}
                       >
                         {categoryDropDownData
                           .filter((category) => category.parent_category === "none") // Get only parent categories
@@ -505,7 +581,7 @@ export default function AllDocTable() {
                     Storage
                   </p>
                   <DropdownButton
-                    id="dropdown-category-button"
+                    id="dropdown-storage-button"
                     title={storage || "Select"}
                     className="custom-dropdown-text-start text-start w-100"
                     onSelect={(value) => setStorage(value || "")}
@@ -574,41 +650,91 @@ export default function AllDocTable() {
                   </p>
                   <div className="col-12">
                     <div
-                      style={{ marginBottom: "10px" }}
-                      className="w-100 d-flex metaBorder"
+                      style={{ marginBottom: "10px", position: "relative" }}
+                      className="w-100 d-flex flex-column"
                     >
-                      <input
-                        type="text"
-                        value={currentMeta}
-                        onChange={(e) => setCurrentMeta(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Enter a meta tag"
-                        style={{
-                          flex: 1,
-                          padding: "6px 10px",
-                          border: "1px solid #ccc",
-                          borderTopRightRadius: "0 !important",
-                          borderBottomRightRadius: "0 !important",
-                          backgroundColor: 'transparent',
-                          color: "#333",
-                        }}
-                      />
-                      <button
-                        onClick={addMetaTag}
-                        className="successButton"
-                        style={{
-                          padding: "10px",
-                          backgroundColor: "#4CAF50",
-                          color: "white",
-                          border: "1px solid #4CAF50",
-                          borderLeft: "none",
-                          borderTopRightRadius: "4px",
-                          borderBottomRightRadius: "4px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <IoAdd />
-                      </button>
+                      <div className="w-100 d-flex metaBorder">
+                        <input
+                          type="text"
+                          value={currentMeta}
+                          onChange={(e) => setCurrentMeta(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Enter a meta tag"
+                          style={{
+                            flex: 1,
+                            padding: "6px 10px",
+                            border: "1px solid #ccc",
+                            borderTopRightRadius: "0 !important",
+                            borderBottomRightRadius: "0 !important",
+                            backgroundColor: 'transparent',
+                            color: "#333",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addMetaTag();
+                          }}
+                          className="successButton"
+                          style={{
+                            padding: "10px",
+                            backgroundColor: "#4CAF50",
+                            color: "white",
+                            border: "1px solid #4CAF50",
+                            borderLeft: "none",
+                            borderTopRightRadius: "4px",
+                            borderBottomRightRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <IoAdd />
+                        </button>
+                      </div>
+
+                      {currentMeta.trim() !== "" && suggestedTags.filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag)).length > 0 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: "42px",
+                            backgroundColor: "#fff",
+                            border: "1px solid #ccc",
+                            borderTop: "none",
+                            borderBottomLeftRadius: "4px",
+                            borderBottomRightRadius: "4px",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                            zIndex: 10,
+                            maxHeight: "150px",
+                            overflowY: "auto",
+                          }}
+                        >
+                          {suggestedTags
+                            .filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag))
+                            .map((tag, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  setMetaTags((prev) => [...prev, tag]);
+                                  setCurrentMeta("");
+                                }}
+                                style={{
+                                  padding: "8px 12px",
+                                  cursor: "pointer",
+                                  fontSize: "14px",
+                                  color: "#333",
+                                  borderBottom: "1px solid #f9f9f9",
+                                  transition: "background-color 0.2s",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f1f1")}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                              >
+                                {tag}
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       {metaTags.map((tag, index) => (
@@ -909,53 +1035,6 @@ export default function AllDocTable() {
                 </div>
               </div>
               <div className="d-flex flex-column flex-lg-row w-100">
-                <div className="col-12 col-lg-6 d-flex flex-column">
-                  <div className="d-flex w-100 flex-column justify-content-center align-items-start p-1">
-                    <div className="d-flex flex-column w-100 pt-3">
-                      <p
-                        className="mb-1 text-start w-100"
-                        style={{ fontSize: "14px" }}
-                      >
-                        Sectors
-                      </p>
-                      <DropdownButton
-                        id="dropdown-category-button"
-                        title={
-                          selectedSectorId
-                            ? sectorDropDownData.find((item) => item.id.toString() === selectedSectorId)?.sector_name
-                            : "Select Sector"
-                        }
-                        className="custom-dropdown-text-start text-start w-100"
-                        onSelect={(value) => handleSectorSelect(value || "")}
-                      >
-                        {sectorDropDownData
-                          .filter((sector) => sector.parent_sector === "none")
-                          .map((parentSector) => (
-                            <React.Fragment key={parentSector.id}>
-                              <Dropdown.Item
-                                eventKey={parentSector.id.toString()}
-                                style={{ fontWeight: "bold", paddingLeft: "10px" }}
-                              >
-                                {parentSector.sector_name}
-                              </Dropdown.Item>
-                              {sectorDropDownData
-                                .filter((sector) => sector.parent_sector === parentSector.id.toString())
-                                .map((childSector) => (
-                                  <Dropdown.Item
-                                    key={childSector.id}
-                                    eventKey={childSector.id.toString()}
-                                    style={{ paddingLeft: "30px" }}
-                                  >
-                                    {childSector.sector_name}
-                                  </Dropdown.Item>
-                                ))}
-                            </React.Fragment>
-                          ))}
-                      </DropdownButton>
-
-                    </div>
-                  </div>
-                </div>
                 <div className="col-12 col-lg-6 d-flex flex-column justify-content-center">
                   <div className="d-flex w-100 flex-column justify-content-center align-items-start p-1">
                     <div className="d-flex flex-column w-100 pt-3">
@@ -971,7 +1050,7 @@ export default function AllDocTable() {
                           className={`w-100`}
                           placeholder="Choose Expire Date"
                           onChange={(value, dateString) => {
-                            setUserEndDate(`${dateString}`)
+                            setEndDate(`${dateString}`)
                           }}
                           onOk={(value) => onExpireDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                         />

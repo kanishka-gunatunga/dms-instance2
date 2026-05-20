@@ -446,3 +446,26 @@ export const fetchFTPData = async (
         console.error("Failed to fetch data:", error);
     }
 };
+
+export const fetchSectorsByUserRole = async (
+    setSectors: React.Dispatch<React.SetStateAction<any>>
+) => {
+    try {
+        const response = await getWithAuth("user-role-sectors");
+        setSectors(response);
+    } catch (error) {
+        console.error("Failed to fetch user-role sectors:", error);
+    }
+};
+
+export const fetchCategoriesBySector = async (
+    sectorId: string,
+    setCategories: React.Dispatch<React.SetStateAction<any>>
+) => {
+    try {
+        const response = await getWithAuth(`sector-categories/${sectorId}`);
+        setCategories(response);
+    } catch (error) {
+        console.error("Failed to fetch sector-categories:", error);
+    }
+};
