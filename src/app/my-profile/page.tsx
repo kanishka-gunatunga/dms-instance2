@@ -344,7 +344,7 @@ export default function AllDocTable({ }: Props) {
             const res = await postWithAuth("mfa/generate", new FormData());
                     if (res.status === "success" || res.secret) {
                         setMfaSecret(res.secret);
-                        setMfaQrCode(res.qr_code_url);
+                        setMfaQrCode(res.qrCodeUrl);
                         setMfaRecoveryCodes(res.recovery_codes);
                         setMfaSetupStep("enrolling");
                     } else {
