@@ -149,7 +149,7 @@ const page = () => {
       if (data.status === "success") {
         setMfaSetupData({
           secret: data.secret,
-          qrCodeUrl: data.qr_code_url,
+          qrCodeUrl: data.qrCodeUrl,
           recoveryCodes: data.recovery_codes,
         });
       }
