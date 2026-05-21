@@ -96,11 +96,11 @@ export default function AllDocTable() {
     if (!email.trim()) newErrors.email = "Email is required.";
     if (selectedRoleIds.length === 0) newErrors.role = "Role is required.";
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*_\-]).{8,}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*_\-]).{12,}$/;
     if (!password.trim()) {
       newErrors.password = "Password is required.";
     } else if (!passwordRegex.test(password)) {
-      newErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, one number, one special character, and be at least 8 characters long.";
+      newErrors.password = "Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
     }
 
     if (password !== confirmPassword) {
