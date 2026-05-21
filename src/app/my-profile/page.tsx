@@ -341,7 +341,7 @@ export default function AllDocTable({ }: Props) {
     };
             const handleStartMfaSetup = async () => {
                 try {
-                    const res = await postWithAuth("mfa/generate", {});
+            const res = await postWithAuth("mfa/generate", new FormData());
                     if (res.status === "success" || res.secret) {
                         setMfaSecret(res.secret);
                         setMfaQrCode(res.qr_code_url);
