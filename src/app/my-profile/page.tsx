@@ -55,6 +55,7 @@ export default function AllDocTable({ }: Props) {
     const [currentPassword, setCurrentPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [show, setShow] = useState(false);
+    const [error, setError] = useState("");
 
     // MFA States
     const [mfaEnabled, setMfaEnabled] = useState<boolean>(false);
