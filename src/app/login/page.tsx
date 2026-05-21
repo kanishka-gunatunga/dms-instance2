@@ -355,7 +355,9 @@ const page = () => {
           {stage === "mfa_verify" && (
             <>
               <h3 className="mb-1 text-center font-weight-bold">Two-Factor Authentication</h3>
-              <Paragraph text="Please open your authenticator app and enter the 6-digit verification code below." color="Paragraph" className="text-center mb-4" />
+              <div className="text-center mb-4">
+                <Paragraph text="Please open your authenticator app and enter the 6-digit verification code below." color="Paragraph" />
+              </div>
               <form
                 className="d-flex flex-column px-0 px-lg-3 w-100"
                 onSubmit={handleMfaVerify}
