@@ -240,6 +240,7 @@ const page = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const completeLoginSession = (data: any) => {
     const expiresIn = 1;
     Cookies.set("authToken", data.token, {
