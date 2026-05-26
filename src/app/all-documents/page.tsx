@@ -255,6 +255,7 @@ export default function AllDocTable() {
     docArchivedModel: false,
     uploadNewVersionFileModel: false,
     sendEmailModel: false,
+    sendBulkEmailModel: false,
     versionHistoryModel: false,
     commentModel: false,
     addReminderModel: false,
@@ -1321,6 +1322,49 @@ export default function AllDocTable() {
     }
   };
 
+  const handleSendBulkEmail = async (userId: string) => {
+    try {
+      const formData = new FormData();
+      formData.append("subject", sendEmailData?.subject || "");
+      formData.append("body", sendEmailData?.body || "");
+      formData.append("to", sendEmailData?.to || "");
+      formData.append("user", userId || "");
+      formData.append("documents", JSON.stringify(selectedItems));
+
+      const response = await postWithAuth(
+        `document-bulk-send-email`,
+        formData
+      );
+      if (response.status === "fail") {
+        setToastType("error");
+        setToastMessage("An error occurred while sending the bulk email!");
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
+      } else {
+        handleCloseModal("sendBulkEmailModel");
+        setSendEmailData(null);
+        setSelectedItems([]);
+        setSelectedItemsNames([]);
+        setSelectAll(false);
+        setToastType("success");
+        setToastMessage("Bulk email sent successfully!");
+        setShowToast(true);
+        setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
+      }
+    } catch (error) {
+      setToastType("error");
+      setToastMessage("An error occurred while sending the bulk email!");
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 5000);
+    }
+  };
+
   const validate = () => {
     const validationErrors: any = {};
 
@@ -2105,6 +2149,17 @@ export default function AllDocTable() {
                               >
                                 <IoShareSocial className="me-2" />
                                 Share
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(permissions, "All Documents", "Send Email") && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal("sendBulkEmailModel")
+                                }
+                                className="py-2"
+                              >
+                                <MdEmail className="me-2" />
+                                Email
                               </Dropdown.Item>
                             )}
                           {hasPermission(permissions, "All Documents", "Delete Document") && (
@@ -5600,6 +5655,109 @@ export default function AllDocTable() {
                 className="custom-icon-button button-danger px-3 py-1 rounded me-2"
               >
                 <IoClose fontSize={16} className="me-1" /> Cancel
+              </button>
+            </div>
+          </Modal.Footer>
+        </Modal>
+        {/* send bulk email model */}
+        <Modal
+          centered
+          show={modalStates.sendBulkEmailModel}
+          className="large-model"
+          onHide={() => {
+            handleCloseModal("sendBulkEmailModel");
+            setSendEmailData(null);
+          }}
+        >
+          <Modal.Header>
+            <div className="d-flex w-100 justify-content-end">
+              <div className="col-11 d-flex flex-row">
+                <p className="mb-0" style={{ fontSize: "16px", color: "#333" }}>
+                  Send Bulk Email
+                </p>
+              </div>
+              <div className="col-1 d-flex justify-content-end">
+                <IoClose
+                  fontSize={20}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => {
+                    handleCloseModal("sendBulkEmailModel");
+                    setSendEmailData(null);
+                  }}
+                />
+              </div>
+            </div>
+          </Modal.Header>
+          <Modal.Body className="py-3">
+            <div
+              className="d-flex flex-column custom-scroll mb-3"
+              style={{ maxHeight: "300px", overflowY: "auto" }}
+            >
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                To
+              </p>
+              <div className="input-group mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="to"
+                  value={sendEmailData?.to || ""}
+                  onChange={(e) =>
+                    setSendEmailData((prev) => ({
+                      ...(prev || { subject: "", body: "", to: "" }),
+                      to: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                Subject
+              </p>
+              <div className="input-group mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  id="subject"
+                  value={sendEmailData?.subject || ""}
+                  onChange={(e) =>
+                    setSendEmailData((prev) => ({
+                      ...(prev || { subject: "", body: "", to: "" }),
+                      subject: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                Body
+              </p>
+              <ReactQuill
+                value={sendEmailData?.body || ""}
+                onChange={(content) =>
+                  setSendEmailData((prev) => ({
+                    ...(prev || { subject: "", body: "", to: "" }),
+                    body: content,
+                  }))
+                }
+              />
+              <div className="d-flex w-100">
+                <p
+                  className="mb-1 text-start w-100 px-3 py-2 rounded mt-2"
+                  style={{ fontSize: "14px", backgroundColor: "#eee" }}
+                >
+                  Attachment Documents :: {selectedItemsNames.join(", ")}
+                </p>
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <div className="d-flex flex-row">
+              <button
+                onClick={() => handleSendBulkEmail(userId!)}
+                className="custom-icon-button button-success px-3 py-1 rounded me-2"
+              >
+                <IoMdSend fontSize={16} className="me-1" /> Send
               </button>
             </div>
           </Modal.Footer>
