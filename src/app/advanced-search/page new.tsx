@@ -44,8 +44,8 @@ import {
   MdEmail,
   MdFileDownload,
   MdModeEditOutline,
-  MdOutlineCancel,
-  MdOutlineInsertLink,
+  MdCancel,
+  MdInsertLink,
   MdUpload,
 } from "react-icons/md";
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -1977,7 +1977,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2389,7 +2389,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2453,7 +2453,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2513,7 +2513,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2567,7 +2567,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2658,7 +2658,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2802,7 +2802,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -4144,7 +4144,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                   }}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> No
+                  <MdCancel fontSize={16} className="me-1" /> No
                 </button>
               </div>
             </div>
@@ -4498,7 +4498,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
               Document Name : <span style={{ fontWeight: 600 }} >{viewDocument?.name || ""}</span>
             </p>
             <p className="mb-1" style={{ fontSize: "14px" }}>
-              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category.category_name}</span>
+              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category?.category_name ?? 'No Category'}</span>
             </p>
             <p className="mb-1 " style={{ fontSize: "14px" }}>
               Description : <span style={{ fontWeight: 600 }} >{viewDocument?.description || ""}</span>
@@ -4702,7 +4702,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -4792,7 +4792,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Close
+              <MdCancel fontSize={16} className="me-1" /> Close
             </button>
           </Modal.Footer>
         </Modal>

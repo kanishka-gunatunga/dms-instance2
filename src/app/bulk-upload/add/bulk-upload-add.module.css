@@ -1,0 +1,424 @@
+/* Bulk Upload Add page – theme-aligned modern UI */
+/* Theme: primary #EA580C, light #FFF4E8, text #0A0A0A, muted #717182 */
+
+.pageWrapper {
+  padding-bottom: 2rem;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+@media (min-width: 992px) {
+  .pageHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.pageHeader :global(h3) {
+  color: #0A0A0A !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tabs – theme colors instead of purple (override companyProfileTabs) */
+.tabsWrapper {
+  margin-top: 1.5rem;
+}
+
+.tabsWrapper :global(ul.nav-tabs) {
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.25rem;
+}
+
+.tabsWrapper :global(ul .nav-link) {
+  font-size: 0.9375rem !important;
+  font-weight: 500;
+  color: #717182 !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.5rem 0.5rem 0 0;
+  padding: 0.625rem 1rem;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.tabsWrapper :global(ul .nav-link:hover) {
+  color: #0A0A0A !important;
+  background: #f9fafb;
+}
+
+.tabsWrapper :global(ul .nav-link.active) {
+  color: #EA580C !important;
+  background: #FFF4E8 !important;
+  border-color: #e5e7eb #e5e7eb transparent !important;
+  border-bottom-color: #fff !important;
+  margin-bottom: -1px;
+}
+
+.tabsWrapper :global(.tab-content) {
+  border: 1px solid #e5e7eb !important;
+  border-top: none !important;
+  border-radius: 0 0 1rem 1rem;
+  padding: 0;
+  background: #fff;
+}
+
+/* Form card inside tab */
+.formCard {
+  background: #ffffff !important;
+  padding: 1.5rem !important;
+  border: none;
+}
+
+.formContent {
+  max-height: 380px;
+  min-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+}
+
+/* Form grid – 2 columns on desktop */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+@media (min-width: 992px) {
+  .formGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  color: #0A0A0A;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* File input styling */
+.fileInput {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  min-height: 42px;
+  line-height: 1.5;
+  display: block;
+  box-sizing: border-box;
+}
+.fileInput:hover {
+  border-color: #EA580C !important;
+}
+.fileInput:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15) !important;
+  outline: none !important;
+}
+
+.fileInput::-webkit-file-upload-button {
+  border-radius: 0.375rem !important;
+  border: none !important;
+  background: #f9fafb !important;
+  color: #0A0A0A !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  margin-right: 0.75rem !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.fileInput::-webkit-file-upload-button:hover {
+  background: #FFF4E8 !important;
+  color: #EA580C !important;
+}
+
+.fileInput::file-selector-button {
+  border-radius: 0.375rem !important;
+  border: none !important;
+  background: #f9fafb !important;
+  color: #0A0A0A !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  margin-right: 0.75rem !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.fileInput::file-selector-button:hover {
+  background: #FFF4E8 !important;
+  color: #EA580C !important;
+}
+
+/* Dropdown styling */
+.dropdownToggle {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+  min-height: 42px;
+  width: 100%;
+  display: flex !important;
+  align-items: center !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+  position: relative;
+  box-sizing: border-box;
+}
+.dropdownToggle:hover,
+.dropdownToggle:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1) !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+}
+
+/* Dropdown wrapper – forces full width, isolates from globals */
+.dropdownWrapper {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.dropdownWrapper :global(.dropdown),
+.dropdownWrapper :global(.btn-group) {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Override dropdown wrapper and toggle - match add-document, override globals.css */
+.formCard :global(.dropdown),
+.formCard :global(.btn-group) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  position: relative;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.formCard :global(.dropdown-menu) {
+  z-index: 1060 !important;
+}
+.formCard :global(.dropdown-toggle),
+.formCard :global(button.dropdown-toggle) {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  min-height: 42px !important;
+  max-height: none !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 100% !important;
+  max-width: 100% !important;
+  text-align: left !important;
+  position: relative !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+}
+/* Arrow must stay inside; override globals.css .custom-dropdown-text-start button::after { top: 14px } */
+.formCard :global(.custom-dropdown-text-start .dropdown-toggle::after),
+.formCard :global(.custom-dropdown-text-start button.dropdown-toggle::after),
+.formCard :global(.dropdown-toggle::after) {
+  position: absolute !important;
+  right: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-left: 0 !important;
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+}
+.formCard :global(.dropdown-toggle:hover),
+.formCard :global(.dropdown-toggle:focus) {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1) !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+}
+
+/* Button styles */
+.btnDownload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #EA580C !important;
+  background: #FFF4E8 !important;
+  border: 1px solid #EA580C !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none !important;
+  margin-top: 0.5rem;
+}
+.btnDownload:hover {
+  background: #EA580C !important;
+  color: #fff !important;
+  border-color: #EA580C !important;
+}
+
+.btnAutoFill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  background: #EA580C !important;
+  border: 1px solid #EA580C !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
+  cursor: pointer;
+}
+.btnAutoFill:hover {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.formActions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  background: #EA580C !important;
+  border: 1px solid #EA580C !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
+  cursor: pointer;
+}
+.btnSave:hover:not(:disabled) {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6B7280 !important;
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  text-decoration: none !important;
+}
+.btnCancel:hover {
+  background: #FFF4E8 !important;
+  border-color: #EA580C !important;
+  color: #EA580C !important;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}
+
+/* Upload progress */
+.uploadProgressList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.uploadProgressItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.uploadProgressFileName {
+  margin: 0;
+  color: #0A0A0A;
+}
+
+.uploadProgressStatus {
+  margin: 0;
+  font-weight: 600;
+}
+
+.statusPending { color: #374151; }
+.statusOngoing { color: #EA580C; }
+.statusCompleted { color: #16a34a; }
+.statusFailed { color: #dc2626; }
+
+/* Processing message */
+.processingMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #FFF4E8;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0A0A0A;
+  margin-top: 1rem;
+}
+
+.processingMessage :global(.dots) {
+  display: inline-flex;
+  gap: 0.125rem;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}

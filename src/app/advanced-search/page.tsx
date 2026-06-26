@@ -13,8 +13,9 @@ import { usePermissions } from "@/context/userPermissions";
 import useAuth from "@/hooks/useAuth";
 import { CommentItem, UserDropdownItem, RoleDropdownItem, VersionHistoryItem } from "@/types/types";
 import { deleteWithAuth, getWithAuth, postWithAuth } from "@/utils/apiClient";
-import { fetchCategoryData, fetchDocumentsData, fetchAndMapUserData, fetchRoleData, fetchVersionHistory } from "@/utils/dataFetchFunctions";
+import { fetchCategoryData, fetchDocumentsData, fetchAndMapUserData, fetchRoleData, fetchVersionHistory, fetchSectors } from "@/utils/dataFetchFunctions";
 import { handleDownload, handleViewOldDocument } from "@/utils/documentFunctions";
+import { getFlattenedSectors } from "@/utils/commonFunctions";
 import { hasPermission } from "@/utils/permission";
 import { Button, Checkbox, DatePicker, DatePickerProps, Input, Radio, RadioChangeEvent } from "antd";
 import dayjs from "dayjs";
@@ -44,20 +45,20 @@ import {
   MdEmail,
   MdFileDownload,
   MdModeEditOutline,
-  MdOutlineCancel,
-  MdOutlineInsertLink,
+  MdCancel,
+  MdInsertLink,
   MdUpload,
 } from "react-icons/md";
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 import 'react-quill/dist/quill.snow.css';
+import styles from "./advanced-search.module.css";
 
 interface Category {
   category_name: string;
 }
 
 interface TableItem {
-  sector_category: number;
   id: number;
   name: string;
   category: Category;
@@ -101,14 +102,19 @@ interface ViewDocumentItem {
   attributes: string;
   type: string;
   url: string;
-  enable_external_file_view: number;
-  sector_category: number;
+  enable_external_file_view: number
 }
 
 interface CategoryDropdownItem {
   id: number;
   parent_category: string;
   category_name: string;
+}
+
+interface SectorDropdownItem {
+  id: number;
+  parent_sector: string;
+  sector_name: string;
 }
 
 interface HalfMonth {
@@ -120,6 +126,8 @@ interface HalfMonth {
 export default function AllDocTable() {
   const [filterData, setFilterData] = useState({
     term: "",
+    category: "",
+    sector: "",
   });
   const [isLoadingTable, setIsLoadingTable] = useState(false);
 
@@ -229,6 +237,7 @@ export default function AllDocTable() {
   const [categoryDropDownData, setCategoryDropDownData] = useState<
     CategoryDropdownItem[]
   >([]);
+  const [sectorDropDownData, setSectorDropDownData] = useState<SectorDropdownItem[]>([]);
   const [versionHistory, setVersionHistory] = useState<VersionHistoryItem[]>(
     []
   );
@@ -320,6 +329,7 @@ export default function AllDocTable() {
     fetchCategoryData(setCategoryDropDownData);
     fetchAndMapUserData(setUserDropDownData);
     fetchRoleData(setRoleDropDownData);
+    fetchSectors(setSectorDropDownData);
   }, []);
 
   useEffect(() => {
@@ -1648,18 +1658,27 @@ export default function AllDocTable() {
 
     if (filterData.term) {
       formData.append("term", filterData.term);
-    } else {
+    }
+    if (filterData.category) {
+      formData.append("category", filterData.category);
+    }
+    if (filterData.sector) {
+      formData.append("sector", filterData.sector);
+    }
+
+    // Require at least one filter before searching
+    if (!filterData.term && !filterData.category && !filterData.sector) {
       return;
     }
 
-    setIsLoadingTable(true)
+    setIsLoadingTable(true);
     try {
       const response = await postWithAuth("advanced-search", formData);
       setDummyData(response);
-      // fetchDocumentsData(response);
-      setIsLoadingTable(false)
+      setIsLoadingTable(false);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      setIsLoadingTable(false);
     }
   };
 
@@ -1732,44 +1751,93 @@ export default function AllDocTable() {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Advanced Search" color="#444" />
-        </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div className="d-flex flex-column flex-lg-row">
-            <div className="col-12">
-              <div className="input-group mb-3 metaBorder ">
-                <input
-                  type="search"
-                  className="form-control deep-search-input"
-                  placeholder="Type here to search within PDFs, Word, and more..."
-                  aria-label="Type here to search within PDFs, Word, and more..."
-                  aria-describedby="basic-addon2"
-                  style={{
-                    borderTopRightRadius: "0px !important",
-                    borderBottomRightRadius: "0px !important",
-                  }}
-                  onChange={(e) => handleTermSearch(e.target.value)}
-                ></input>
-                <span
-                  className="input-group-text text-white"
-                  id="basic-addon2"
-                  style={{
-                    backgroundColor: "#683ab7",
-                    border: "solid 1px #683ab7 !important",
-                    borderTopLeftRadius: "0px !important",
-                    borderBottomLeftRadius: "0px !important",
-                    fontSize: "14px",
-                  }}
-                  onClick={() => handleSearch()}
-                >
-                  <FiSearch className="me-2" /> Search
-                </span>
-              </div>
-              <p
-                className="text-danger"
-                style={{ fontSize: "14px", fontWeight: "400" }}
-              >
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Advanced Search" color="#444" />
+          </div>
+          <div className={`d-flex flex-column ${styles.card}`}>
+            <div className="d-flex flex-column flex-lg-row">
+              <div className="col-12">
+                <div className={`input-group mb-3 ${styles.searchInputGroup}`}>
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Type here to search within PDFs, Word, and more..."
+                    aria-label="Type here to search within PDFs, Word, and more..."
+                    aria-describedby="basic-addon2"
+                    onChange={(e) => handleTermSearch(e.target.value)}
+                  />
+                  <span
+                    className={`input-group-text ${styles.searchBtn}`}
+                    id="basic-addon2"
+                    onClick={() => handleSearch()}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <FiSearch className="me-2" /> Search
+                  </span>
+                </div>
+
+                {/* Category & Sector filter row */}
+                <div className={`d-flex flex-column flex-md-row gap-3 mb-3 ${styles.filterRow}`}>
+                  <div className="flex-fill">
+                    <label className={styles.filterLabel} htmlFor="search-category-select">
+                      Filter by Category
+                    </label>
+                    <select
+                      id="search-category-select"
+                      className={`form-select ${styles.filterSelect}`}
+                      value={filterData.category}
+                      onChange={(e) =>
+                        setFilterData((prev) => ({ ...prev, category: e.target.value }))
+                      }
+                    >
+                      <option value="">All Categories</option>
+                      {categoryDropDownData.map((cat) => (
+                        <option key={cat.id} value={String(cat.id)}>
+                          {cat.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex-fill">
+                    <label className={styles.filterLabel} htmlFor="search-sector-select">
+                      Filter by Sector
+                    </label>
+                    <select
+                      id="search-sector-select"
+                      className={`form-select ${styles.filterSelect}`}
+                      value={filterData.sector}
+                      onChange={(e) =>
+                        setFilterData((prev) => ({ ...prev, sector: e.target.value }))
+                      }
+                    >
+                      <option value="">All Sectors</option>
+                      {getFlattenedSectors(sectorDropDownData).map((sec) => (
+                        <option key={sec.id} value={String(sec.id)}>
+                          {"\u00A0\u00A0".repeat(sec.level) + sec.sector_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {(filterData.category || filterData.sector) && (
+                    <div className="d-flex align-items-end">
+                      <button
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() =>
+                          setFilterData((prev) => ({ ...prev, category: "", sector: "" }))
+                        }
+                      >
+                        <IoClose className="me-1" /> Clear Filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <p className={styles.searchHint}>
                 You will receive up to 10 results for each search. The search is
                 not case-sensitive, so searching for &quot;Report&quot; and
                 &quot;report&quot; will return the same results. Common words
@@ -1779,17 +1847,14 @@ export default function AllDocTable() {
                 include results for &quot;running&quot; and &quot;runs.&quot;
                 Supported file types include Word documents, PDFs, Notepad
                 files, and Excel spreadsheets.
-              </p>
+                </p>
             </div>
           </div>
           <div>
             {isLoadingTable && <LoadingBar />}
           </div>
           <div>
-            <div
-              style={{ maxHeight: "350px", overflowY: "auto" }}
-              className="custom-scroll "
-            >
+            <div className={`${styles.tableWrapper} custom-scroll`}>
               <Table hover responsive>
                 <thead className="sticky-header">
                   <tr>
@@ -1841,13 +1906,13 @@ export default function AllDocTable() {
                           className="no-caret position-static dropdown-toggle-bulk"
                           style={{ zIndex: "99999", padding: '0px !important', backgroundColor: "transparent", color: "#000" }}
                         >
-                          {hasPermission(permissions, "All Documents", "Share Document") && (
+                          {(hasPermission(permissions, "All Documents", "Share Document") || hasPermission(permissions, "Assigned Documents", "Share Document")) && (
                             <Dropdown.Item onClick={() => handleOpenModal("allDocShareModel")} className="py-2">
                               <IoShareSocial className="me-2" />
                               Share
                             </Dropdown.Item>
                           )}
-                          {hasPermission(permissions, "All Documents", "Delete Document") && (
+                          {(hasPermission(permissions, "All Documents", "Delete Document") || hasPermission(permissions, "Assigned Documents", "Delete Document")) && (
                             <Dropdown.Item
                               onClick={() => handleOpenModal("deleteBulkFileModel")}
                               className="py-2"
@@ -1917,7 +1982,7 @@ export default function AllDocTable() {
                             className="no-caret position-static"
                             style={{ zIndex: "99999" }}
                           >
-                            {hasPermission(permissions, "All Documents", "View Documents") && (
+                            {(hasPermission(permissions, "All Documents", "View Documents") || hasPermission(permissions, "Assigned Documents", "View Documents")) && (
                               <Dropdown.Item
                                 className="py-2"
                                 onClick={() =>
@@ -1928,7 +1993,7 @@ export default function AllDocTable() {
                                 View
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Edit Document") && (
+                            {(hasPermission(permissions, "All Documents", "Edit Document") || hasPermission(permissions, "Assigned Documents", "Edit Document")) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal("editModel", item.id, item.name)
@@ -1939,7 +2004,7 @@ export default function AllDocTable() {
                                 Edit
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Share Document") && (
+                            {(hasPermission(permissions, "All Documents", "Share Document") || hasPermission(permissions, "Assigned Documents", "Share Document") ) && (
                               <Dropdown.Item onClick={() =>
                                 handleOpenModal(
                                   "shareDocumentModel",
@@ -1951,18 +2016,18 @@ export default function AllDocTable() {
                                 Share
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Manage Sharable Link") && (
+                            {(hasPermission(permissions, "All Documents", "Manage Sharable Link") || hasPermission(permissions, "Assigned Documents", "Manage Sharable Link") ) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleGetShareableLinkModel(item?.id)
                                 }
                                 className="py-2"
                               >
-                                <MdOutlineInsertLink className="me-2" />
+                                <MdInsertLink className="me-2" />
                                 Get Shareable Link
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Download Document") && (
+                            {(hasPermission(permissions, "All Documents", "Download Document")  || hasPermission(permissions, "Assigned Documents", "Download Document")) && (
                               <Dropdown.Item className="py-2">
                                 <Link
                                   href={"#"}
@@ -2014,7 +2079,7 @@ export default function AllDocTable() {
                               Comment
                             </Dropdown.Item>
 
-                            {hasPermission(permissions, "All Documents", "Add Reminder") && (
+                            {(hasPermission(permissions, "All Documents", "Add Reminder") || hasPermission(permissions, "Assigned Documents", "Add Reminder")) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2029,7 +2094,7 @@ export default function AllDocTable() {
                                 Add Reminder
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Send Email") && (
+                            {(hasPermission(permissions, "All Documents", "Send Email") || hasPermission(permissions, "Assigned Documents", "Send Email")) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2058,7 +2123,7 @@ export default function AllDocTable() {
                               Remove From Search
                             </Dropdown.Item>
 
-                            {hasPermission(permissions, "All Documents", "Archive Document") && (
+                            {(hasPermission(permissions, "All Documents", "Archive Document") || hasPermission(permissions, "Assigned Documents", "Archive Document")) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2073,7 +2138,7 @@ export default function AllDocTable() {
                                 Archive
                               </Dropdown.Item>
                             )}
-                            {hasPermission(permissions, "All Documents", "Delete Document") && (
+                            {(hasPermission(permissions, "All Documents", "Delete Document") || hasPermission(permissions, "Assigned Documents", "Delete Document") ) && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal(
@@ -2172,16 +2237,18 @@ export default function AllDocTable() {
                       </tr>
                     ))
                   ) : (
-                    <div className="text-start w-100 py-3">
-                      <Paragraph text="No data available" color="#333" />
-                    </div>
+                    <tr>
+                      <td colSpan={8} className={styles.noData}>
+                        <Paragraph text="No data available" color="#717182" />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </Table>
             </div>
-            <div className="d-flex flex-column flex-lg-row paginationFooter">
+            <div className={`d-flex flex-column flex-lg-row ${styles.paginationFooter}`}>
               <div className="d-flex justify-content-between align-items-center">
-                <p className="pagintionText mb-0 me-2">Items per page:</p>
+                <p className={`${styles.paginationLabel} mb-0`}>Items per page:</p>
                 <Form.Select
                   onChange={handleItemsPerPageChange}
                   value={itemsPerPage}
@@ -2197,7 +2264,7 @@ export default function AllDocTable() {
                 </Form.Select>
               </div>
               <div className="d-flex flex-row align-items-center px-lg-5">
-                <div className="pagination-info" style={{ fontSize: "14px" }}>
+                <div className={styles.paginationInfo}>
                   {startIndex} – {endIndex} of {totalItems}
                 </div>
 
@@ -2214,6 +2281,7 @@ export default function AllDocTable() {
               </div>
             </div>
           </div>
+        </div>
         </div>
         {/* Edit Modal */}
         <Modal
@@ -2433,7 +2501,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2845,7 +2913,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2909,7 +2977,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2969,7 +3037,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -3023,7 +3091,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3114,7 +3182,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3241,7 +3309,7 @@ export default function AllDocTable() {
                   type="file"
                   className="form-control p-1"
                   id="newVersionDocument"
-                  accept=".pdf,.doc,.docx,.png,.jpg,.mp4,.webm,.avi,.mov,.wmv,.mkv,.mp3,.wav,.flac,.ogg"
+                  accept=".pdf,.doc,.docx,.png,.jpg"
                   onChange={handleNewVersionFileChange}
                   required
                 ></input>
@@ -3266,7 +3334,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -4608,7 +4676,7 @@ export default function AllDocTable() {
                   }}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> No
+                  <MdCancel fontSize={16} className="me-1" /> No
                 </button>
               </div>
             </div>
@@ -4914,26 +4982,26 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {viewDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
+                  {/* Image Preview */}
+                  {
+                  ["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
+                          <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
+                              <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the video tag.
+                          </video>
+                      </div>
+                  ) : 
+                  /* Audio Preview */
+                  ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
+                          <audio controls style={{ width: "100%" }}>
+                              <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the audio element.
+                          </audio>
+                      </div>
+                  ) :
+                  ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
                     <Image
                       src={viewDocument.url}
                       alt={viewDocument.name}
@@ -4980,7 +5048,7 @@ export default function AllDocTable() {
               Document Name : <span style={{ fontWeight: 600 }} >{viewDocument?.name || ""}</span>
             </p>
             <p className="mb-1" style={{ fontSize: "14px" }}>
-              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category.category_name}</span>
+              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category?.category_name ?? 'No Category'}</span>
             </p>
             <p className="mb-1 " style={{ fontSize: "14px" }}>
               Description : <span style={{ fontWeight: 600 }} >{viewDocument?.description || ""}</span>
@@ -5014,8 +5082,10 @@ export default function AllDocTable() {
                   </div>
                 ))}
               </p>
-            </div>            <div className="d-flex flex-wrap gap-3 py-3">
-              {hasPermission(permissions, "All Documents", "Edit Document") && (
+            </div>
+
+            <div className="d-flex flex-wrap gap-3 py-3">
+              {(hasPermission(permissions, "All Documents", "Edit Document") || hasPermission(permissions, "Assigned Documents", "Edit Document")) && (
                 <button
                   onClick={() =>
                     handleOpenModal("editModel", viewDocument?.id, viewDocument?.name)
@@ -5026,7 +5096,7 @@ export default function AllDocTable() {
                   Edit
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Share Document") && (
+              {(hasPermission(permissions, "All Documents", "Share Document") || hasPermission(permissions, "Assigned Documents", "Share Document")) && (
                 <button onClick={() =>
                   handleOpenModal(
                     "shareDocumentModel",
@@ -5037,7 +5107,7 @@ export default function AllDocTable() {
                   Share
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Manage Sharable Link") && (
+             {(hasPermission(permissions, "All Documents", "Manage Sharable Link") || hasPermission(permissions, "Assigned Documents", "Manage Sharable Link") ) && (
                 <button onClick={() =>
                   handleGetShareableLinkModel(viewDocument?.id || 0)
                 }
@@ -5046,7 +5116,7 @@ export default function AllDocTable() {
                   Get Shareable Link
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Download Document") && viewDocument?.id && (
+              {(hasPermission(permissions, "All Documents", "Download Document") || hasPermission(permissions, "Assigned Documents", "Download Document")) && viewDocument?.id && (
                 <button
                   onClick={() => handleDownload(viewDocument?.id || 0, userId)}
                   className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1">
@@ -5055,50 +5125,44 @@ export default function AllDocTable() {
                 </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Upload New Version file") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "uploadNewVersionFileModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <MdUpload className="me-2" />
-                  Upload New Version file
-                </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Version History") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "versionHistoryModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <GoHistory className="me-2" />
-                  Version History
-                </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Comment") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "commentModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <BiSolidCommentDetail className="me-2" />
-                  Comment
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "uploadNewVersionFileModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <MdUpload className="me-2" />
+                Upload New Version file
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "versionHistoryModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <GoHistory className="me-2" />
+                Version History
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "commentModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <BiSolidCommentDetail className="me-2" />
+                Comment
+              </button>
 
-              {hasPermission(permissions, "All Documents", "Add Reminder") && (
+              {(hasPermission(permissions, "All Documents", "Add Reminder") || hasPermission(permissions, "Assigned Documents", "Add Reminder")) && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5112,7 +5176,7 @@ export default function AllDocTable() {
                   Add Reminder
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Send Email") && (
+              {(hasPermission(permissions, "All Documents", "Send Email") || hasPermission(permissions, "Assigned Documents", "Send Email")) && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5126,22 +5190,20 @@ export default function AllDocTable() {
                   Send Email
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Remove From Search") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "removeIndexingModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <AiOutlineZoomOut className="me-2" />
-                  Remove From Search
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "removeIndexingModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <AiOutlineZoomOut className="me-2" />
+                Remove From Search
+              </button>
 
-              {hasPermission(permissions, "All Documents", "Archive Document") && (
+              {(hasPermission(permissions, "All Documents", "Archive Document") || hasPermission(permissions, "Assigned Documents", "Archive Document")) && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5155,7 +5217,7 @@ export default function AllDocTable() {
                   Archive
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Delete Document") && (
+              {(hasPermission(permissions, "All Documents", "Delete Document") || hasPermission(permissions, "Assigned Documents", "Delete Document")) && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5169,6 +5231,7 @@ export default function AllDocTable() {
                   Delete
                 </button>
               )}
+
             </div>
 
           </Modal.Body>
@@ -5189,7 +5252,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -5227,26 +5290,8 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {oldVersionDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={oldVersionDocument.url} type={`video/${oldVersionDocument.type.toLowerCase() === 'mkv' ? 'webm' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={oldVersionDocument.url} type={`audio/${oldVersionDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
+                  {/* Image Preview */}
+                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
                     <Image
                       src={oldVersionDocument.url}
                       alt={oldVersionDocument.name}
@@ -5297,7 +5342,7 @@ export default function AllDocTable() {
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Close
+              <MdCancel fontSize={16} className="me-1" /> Close
             </button>
           </Modal.Footer>
         </Modal>
@@ -5342,7 +5387,7 @@ export default function AllDocTable() {
                   type="file"
                   className="form-control p-1"
                   id="newVersionDocument"
-                  accept=".pdf,.doc,.docx,.png,.jpg,.mp4,.webm,.avi,.mov,.wmv,.mkv,.mp3,.wav,.flac,.ogg"
+                  accept=".pdf,.doc,.docx,.png,.jpg"
                   onChange={handleNewVersionFileChange}
                   required
                 ></input>
@@ -5381,7 +5426,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>

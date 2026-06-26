@@ -9,7 +9,7 @@ import {
     AuditTrialItem,
     RoleUserItem
 } from "@/types/types";
-import {getWithAuth} from "./apiClient";
+import {getWithAuth, postWithAuth} from "./apiClient";
 import dayjs from "dayjs";
 
 export const fetchCategoryData = async (
@@ -110,6 +110,26 @@ export const fetchAndMapUserData = async (
         setUserDropDownData(mappedData);
     } catch (error) {
         console.error("Failed to fetch user data:", error);
+    }
+};
+
+export const fetchAndMapUsersBySectorsData = async (
+    sectorIds: (string|number)[],
+    setUserDropDownData: React.Dispatch<React.SetStateAction<UserDropdownItem[]>>
+) => {
+    try {
+        const formData = new FormData();
+        sectorIds.forEach(id => formData.append('sector_ids[]', String(id)));
+        const response = await postWithAuth("users-by-sectors", formData);
+
+        const mappedData: UserDropdownItem[] = response.map((item: any) => ({
+            id: item?.id,
+            user_name: `${item?.user_details?.first_name} ${item?.user_details?.last_name}`,
+        }));
+
+        setUserDropDownData(mappedData);
+    } catch (error) {
+        console.error("Failed to fetch user data by sectors:", error);
     }
 };
 
@@ -423,6 +443,19 @@ export const fetchSectors = async (
     }
 };
 
+export const fetchSectorsForUser = async (
+    userId: string | null,
+    setSectors: React.Dispatch<React.SetStateAction<any>>
+) => {
+    try {
+        if (!userId) return;
+        const response = await getWithAuth(`user-sectors/${userId}`);
+        setSectors(response || []);
+    } catch (error) {
+        console.error("Failed to fetch user sectors data:", error);
+    }
+};
+
 
 export const fetchFtpAccounts = async (
     setFtpAccountData: React.Dispatch<React.SetStateAction<any>>
@@ -444,28 +477,5 @@ export const fetchFTPData = async (
         setDummyData(response);
     } catch (error) {
         console.error("Failed to fetch data:", error);
-    }
-};
-
-export const fetchSectorsByUserRole = async (
-    setSectors: React.Dispatch<React.SetStateAction<any>>
-) => {
-    try {
-        const response = await getWithAuth("user-role-sectors");
-        setSectors(response);
-    } catch (error) {
-        console.error("Failed to fetch user-role sectors:", error);
-    }
-};
-
-export const fetchCategoriesBySector = async (
-    sectorId: string,
-    setCategories: React.Dispatch<React.SetStateAction<any>>
-) => {
-    try {
-        const response = await getWithAuth(`sector-categories/${sectorId}`);
-        setCategories(response);
-    } catch (error) {
-        console.error("Failed to fetch sector-categories:", error);
     }
 };

@@ -8,9 +8,9 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoAdd, IoClose, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
-import { formatDateForSQL } from "@/utils/commonFunctions";
+import { formatDateForSQL, getFlattenedSectors, getFlattenedCategories } from "@/utils/commonFunctions";
 import {
   fetchAndMapUserData,
   fetchCategoryData,
@@ -41,7 +41,7 @@ export default  function AllDocTable({ params }: Props) {
   const id = params?.id;
 
   const [name, setName] = useState<string>("");
-  const [storage, setStorage] = useState<string>("Local Disk (Default)");
+  // const [storage, setStorage] = useState<string>("Local Disk (Default)");
   const [roleDropDownData, setRoleDropDownData] = useState<RoleDropdownItem[]>(
     []
   );
@@ -256,7 +256,7 @@ export default  function AllDocTable({ params }: Props) {
     formData.append("name", name);
     formData.append("category", selectedCategoryId);
     formData.append("sector_category", selectedSectorId);
-    formData.append("storage", storage);
+    // formData.append("storage", storage);
     formData.append("description", description);
     formData.append("meta_tags", JSON.stringify(metaTags));
     formData.append("assigned_roles", JSON.stringify(selectedRoleIds));
@@ -365,19 +365,13 @@ export default  function AllDocTable({ params }: Props) {
                     className="custom-dropdown-text-start text-start w-100"
                     onSelect={(value) => handleCategorySelect(value || "")}
                   >
-                    {categoryDropDownData.map((category) => (
+                    {getFlattenedCategories(categoryDropDownData).map((category) => (
                       <Dropdown.Item
                         key={category.id}
                         eventKey={category.id.toString()}
                         style={{
-                          fontWeight:
-                            category.parent_category === "none"
-                              ? "bold"
-                              : "normal",
-                          paddingLeft:
-                            category.parent_category === "none"
-                              ? "10px"
-                              : "20px",
+                          fontWeight: category.level === 0 ? "bold" : "normal",
+                          paddingLeft: `${category.level * 20 + 10}px`,
                         }}
                       >
                         {category.category_name}
@@ -385,7 +379,7 @@ export default  function AllDocTable({ params }: Props) {
                     ))}
                   </DropdownButton>
                 </div>
-                <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2">
+                {/* <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2">
                   <p
                     className="mb-1 text-start w-100"
                     style={{ fontSize: "14px" }}
@@ -402,7 +396,7 @@ export default  function AllDocTable({ params }: Props) {
                       Local Disk (Default)
                     </Dropdown.Item>
                   </DropdownButton>
-                </div>
+                </div> */}
               </div>
               {attributes.map((attribute, index) => {
                 const existingValue = formAttributeData.find((item) => item.attribute === attribute)?.value || "";
@@ -791,19 +785,13 @@ export default  function AllDocTable({ params }: Props) {
                         className="custom-dropdown-text-start text-start w-100"
                         onSelect={(value) => handleSectorSelect(value || "")}
                       >
-                        {sectorDropDownData.map((sector) => (
+                        {getFlattenedSectors(sectorDropDownData).map((sector) => (
                           <Dropdown.Item
                             key={sector.id}
                             eventKey={sector.id.toString()}
                             style={{
-                              fontWeight:
-                                sector.parent_sector === "none"
-                                  ? "bold"
-                                  : "normal",
-                              paddingLeft:
-                                sector.parent_sector === "none"
-                                  ? "10px"
-                                  : "20px",
+                              fontWeight: sector.level === 0 ? "bold" : "normal",
+                              paddingLeft: `${sector.level * 20 + 10}px`,
                             }}
                           >
                             {sector.sector_name}
@@ -877,7 +865,7 @@ export default  function AllDocTable({ params }: Props) {
               href="/bulk-upload"
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </Link>
           </div>
         </div>

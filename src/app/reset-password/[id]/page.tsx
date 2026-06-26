@@ -10,6 +10,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import ToastMessage from "@/components/common/Toast";
 import { API_BASE_URL } from "@/utils/apiClient";
+
 type Params = {
   id: string;
 };
@@ -17,6 +18,7 @@ type Params = {
 interface Props {
   params: Params;
 }
+
 const page = ({ params }: Props) => {
   const id = params?.id;
   const { data } = useCompanyProfile();
@@ -30,21 +32,27 @@ const page = ({ params }: Props) => {
   const [toastMessage, setToastMessage] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 1. Password Strength Evaluator Logic
+  // Password Strength Evaluator
   const getPasswordStrength = (pwd: string) => {
-    if (!pwd) return { score: 0, label: "", color: "#e5e7eb", checks: { len: false, upper: false, lower: false, num: false, sym: false } };
-    
+    if (!pwd)
+      return {
+        score: 0,
+        label: "",
+        color: "#e5e7eb",
+        checks: { len: false, upper: false, lower: false, num: false, sym: false },
+      };
+
     const checks = {
       len: pwd.length >= 12,
       upper: /[A-Z]/.test(pwd),
       lower: /[a-z]/.test(pwd),
       num: /[0-9]/.test(pwd),
-      sym: /[^a-zA-Z0-9]/.test(pwd)
+      sym: /[^a-zA-Z0-9]/.test(pwd),
     };
 
     let score = 0;
     if (checks.len) score += 1;
-    if (pwd.length >= 14) score += 1; // Extra point for preferred admin length
+    if (pwd.length >= 14) score += 1; // Extra point for preferred length
     if (checks.upper && checks.lower) score += 1;
     if (checks.num) score += 1;
     if (checks.sym) score += 1;
@@ -77,9 +85,12 @@ const page = ({ params }: Props) => {
 
     const validationErrors: { password?: string; password_confirmation?: string } = {};
     if (!password) validationErrors.password = "Password is required";
-    if (!password_confirmation) validationErrors.password_confirmation = "Confirm password is required";
-    if (password !== password_confirmation) validationErrors.password_confirmation = "Passwords do not match";
-    if (password.length < 12) validationErrors.password = "Password must be at least 12 characters under ISO guidelines";
+    if (password.length < 12)
+      validationErrors.password = "Password must be at least 12 characters under ISO guidelines";
+    if (!password_confirmation)
+      validationErrors.password_confirmation = "Confirm password is required";
+    if (password !== password_confirmation)
+      validationErrors.password_confirmation = "Passwords do not match";
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -116,7 +127,9 @@ const page = ({ params }: Props) => {
           });
         }
         setToastType("error");
-        setToastMessage(res.message || "Failed to update password. Password might have been reused.");
+        setToastMessage(
+          res.message || "Failed to update password. Password might have been reused."
+        );
         setShowToast(true);
         setTimeout(() => setShowToast(false), 5000);
       }
@@ -132,8 +145,8 @@ const page = ({ params }: Props) => {
     }
   };
 
-  const imageUrl = data?.logo_url || '/logo.png';
-  const bannerUrl = data?.banner_url || '/login-image.png';
+  const imageUrl = data?.logo_url || "/logo.png";
+  const bannerUrl = data?.banner_url || "/login-image.png";
 
   return (
     <>
@@ -141,6 +154,7 @@ const page = ({ params }: Props) => {
         className="d-flex flex-column flex-lg-row-reverse w-100"
         style={{ minHeight: "100svh", maxHeight: "100svh" }}
       >
+        {/* Banner */}
         <div
           className="col-12 col-lg-8 d-none d-lg-block"
           style={{
@@ -162,6 +176,8 @@ const page = ({ params }: Props) => {
             }}
           />
         </div>
+
+        {/* Form area */}
         <div
           className="col-12 col-md-6 align-self-center col-lg-4 px-4 px-lg-5 d-flex flex-column justify-content-center align-items-center"
           style={{ minHeight: "100svh", maxHeight: "100svh", overflowY: "auto" }}
@@ -174,7 +190,9 @@ const page = ({ params }: Props) => {
             objectFit="cover"
             className="img-fluid mb-3 loginLogo"
           />
-          <h3 className="mb-0 font-weight-bold" style={{ color: "#1e3a8a" }}>Update Password</h3>
+          <h3 className="mb-0 font-weight-bold" style={{ color: "#1e3a8a" }}>
+            Update Password
+          </h3>
           <Paragraph
             text="Please establish a secure, compliant password."
             color="Paragraph"
@@ -186,7 +204,9 @@ const page = ({ params }: Props) => {
           >
             <div className="d-flex flex-column">
               <div className="d-flex flex-column mt-2">
-                <label className="font-weight-bold mb-1" style={{ fontSize: "0.85rem" }}>New Password</label>
+                <label className="font-weight-bold mb-1" style={{ fontSize: "0.85rem" }}>
+                  New Password
+                </label>
                 <Input.Password
                   placeholder="New Password"
                   value={password}
@@ -194,10 +214,12 @@ const page = ({ params }: Props) => {
                   className={`${errors.password ? "is-invalid" : ""}`}
                 />
                 {errors.password && (
-                  <div className="text-danger mt-1" style={{ fontSize: "0.8rem" }}>{errors.password}</div>
+                  <div className="text-danger mt-1" style={{ fontSize: "0.8rem" }}>
+                    {errors.password}
+                  </div>
                 )}
 
-                {/* Password Strength Indicator Visual Band */}
+                {/* Password Strength Indicator */}
                 {password && (
                   <div className="mt-2 p-2 bg-light rounded border">
                     <div className="d-flex justify-content-between align-items-center mb-1">
@@ -206,7 +228,8 @@ const page = ({ params }: Props) => {
                         {strength.label}
                       </span>
                     </div>
-                    {/* Visual bar */}
+
+                    {/* Visual progress bar */}
                     <div className="progress" style={{ height: "6px" }}>
                       <div
                         className="progress-bar"
@@ -214,12 +237,12 @@ const page = ({ params }: Props) => {
                         style={{
                           width: `${(strength.score / 5) * 100}%`,
                           backgroundColor: strength.color,
-                          transition: "width 0.3s ease"
+                          transition: "width 0.3s ease",
                         }}
                       />
                     </div>
 
-                    {/* Policy Compliance Bullet Checkmarks */}
+                    {/* Policy Compliance Checklist */}
                     <div className="mt-2 row g-1" style={{ fontSize: "0.7rem", color: "#64748b" }}>
                       <div className="col-6 d-flex align-items-center">
                         <span className="me-1">{strength.checks.len ? "✅" : "❌"}</span>
@@ -230,7 +253,9 @@ const page = ({ params }: Props) => {
                         <span>Preferred 14+</span>
                       </div>
                       <div className="col-6 d-flex align-items-center">
-                        <span className="me-1">{(strength.checks.upper && strength.checks.lower) ? "✅" : "❌"}</span>
+                        <span className="me-1">
+                          {strength.checks.upper && strength.checks.lower ? "✅" : "❌"}
+                        </span>
                         <span>Mixed letters</span>
                       </div>
                       <div className="col-6 d-flex align-items-center">
@@ -247,7 +272,9 @@ const page = ({ params }: Props) => {
               </div>
 
               <div className="d-flex flex-column mt-3">
-                <label className="font-weight-bold mb-1" style={{ fontSize: "0.85rem" }}>Confirm Password</label>
+                <label className="font-weight-bold mb-1" style={{ fontSize: "0.85rem" }}>
+                  Confirm Password
+                </label>
                 <Input.Password
                   placeholder="Confirm Password"
                   value={password_confirmation}
@@ -255,12 +282,16 @@ const page = ({ params }: Props) => {
                   className={`${errors.password_confirmation ? "is-invalid" : ""}`}
                 />
                 {errors.password_confirmation && (
-                  <div className="text-danger mt-1" style={{ fontSize: "0.8rem" }}>{errors.password_confirmation}</div>
+                  <div className="text-danger mt-1" style={{ fontSize: "0.8rem" }}>
+                    {errors.password_confirmation}
+                  </div>
                 )}
               </div>
 
               <div className="d-flex flex-row align-items-center mt-2">
-                <p className="mb-0 me-2" style={{ fontSize: "0.85rem" }}>Remembered your password? </p>
+                <p className="mb-0 me-2" style={{ fontSize: "0.85rem" }}>
+                  Remembered your password?{" "}
+                </p>
                 <Link
                   href="/login"
                   style={{
@@ -274,7 +305,11 @@ const page = ({ params }: Props) => {
                   Log in
                 </Link>
               </div>
-              <button type="submit" className="loginButton text-white mt-3" disabled={loading}>
+              <button
+                type="submit"
+                className="loginButton text-white mt-3"
+                disabled={loading}
+              >
                 {loading ? "Loading..." : "Update & Reset Password"}
               </button>
             </div>

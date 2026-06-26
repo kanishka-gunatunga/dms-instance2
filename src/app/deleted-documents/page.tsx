@@ -25,7 +25,7 @@ import { IoCheckmark, IoClose, IoTrash } from "react-icons/io5";
 import {
   MdArrowDropDown,
   MdArrowDropUp,
-  MdOutlineCancel,
+  MdCancel,
   MdRestore,
 } from "react-icons/md";
 // import { useUserContext } from "@/context/userContext";
@@ -140,7 +140,7 @@ export default function AllDocTable() {
       console.error("Invalid document ID");
       return;
     }
-    // https://sites.techvoice.lk/dms-backend-v2/api/restore-deleted-document/151
+    // https://kodetech.co/dms-backend-v2/api/restore-deleted-document/151
     try {
       const response = await getWithAuth(`restore-deleted-document/${selectedDocumentId}`);
       // console.log("document deleted successfully:", response);
@@ -524,7 +524,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </div>
@@ -586,7 +586,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </div>

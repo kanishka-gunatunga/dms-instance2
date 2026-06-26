@@ -1,16 +1,33 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Roboto } from "next/font/google";
+
 import { UserProvider } from "@/context/userContext";
 import { PermissionsProvider } from "@/context/userPermissions";
 import { CompanyProfileProvider } from "@/context/userCompanyProfile";
 import { ChatProvider } from "@/context/ChatContext";
 
-const roboto = Roboto({
-  weight: ["100", "300", "400", "500", "700"],
-  style: ["normal", "italic"],
-  subsets: ["latin"],
+import localFont from "next/font/local";
+
+const roboto = localFont({
+  src: [
+    {
+      path: "./fonts/Roboto-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Roboto-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Roboto-LightItalic.woff2",
+      weight: "400",
+      style: "italic",
+    },
+  ],
+  variable: "--font-roboto",
   display: "swap",
 });
 

@@ -9,9 +9,10 @@ import useAuth from "@/hooks/useAuth";
 import React, { useState, useRef, useEffect } from "react";
 import { Tabs, Tab, Card, Dropdown, DropdownButton } from "react-bootstrap";
 import { IoImageOutline, IoSaveOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { postWithAuth,getWithAuth } from "@/utils/apiClient";
 import ToastMessage from "@/components/common/Toast";
+import styles from "./company-profile.module.css";
 
 type S3Fields = Record<"key" | "secret" | "bucket" | "region", string>;
 type Errors = Record<"key" | "secret" | "bucket", boolean>;
@@ -239,49 +240,45 @@ export default function AllDocTable() {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <div className="d-flex flex-row align-items-center">
-            <Heading text="Company Profile" color="#444" />
-            {/* <InfoModal
-              title="Sample Blog"
-              content={`<h1><strong>Hello world,</strong></h1><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p>`}
-            /> */}
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <div className="d-flex flex-row align-items-center">
+              <Heading text="Company Profile" color="#444" />
+              {/* <InfoModal
+                title="Sample Blog"
+                content={`<h1><strong>Hello world,</strong></h1><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p><br><h3><strong>Hello world,</strong></h3><p>The Company Profile feature allows users to customize the branding of the application by entering the company name and uploading logos. This customization will reflect on the login screen, enhancing the professional appearance and brand identity of the application.</p>`}
+              /> */}
+            </div>
           </div>
-        </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div
-            style={{ maxHeight: "480px", overflowY: "scroll" }}
-            className="custom-scroll"
-          >
-            <div className="companyProfileTabs">
-              <Tabs
-                defaultActiveKey="general"
-                id="uncontrolled-tab-example"
-                className="mb-3"
-              >
-                 <Tab eventKey="general" title="General">
-                    <div className="d-flex flex-column flex-lg-row">
-                      <div className="col-12 col-lg-6 pe-2">
-                        <p className="mb-1" style={{ fontSize: "14px" }}>Name</p>
-                        <div className="input-group mb-3 pe-lg-4">
-                          <input
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="form-control w-100"
-                          />
-                           {errors.title && <div className="invalid-feedback">{errors.title}</div>}
-                        </div>
 
-                        <p className="mb-2" style={{ fontSize: "14px" }}>Logo</p>
-                        <Card style={{ width: "18rem" }} className="shadow-sm border-0 p-3">
+          <div className={styles.card}>
+            <div className={`${styles.scrollContent} custom-scroll`}>
+              <Tabs defaultActiveKey="general" id="uncontrolled-tab-example" className="mb-3">
+                <Tab eventKey="general" title="General">
+                  <div className="d-flex flex-column flex-lg-row gap-4">
+                    <div className="col-12 col-lg-6">
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Name</label>
+                        <input
+                          type="text"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          className={`${styles.formInput} ${errors.title ? styles.isInvalid : ""}`}
+                        />
+                        {errors.title && <div className={styles.errorText}>{errors.title}</div>}
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={`${styles.formLabel} ${styles.logoLabel}`}>Logo</label>
+                        <Card className={styles.imageCard} style={{ width: "18rem" }}>
                           <Card.Img variant="top" src={logo} />
                           <Card.Body className="p-0 pt-3">
                             <button
+                              type="button"
                               onClick={triggerLogoInput}
-                              className="custom-icon-button button-success px-3 py-1 rounded"
+                              className={styles.btnChange}
                             >
-                              <IoImageOutline fontSize={16} className="me-1" /> Change Logo
+                              <IoImageOutline fontSize={16} /> Change Logo
                             </button>
                             <input
                               type="file"
@@ -293,17 +290,20 @@ export default function AllDocTable() {
                           </Card.Body>
                         </Card>
                       </div>
+                    </div>
 
-                      <div className="col-12 col-lg-6">
-                        <p className="mb-2 mt-2 mt-lg-0" style={{ fontSize: "14px" }}>Banner Image</p>
-                        <Card className="shadow-sm border-0 p-3 bannerImage">
+                    <div className="col-12 col-lg-6">
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Banner Image</label>
+                        <Card className={styles.imageCard}>
                           <Card.Img variant="top" src={banner} />
                           <Card.Body className="p-0 pt-3">
                             <button
+                              type="button"
                               onClick={triggerBannerInput}
-                              className="custom-icon-button button-success px-3 py-1 rounded"
+                              className={styles.btnChange}
                             >
-                              <IoImageOutline fontSize={16} className="me-1" /> Change Banner
+                              <IoImageOutline fontSize={16} /> Change Banner
                             </button>
                             <input
                               type="file"
@@ -316,121 +316,85 @@ export default function AllDocTable() {
                         </Card>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="d-flex flex-row mt-3">
-                      <button
-                        onClick={handleSave}
-                        className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                      >
-                        <IoSaveOutline fontSize={16} className="me-1" /> Save
-                      </button>
-                      <button
-                        onClick={handleCancel}
-                        className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                      >
-                        <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
-                      </button>
-                    </div>
-                  </Tab>
+                  <div className={styles.formActions}>
+                    <button onClick={handleSave} className={styles.btnSave}>
+                      <IoSaveOutline fontSize={16} /> Save
+                    </button>
+                    <button onClick={handleCancel} className={styles.btnCancel}>
+                      <MdCancel fontSize={16} /> Cancel
+                    </button>
+                  </div>
+                </Tab>
+
                 <Tab eventKey="storage" title="Storage">
-                  <p className="mb-1" style={{ fontSize: "14px" }}>
-                    Name
-                  </p>
-                  <DropdownButton
-                    id="dropdown-category-button"
-                    key="down-centered"
-                    title={selectedStorage}
-                    className="custom-dropdown-text-start col-12 col-lg-6 text-start"
-                  >
-                    <Dropdown.Item
-                      onClick={() =>
-                        handleStorageSelect("Local Disk (Default)")
-                      }
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Storage</label>
+                    <DropdownButton
+                      id="dropdown-category-button"
+                      key="down-centered"
+                      title={selectedStorage}
+                      className="col-12 col-lg-6 text-start"
                     >
-                      Local Disk (Default)
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      onClick={() => handleStorageSelect("Amazon S3")}
-                    >
-                      Amazon S3
-                    </Dropdown.Item>
-                  </DropdownButton>
+                      <Dropdown.Item onClick={() => handleStorageSelect("Local Disk (Default)")}>
+                        Local Disk (Default)
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleStorageSelect("Amazon S3")}>
+                        Amazon S3
+                      </Dropdown.Item>
+                    </DropdownButton>
+                  </div>
+
                   {selectedStorage === "Amazon S3" && (
-                    <div
-                      id="AmazonS3Fields"
-                      className="d-flex row row-cols-1 row-cols-lg-2 mt-5"
-                    >
-                      <div className="col">
-                        <p className="mb-1" style={{ fontSize: "14px" }}>
-                          Amazon S3 Key
-                        </p>
-                        <div className="input-group d-flex flex-column mb-3">
-                          <input
-                            type="text"
-                            className="form-control w-100"
-                            value={key}
-                            onChange={(e) => setKey(e.target.value)}
-                            onBlur={() => handleFieldBlur("key")}
-                          />
-                         
-                        </div>
+                    <div id="AmazonS3Fields" className={styles.s3FieldsGrid}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Amazon S3 Key</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={key}
+                          onChange={(e) => setKey(e.target.value)}
+                          onBlur={() => handleFieldBlur("key")}
+                        />
                       </div>
-                      <div className="col">
-                        <p className="mb-1" style={{ fontSize: "14px" }}>
-                          Amazon S3 Secret
-                        </p>
-                        <div className="input-group d-flex flex-column mb-3">
-                          <input
-                            type="text"
-                            className="form-control w-100"
-                            value={secret}
-                            onChange={(e) => setSecret(e.target.value)}
-                            onBlur={() => handleFieldBlur("secret")}
-                          />
-                          
-                        </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Amazon S3 Secret</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={secret}
+                          onChange={(e) => setSecret(e.target.value)}
+                          onBlur={() => handleFieldBlur("secret")}
+                        />
                       </div>
-                      <div className="col">
-                        <p className="mb-1" style={{ fontSize: "14px" }}>
-                          Amazon S3 Region
-                        </p>
-                        <div className="input-group d-flex flex-column mb-3">
-                          <input
-                            type="text"
-                            className="form-control w-100"
-                            value={region}
-                            onChange={(e) => setRegion(e.target.value)}
-                          />
-                        </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Amazon S3 Region</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={region}
+                          onChange={(e) => setRegion(e.target.value)}
+                        />
                       </div>
-                      <div className="col">
-                        <p className="mb-1" style={{ fontSize: "14px" }}>
-                          Amazon S3 Bucket
-                        </p>
-                        <div className="input-group d-flex flex-column mb-3">
-                          <input
-                            type="text"
-                            className="form-control w-100"
-                            value={bucket}
-                            onChange={(e) => setBucket(e.target.value)}
-                          />
-                         
-                        </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Amazon S3 Bucket</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={bucket}
+                          onChange={(e) => setBucket(e.target.value)}
+                        />
                       </div>
                     </div>
                   )}
-                  <div className="d-flex flex-row mt-5">
-                    <button
-                      onClick={handleStorageSave}
-                      className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                    >
-                      <IoSaveOutline fontSize={16} className="me-1" /> Save
+
+                  <div className={styles.formActions}>
+                    <button onClick={handleStorageSave} className={styles.btnSave}>
+                      <IoSaveOutline fontSize={16} /> Save
                     </button>
-                    <button
-                      onClick={handleStorageCancel}
-                      className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                    >
-                      <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                    <button onClick={handleStorageCancel} className={styles.btnCancel}>
+                      <MdCancel fontSize={16} /> Cancel
                     </button>
                   </div>
                 </Tab>

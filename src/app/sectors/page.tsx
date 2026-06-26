@@ -1,20 +1,26 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Tree, Modal, Input, Button } from 'antd';
-import type { TreeDataNode, TreeProps } from 'antd';
-import { deleteWithAuth, getWithAuth, postWithAuth } from '@/utils/apiClient';
+import { Tree, Modal, Input, Select } from 'antd';
+import type { TreeDataNode } from 'antd';
+import {getWithAuth, postWithAuth } from '@/utils/apiClient';
 import Heading from '@/components/common/Heading';
 import DashboardLayout from '@/components/DashboardLayout';
 import { IoPencil, IoTrash } from 'react-icons/io5';
+import styles from './sectors.module.css';
 
 interface CategoryNode extends TreeDataNode {
   title: string | JSX.Element;
   key: string;
   parent_sector: string | null;
   children?: CategoryNode[];
+}
+
+interface SectorData {
+  id: number | string;
+  sector_name: string;
+  parent_sector: string;
+  categories?: { id: number; category_name: string }[];
 }
 
 const CategoryManagement: React.FC = () => {
@@ -24,12 +30,14 @@ const CategoryManagement: React.FC = () => {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [categoryName, setCategoryName] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
+  const [allCategories, setAllCategories] = useState<{ id: number; category_name: string }[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
 
   const fetchRootNodes = async () => {
     try {
       const data = await getWithAuth("all-sectors");
       // console.log("data: ", data)
-      const convertToTreeData = (nodes: any[]): CategoryNode[] => {
+      const convertToTreeData = (nodes: SectorData[]): CategoryNode[] => {
         const map: Record<string, CategoryNode> = {};
         nodes.forEach((node) => {
           map[node.id] = {
@@ -58,8 +66,18 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await getWithAuth("categories");
+      setAllCategories(data || []);
+    } catch (error) {
+      console.error('Failed to fetch categories', error);
+    }
+  };
+
   useEffect(() => {
     fetchRootNodes();
+    fetchCategories();
   }, []);
 
   const handleAddNode = async () => {
@@ -67,6 +85,9 @@ const CategoryManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('parent_sector', parentId || 'none');
       formData.append('sector_name', categoryName);
+      selectedCategories.forEach((catId) => {
+        formData.append('category_ids[]', catId.toString());
+      });
       await postWithAuth('add-sector', formData);
       setModalVisible(false);
       fetchRootNodes();
@@ -81,6 +102,9 @@ const CategoryManagement: React.FC = () => {
       const formData = new FormData();
       formData.append('sector_name', categoryName);
       formData.append('parent_sector', parentId || 'none');
+      selectedCategories.forEach((catId) => {
+        formData.append('category_ids[]', catId.toString());
+      });
       await postWithAuth(`sector-details/${selectedKey}`, formData);
       setModalVisible(false);
       fetchRootNodes();
@@ -98,24 +122,20 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
-  // const showModal = (mode: 'add' | 'edit', key: string | null = null, parentKey: string | null = null) => {
-  //   setModalMode(mode);
-  //   setSelectedKey(key);
-  //   setParentId(parentKey);
-  //   setCategoryName('');
-  //   setModalVisible(true);
-  // };
-
   const showModal = async (mode: 'add' | 'edit', key: string | null = null, parentKey: string | null = null) => {
     setModalMode(mode);
     setSelectedKey(key);
     setParentId(parentKey);
     setCategoryName('');
+    setSelectedCategories([]);
   
     if (mode === 'edit' && key) {
       try {
-        const data = await getWithAuth(`sector-details/${key}`);
+        const data: SectorData = await getWithAuth(`sector-details/${key}`);
         setCategoryName(data.sector_name); 
+        if (data.categories) {
+          setSelectedCategories(data.categories.map((cat) => Number(cat.id)));
+        }
       } catch (error) {
         console.error('Failed to fetch sector details', error);
       }
@@ -127,59 +147,78 @@ const CategoryManagement: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className="d-flex flex-column justify-content-center align-items-start pt-2">
-        <div className="d-flex flex-row w-100 py-3 align-items-center justify-content-between">
+      <div className={styles.pageWrapper}>
+        <div className={styles.pageHeader}>
           <Heading text="Sectors" color="#444" />
-          <Button type="primary" className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1" onClick={() => showModal('add')}>Add Root Category</Button>
+          <button
+            type="button"
+            className={styles.btnAdd}
+            onClick={() => showModal('add')}
+          >
+            Add Root Category
+          </button>
         </div>
-        <div className="p-2 p-lg-5 bg-white w-100 rounded">
-          <div className=''>
+        <div className={`${styles.card} w-100`}>
+          <div className={styles.treeWrapper}>
             <Tree
               checkable
               treeData={treeData}
               titleRender={(node) => (
-                <div className='d-flex flex-column flex-md-row' >
-                  {node.title}
-                  <Button
-                    size="small"
+                <div className={styles.nodeActions}>
+                  <span>{node.title}</span>
+                  <button
+                    type="button"
+                    className={styles.btnAddChild}
                     onClick={() => showModal('add', null, node.key)}
-                    style={{ marginRight: 8, marginLeft: 8  }}
-                    className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1 my-1 my-md-0"
                   >
                     Add Child
-                  </Button>
-                  <Button
-                    size="small"
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnEdit}
                     onClick={() => showModal('edit', node.key, node.parent_sector)}
-                    style={{ marginLeft: 8 }}
-                     className="custom-icon-button button-success px-3 py-2 rounded me-2 my-1 my-md-0"
                   >
                     <IoPencil fontSize={16} className="me-1" /> Edit
-                  </Button>
-                  <Button
-                    size="small"
-                    danger
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnDanger}
                     onClick={() => handleDeleteNode(node.key)}
-                    style={{ marginLeft: 8 }}
-                    className="custom-icon-button button-danger text-white bg-danger px-3 py-2 rounded my-1 my-md-0"
                   >
-                     <IoTrash fontSize={16} className="me-1" /> Delete
-                  </Button>
+                    <IoTrash fontSize={16} className="me-1" /> Delete
+                  </button>
                 </div>
               )}
             />
             <Modal
-            className='sector-model'
+              className={styles.modalWrapper}
               title={modalMode === 'add' ? 'Add Category' : 'Edit Category'}
               open={modalVisible}
               onOk={modalMode === 'add' ? handleAddNode : handleEditNode}
               onCancel={() => setModalVisible(false)}
             >
-              <Input
-                placeholder="Enter category name"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-              />
+              <div style={{ marginBottom: 16 }}>
+                <Input
+                  placeholder="Enter category name"
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                />
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: '14px', fontWeight: 500 }}>Select Categories</label>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  style={{ width: '100%' }}
+                  placeholder="Select categories belonging to this sector"
+                  value={selectedCategories}
+                  onChange={(values) => setSelectedCategories(values)}
+                  options={allCategories.map(cat => ({ label: cat.category_name, value: cat.id }))}
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                />
+              </div>
             </Modal>
           </div>
         </div>

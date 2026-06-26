@@ -3,7 +3,6 @@
   --foreground: #171717;
 }
 
-
 html,
 body {
   max-width: 100vw;
@@ -21,6 +20,48 @@ body {
   margin: 0;
 }
 
+/* Hide scrollbars but keep scrolling functionality */
+.custom-scroll,
+.custom-scroll * {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.custom-scroll::-webkit-scrollbar,
+.custom-scroll *::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* Hide scrollbars for navbarAside sidebar */
+.navbarAside {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.navbarAside::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* Hide scrollbars for main content containers */
+.container-fluid,
+[style*="overflowY: scroll"],
+[style*="overflow-y: scroll"] {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.container-fluid::-webkit-scrollbar,
+[style*="overflowY: scroll"]::-webkit-scrollbar,
+[style*="overflow-y: scroll"]::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
 a {
   color: inherit;
   text-decoration: none !important;
@@ -28,21 +69,42 @@ a {
 
 .navbarAside .nav-link {
   font-size: 14px !important;
-  color: #333 !important;
+  color: #6b7280 !important;
+  text-decoration: none !important;
+}
+
+.navbarAside .nav-link:hover:not(.active-nav-item) {
+  background-color: rgba(232, 237, 249, 0.5) !important;
+  transition: background-color 0.2s ease;
+}
+
+.navbarAside .nav-link.active-nav-item {
+  background-color: #fff4e8 !important;
+  color: #ea580c !important;
 }
 
 .navbarAside .nav {
   flex-wrap: nowrap !important;
 }
 
-.navbarAside a svg {
-  color: #495584 !important;
+.navbarAside .nav-link svg {
+  color: #6b7280 !important;
   font-size: 18px !important;
 }
 
-.navbarAside a span {
-  color: #333 !important;
+.navbarAside .nav-link.active-nav-item svg,
+.navbarAside .nav-link.active-nav-item svg * {
+  color: #ea580c !important;
+}
+
+.navbarAside .nav-link span {
+  color: #6b7280 !important;
   font-size: 14px !important;
+}
+
+.navbarAside .nav-link.active-nav-item span,
+.navbarAside .nav-link.active-nav-item {
+  color: #ea580c !important;
 }
 
 .loginButton {
@@ -89,11 +151,11 @@ input {
   font-size: 14px !important;
 }
 
-.ant-picker .ant-picker-input>input:placeholder-shown {
+.ant-picker .ant-picker-input > input:placeholder-shown {
   padding: 5px 10px !important;
 }
 
-.ant-picker .ant-picker-input>input {
+.ant-picker .ant-picker-input > input {
   padding: 5px 10px !important;
 }
 
@@ -148,9 +210,9 @@ input[type="file"] {
   cursor: pointer;
 }
 
-.custom-checkbox input:checked+.checkbox-mark {
-  background-color: #4caf50;
-  border-color: #4caf50;
+.custom-checkbox input:checked + .checkbox-mark {
+  background-color: #EA580C;
+  border-color: #EA580C;
 }
 
 .custom-checkbox .checkbox-mark {
@@ -168,7 +230,7 @@ input[type="file"] {
   background-color: #fff !important;
 } */
 
-.custom-checkbox input:checked+.checkbox-mark::before {
+.custom-checkbox input:checked + .checkbox-mark::before {
   content: "✔";
   position: absolute;
   top: -2px;
@@ -209,7 +271,9 @@ tbody tr td {
   background-color: transparent;
   border: none;
   outline: none;
-  transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out;
+  transition:
+    background-color 0.4s ease-in-out,
+    color 0.4s ease-in-out;
   font-size: 14px;
   min-width: max-content;
 }
@@ -237,7 +301,9 @@ tbody tr td {
 }
 
 .addButton {
-  transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out;
+  transition:
+    background-color 0.4s ease-in-out,
+    color 0.4s ease-in-out;
   font-size: 14px;
 }
 
@@ -553,7 +619,6 @@ table {
   .companyProfileTabs .tab-content {
     padding: 10px;
   }
-
   .preview-image {
     display: none !important;
   }
@@ -593,12 +658,12 @@ button {
 }
 
 .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: #683ab7 !important;
-  border-color: #683ab7 !important;
+  background-color: #EA580C !important;
+  border-color: #EA580C !important;
 }
 
 .ant-checkbox-indeterminate .ant-checkbox-inner:after {
-  background-color: #683ab7 !important;
+  background-color: #EA580C !important;
 }
 
 input:-internal-autofill-selected {
@@ -610,7 +675,6 @@ input:active,
 input::selection {
   background-color: #fff !important;
 }
-
 
 .modal-sector {
   position: fixed;
@@ -756,12 +820,16 @@ textarea:focus {
   pointer-events: none;
 }
 
-
 .ant-radio-checked::after {
-  border: #683ab7 !important;
+  border-color: #EA580C !important;
 }
 
-
+.ant-radio-checked .ant-radio-inner {
+  border-color: #EA580C !important;
+}
+.ant-radio-checked .ant-radio-inner::after {
+  background-color: #EA580C !important;
+}
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -845,12 +913,12 @@ textarea,
 }
 
 .ant-tree-checkbox-checked .ant-tree-checkbox-inner {
-  background-color: #683ab7 !important;
-  border-color: #683ab7 !important;
+  background-color: #EA580C !important;
+  border-color: #EA580C !important;
 }
 
 .ant-checkbox-indeterminate .ant-tree-checkbox-inner:after {
-  background-color: #683ab7 !important;
+  background-color: #EA580C !important;
 }
 
 .ant-picker-calendar-date-content .events .ant-badge-status-text {
@@ -866,7 +934,8 @@ iframe #WordViewerStatusBar {
 }
 
 .ant-checkbox-checked.ant-checkbox-disabled .ant-checkbox-inner {
-  background-color: #683ab78a !important;
+  background-color: rgba(234, 88, 12, 0.54) !important;
+  border-color: rgba(234, 88, 12, 0.54) !important;
 }
 
 .copy-button {
@@ -879,20 +948,19 @@ iframe #WordViewerStatusBar {
   font-size: 12px;
   background-color: rgb(25, 135, 84) !important;
   padding: 5px 15px !important;
-  color: #fff
+  color: #fff;
 }
 
 .inactive-badge {
   background-color: rgb(220, 53, 69) !important;
   font-size: 12px;
   padding: 5px 15px !important;
-  color: #fff
+  color: #fff;
 }
 
-.table>:not(caption)>*>* {
+.table > :not(caption) > * > * {
   align-content: center !important;
 }
-
 
 .dropdown-toggle-bulk button {
   padding: 0px !important;
@@ -900,31 +968,35 @@ iframe #WordViewerStatusBar {
   color: #000 !important;
   border: none !important;
 }
-
 .searched-text em {
   background-color: #ece92d;
 }
 
-
-
-
 /*-----------------------*/
 
-.navbarAside a span {
-  color: #8B4513 !important;
+.navbarAside .nav-link span {
+  color: #6b7280 !important;
   font-size: 14px !important;
 }
 
-.navbarAside a svg {
-  color: #8B4513 !important;
+.navbarAside .nav-link svg {
+  color: #6b7280 !important;
 }
 
+.navbarAside .nav-link.active-nav-item span,
+.navbarAside .nav-link.active-nav-item {
+  color: #ea580c !important;
+}
 
+.navbarAside .nav-link.active-nav-item svg,
+.navbarAside .nav-link.active-nav-item svg * {
+  color: #ea580c !important;
+}
 
 .statCard {
   /*border: none;*/
   border-radius: 14px;
-  border: 1px solid #0000001A;
+  border: 1px solid #0000001a;
   transition: transform 0.2s ease-in-out;
 }
 
@@ -933,7 +1005,7 @@ iframe #WordViewerStatusBar {
 }
 
 .iconWrapper {
-  background-color: #FFF4E8;
+  background-color: #fff4e8;
   padding: 1rem;
   border-radius: 0.75rem;
   display: flex;
@@ -943,32 +1015,28 @@ iframe #WordViewerStatusBar {
 
 .icon {
   font-size: 1.75rem;
-  color: #FD7E14;
+  color: #fd7e14;
 }
 
 .positiveChange {
-  color: #00A63E;
+  color: #00a63e;
 }
 
 .noChange {
-  color: #6A7282;
+  color: #6a7282;
 }
-
 
 .recharts-legend-wrapper {
   bottom: 30px !important;
   margin-top: -50px !important;
 }
 
-
-
-
 /* styles/RemindersCalendar.module.css */
 
 /* Main container for the entire component */
 .calendarWrapper {
   background-color: white !important;
-  padding: 1rem 1.5rem !important;
+  padding: 1.5rem !important;
   border-radius: 1.25rem !important;
   /*box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);*/
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -999,8 +1067,7 @@ iframe #WordViewerStatusBar {
   height: 6px;
   border-radius: 50%;
   margin-right: 6px;
-  flex-shrink: 0;
-  /* Prevents the dot from shrinking */
+  flex-shrink: 0; /* Prevents the dot from shrinking */
 }
 
 /* Overriding Ant Design's default styles */
@@ -1009,27 +1076,30 @@ iframe #WordViewerStatusBar {
 }
 
 :global(.ant-picker-calendar-full .ant-picker-cell) {
-  border-top: none !important;
-  /* Remove default lines */
+  border-top: none !important; /* Remove default lines */
 }
 
-:global(.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner) {
-  background-color: #FFF4E8 !important;
-  /* Highlight color for selected date */
+:global(
+  .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner
+) {
+  background-color: #fff4e8 !important; /* Highlight color for selected date */
   border-radius: 0.75rem !important;
 }
 
-:global(.ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before) {
-  border: none !important;
-  /* Remove default "today" border */
+:global(
+  .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before
+) {
+  border: none !important; /* Remove default "today" border */
 }
 
 :global(.ant-picker-calendar-header) {
-  padding: 0 0 1rem 0 !important;
-  /* Adjust header padding */
+  padding: 0 0 1rem 0 !important; /* Adjust header padding */
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-calendar-date {
+:where(
+    .css-dev-only-do-not-override-49qm
+  ).ant-picker-calendar.ant-picker-calendar-full
+  .ant-picker-calendar-date {
   border-top: 0 !important;
   border: 2px solid rgba(5, 5, 5, 0.06) !important;
   border-radius: 10px !important;
@@ -1043,8 +1113,6 @@ iframe #WordViewerStatusBar {
 .ant-picker-content th {
   background-color: white !important;
 }
-
-
 
 /* styles/Documents.module.css */
 
@@ -1065,8 +1133,7 @@ iframe #WordViewerStatusBar {
 }
 
 .daysLeft {
-  color: #E7000B;
-  /* Red color for urgency */
+  color: #e7000b; /* Red color for urgency */
   font-weight: 600;
 }
 
@@ -1077,16 +1144,13 @@ iframe #WordViewerStatusBar {
   gap: 1rem;
 }
 
-
-
 .sectorCard {
-  background-color: #FED7AA4D;
-  /* Light orange background */
+  background-color: #fed7aa4d; /* Light orange background */
   /*border: 1px solid #FFE6CF;*/
 }
 
 .sectorIconWrapper {
-  background-color: #EA580C;
+  background-color: #ea580c;
   border-radius: 16px;
   width: 40px;
   height: 40px;
@@ -1095,8 +1159,7 @@ iframe #WordViewerStatusBar {
   justify-content: center;
   margin-right: 1rem;
   font-size: 1.25rem;
-  color: #FFFFFF;
-  /* Ant Design Orange */
+  color: #ffffff; /* Ant Design Orange */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -1104,27 +1167,51 @@ iframe #WordViewerStatusBar {
 :global(.statCard) {
   border-radius: 1.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: #ffffff !important;
 }
 
+/* Ensure all card components have white backgrounds */
+.card.statCard {
+  background-color: #ffffff !important;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: none;
+}
+
+/* Calendar wrapper components - white background with shadow */
+.calendarWrapper {
+  background-color: #ffffff !important;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-content .calendarWrapper:not(:last-child) {
+  margin-bottom: 0 !important;
+}
+
+.nearly-expired-section {
+  margin-bottom: 2rem !important;
+}
 
 .newRow {
-  background-color: #FED7AA1A !important;
-  /* Light orange for new files */
+  background-color: #fed7aa1a !important; /* Light orange for new files */
 }
 
 /* Optional: To make the row stand out more on hover */
-.newRow:hover>td {
+.newRow:hover > td {
   background-color: #fde6d0 !important;
 }
 
 .ant-table-thead tr {
-  border: 1px solid #E5E7EB !important;
+  border: 1px solid #e5e7eb !important;
 }
 
 .ant-table-thead th {
-  background-color: #F5F5F580 !important;
-  border-bottom: 1px solid #E5E7EB !important;
-  border-top: 1px solid #E5E7EB !important;
+  background-color: #f5f5f580 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  border-top: 1px solid #e5e7eb !important;
   align-items: start;
   text-align: left !important;
 }
@@ -1133,25 +1220,111 @@ iframe #WordViewerStatusBar {
   align-content: flex-end;
 }
 
-
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-panel {
+:where(
+    .css-dev-only-do-not-override-49qm
+  ).ant-picker-calendar.ant-picker-calendar-full
+  .ant-picker-panel {
   text-align: center !important;
   align-content: center !important;
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-calendar-date {
-  background: #FFEDD4;
+:where(
+    .css-dev-only-do-not-override-49qm
+  ).ant-picker-calendar.ant-picker-calendar-full
+  .ant-picker-cell-in-view.ant-picker-cell-selected
+  .ant-picker-calendar-date {
+  background: #ffedd4;
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected .ant-picker-calendar-date .ant-picker-calendar-date-value,
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar.ant-picker-calendar-full .ant-picker-cell-selected:hover .ant-picker-calendar-date .ant-picker-calendar-date-value {
-  color: #CA3500;
+:where(
+    .css-dev-only-do-not-override-49qm
+  ).ant-picker-calendar.ant-picker-calendar-full
+  .ant-picker-cell-selected
+  .ant-picker-calendar-date
+  .ant-picker-calendar-date-value,
+:where(
+    .css-dev-only-do-not-override-49qm
+  ).ant-picker-calendar.ant-picker-calendar-full
+  .ant-picker-cell-selected:hover
+  .ant-picker-calendar-date
+  .ant-picker-calendar-date-value {
+  color: #ca3500;
 }
 
-:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar .ant-picker-calendar-header {
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar
+  .ant-picker-calendar-header {
   margin-top: -50px;
+}
+
+/* Calendar toggle button (Month/Year view switcher) */
+.ant-picker-calendar-header .ant-radio-button-wrapper-checked,
+.ant-picker-calendar-header .ant-radio-button-wrapper-checked:hover,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar-header
+  .ant-radio-button-wrapper-checked,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar-header
+  .ant-radio-button-wrapper-checked:hover {
+  color: #ea580c !important;
+  border-color: #ea580c !important;
+  background: #fff4e8 !important;
+}
+
+.ant-picker-calendar-header .ant-radio-button-wrapper-checked::before {
+  background-color: #ea580c !important;
+}
+
+.ant-picker-calendar-header .ant-radio-button-wrapper:hover {
+  color: #ea580c !important;
+  border-color: #ea580c !important;
+}
+
+/* Calendar navigation buttons (prev/next) */
+.ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-prev-btn:hover,
+.ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-next-btn:hover,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-prev-btn:hover,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-next-btn:hover,
+.ant-picker-calendar-header .ant-picker-calendar-prev-btn:hover,
+.ant-picker-calendar-header .ant-picker-calendar-next-btn:hover {
+  color: #ea580c !important;
+}
+
+.ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-prev-btn:focus,
+.ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-next-btn:focus,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-prev-btn:focus,
+:where(.css-dev-only-do-not-override-49qm).ant-picker-calendar
+  .ant-picker-calendar-header
+  .ant-picker-calendar-next-btn:focus,
+.ant-picker-calendar-header .ant-picker-calendar-prev-btn:focus,
+.ant-picker-calendar-header .ant-picker-calendar-next-btn:focus {
+  color: #ea580c !important;
 }
 
 /*:where(.css-dev-only-do-not-override-49qm).ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {*/
 /*    color: #CA3500;*/
 /*}*/
+
+/* Global radio button checked state in calendar */
+.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+  color: #ea580c !important;
+  border-color: #ea580c !important;
+  background: #fff4e8 !important;
+}
+
+.ant-radio-button-wrapper-checked:not(
+    .ant-radio-button-wrapper-disabled
+  )::before {
+  background-color: #ea580c !important;
+}

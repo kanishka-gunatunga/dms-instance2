@@ -127,7 +127,6 @@ export default function AllDocTable({ }: Props) {
                     const apiOrigin = new URL(API_BASE_URL).origin;
                     signatureSource = `${apiOrigin}${signatureSource.startsWith("/") ? "" : "/"}${signatureSource}`;
                 }
-
                 setSignature(prev => {
                     if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
                     return signatureSource;
@@ -276,33 +275,23 @@ export default function AllDocTable({ }: Props) {
         }, 5000);
     };
 
-    const handleShow = () => {
-        setShow(true);
-    };
-
-    const handleClose = () => {
-        setShow(false);
-    };
+    const handleShow = () => { setShow(true); };
+    const handleClose = () => { setShow(false); };
 
     const validateForm = () => {
         if (!password || !confirmPassword) {
             setError("All fields are required.");
             return false;
         }
-
         if (password !== confirmPassword) {
             setError("Passwords do not match.");
             return false;
         }
-
         const passwordRegex = /^.{8,}$/;
         if (!passwordRegex.test(password)) {
-            setError(
-                "Password must be at least 8 characters long and contain at least one capital letter, one number, and one special character."
-            );
+            setError("Password must be at least 8 characters long and contain at least one capital letter, one number, and one special character.");
             return false;
         }
-
         setError("");
         return true;
     };
@@ -321,513 +310,499 @@ export default function AllDocTable({ }: Props) {
                     setToastType("error");
                     setToastMessage("Failed to reset password!");
                     setShowToast(true);
-                    setTimeout(() => {
-                        setShowToast(false);
-                    }, 5000);
+                    setTimeout(() => setShowToast(false), 5000);
                 } else {
                     setToastType("success");
                     setToastMessage("Reset Password Successful!");
                     setShowToast(true);
-                    setTimeout(() => {
-                        setShowToast(false);
-                    }, 5000);
+                    setTimeout(() => setShowToast(false), 5000);
                 }
-
                 handleClose();
             } catch (error) {
                 console.error("Error submitting form:", error);
             }
         }
     };
-            const handleStartMfaSetup = async () => {
-                try {
+
+    // ── MFA handlers ────────────────────────────────────────────────────────
+
+    const handleStartMfaSetup = async () => {
+        try {
             const res = await postWithAuth("mfa/generate", new FormData());
-                    if (res.status === "success" || res.secret) {
-                        setMfaSecret(res.secret);
-                        setMfaQrCode(res.qrCodeUrl);
-                        setMfaRecoveryCodes(res.recovery_codes);
-                        setMfaSetupStep("enrolling");
-                    } else {
-                        setToastType("error");
-                        setToastMessage("Failed to initiate MFA setup.");
-                        setShowToast(true);
-                    }
-                } catch (error) {
-                    console.error("MFA Generate Error:", error);
-                }
-            };
+            if (res.status === "success" || res.secret) {
+                setMfaSecret(res.secret);
+                setMfaQrCode(res.qrCodeUrl);
+                setMfaRecoveryCodes(res.recovery_codes);
+                setMfaSetupStep("enrolling");
+            } else {
+                setToastType("error");
+                setToastMessage("Failed to initiate MFA setup.");
+                setShowToast(true);
+            }
+        } catch (error) {
+            console.error("MFA Generate Error:", error);
+        }
+    };
 
-            const handleEnableMfa = async () => {
-                if (!mfaVerificationCode || mfaVerificationCode.length !== 6) {
-                    setToastType("error");
-                    setToastMessage("Please enter a valid 6-digit OTP code.");
-                    setShowToast(true);
-                    return;
-                }
+    const handleEnableMfa = async () => {
+        if (!mfaVerificationCode || mfaVerificationCode.length !== 6) {
+            setToastType("error");
+            setToastMessage("Please enter a valid 6-digit OTP code.");
+            setShowToast(true);
+            return;
+        }
 
-                try {
-                    const response = await fetch(`${API_BASE_URL}mfa/enable`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${Cookies.get("authToken")}`
-                        },
-                        body: JSON.stringify({
-                            secret: mfaSecret,
-                            code: mfaVerificationCode,
-                            recovery_codes: mfaRecoveryCodes
-                        })
-                    });
+        try {
+            const response = await fetch(`${API_BASE_URL}mfa/enable`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Cookies.get("authToken")}`
+                },
+                body: JSON.stringify({
+                    secret: mfaSecret,
+                    code: mfaVerificationCode,
+                    recovery_codes: mfaRecoveryCodes
+                })
+            });
 
-                    const res = await response.json();
-                    if (res.status === "success") {
-                        setMfaEnabled(true);
-                        setMfaSetupStep("idle");
-                        setMfaVerificationCode("");
-                        setToastType("success");
-                        setToastMessage("Multi-Factor Authentication enabled successfully!");
-                        setShowToast(true);
-                    } else {
-                        setToastType("error");
-                        setToastMessage(res.message || "Failed to verify authenticator code.");
-                        setShowToast(true);
-                    }
-                } catch (error) {
-                    console.error("MFA Enable Error:", error);
-                }
-            };
+            const res = await response.json();
+            if (res.status === "success") {
+                setMfaEnabled(true);
+                setMfaSetupStep("idle");
+                setMfaVerificationCode("");
+                setToastType("success");
+                setToastMessage("Multi-Factor Authentication enabled successfully!");
+                setShowToast(true);
+            } else {
+                setToastType("error");
+                setToastMessage(res.message || "Failed to verify authenticator code.");
+                setShowToast(true);
+            }
+        } catch (error) {
+            console.error("MFA Enable Error:", error);
+        }
+    };
 
-            const handleDisableMfa = async () => {
-                if (!mfaPassword) {
-                    setToastType("error");
-                    setToastMessage("Account password is required to disable MFA.");
-                    setShowToast(true);
-                    return;
-                }
-                if (!mfaVerificationCode || mfaVerificationCode.length !== 6) {
-                    setToastType("error");
-                    setToastMessage("Verification OTP code is required.");
-                    setShowToast(true);
-                    return;
-                }
+    const handleDisableMfa = async () => {
+        if (!mfaPassword) {
+            setToastType("error");
+            setToastMessage("Account password is required to disable MFA.");
+            setShowToast(true);
+            return;
+        }
+        if (!mfaVerificationCode || mfaVerificationCode.length !== 6) {
+            setToastType("error");
+            setToastMessage("Verification OTP code is required.");
+            setShowToast(true);
+            return;
+        }
 
-                try {
-                    const response = await fetch(`${API_BASE_URL}mfa/disable`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${Cookies.get("authToken")}`
-                        },
-                        body: JSON.stringify({
-                            password: mfaPassword,
-                            code: mfaVerificationCode
-                        })
-                    });
+        try {
+            const response = await fetch(`${API_BASE_URL}mfa/disable`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Cookies.get("authToken")}`
+                },
+                body: JSON.stringify({
+                    password: mfaPassword,
+                    code: mfaVerificationCode
+                })
+            });
 
-                    const res = await response.json();
-                    if (res.status === "success") {
-                        setMfaEnabled(false);
-                        setMfaSetupStep("idle");
-                        setMfaPassword("");
-                        setMfaVerificationCode("");
-                        setToastType("success");
-                        setToastMessage("Multi-Factor Authentication disabled.");
-                        setShowToast(true);
-                    } else {
-                        setToastType("error");
-                        setToastMessage(res.message || "Failed to disable MFA. Check password/OTP.");
-                        setShowToast(true);
-                    }
-                } catch (error) {
-                    console.error("MFA Disable Error:", error);
-                }
-            };
+            const res = await response.json();
+            if (res.status === "success") {
+                setMfaEnabled(false);
+                setMfaSetupStep("idle");
+                setMfaPassword("");
+                setMfaVerificationCode("");
+                setToastType("success");
+                setToastMessage("Multi-Factor Authentication disabled.");
+                setShowToast(true);
+            } else {
+                setToastType("error");
+                setToastMessage(res.message || "Failed to disable MFA. Check password/OTP.");
+                setShowToast(true);
+            }
+        } catch (error) {
+            console.error("MFA Disable Error:", error);
+        }
+    };
 
-            return (
-                <>
-                    <DashboardLayout>
-                        <div className={styles.pageWrapper}>
-                            <div className={styles.pageHeader}>
-                                <div className="d-flex flex-row align-items-center">
-                                    <Heading text="Profile" color="#444" />
-                                </div>
-                                <div className="d-flex flex-row">
-                                    <button
-                                        onClick={() => handleShow()}
-                                        className={styles.btnChangePassword}
-                                    >
-                                        <FaKey className="me-1" /> Change Password
-                                    </button>
-                                </div>
-                            </div>
+    return (
+        <>
+            <DashboardLayout>
+                <div className={styles.pageWrapper}>
+                    <div className={styles.pageHeader}>
+                        <div className="d-flex flex-row align-items-center">
+                            <Heading text="Profile" color="#444" />
+                        </div>
+                        <div className="d-flex flex-row">
+                            <button
+                                onClick={() => handleShow()}
+                                className={styles.btnChangePassword}
+                            >
+                                <FaKey className="me-1" /> Change Password
+                            </button>
+                        </div>
+                    </div>
 
-                            <div className={styles.card}>
-                                <div className={`${styles.scrollContent} custom-scroll`}>
-                                    <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || "general")} id="profile-tabs" className="mb-3">
-                                        <Tab eventKey="general" title="General">
-                                            <div className="p-0 row row-cols-1 row-cols-md-2 overflow-hidden w-100 mt-2">
-                                                <div className="d-flex flex-column pe-md-3">
-                                                    <div className={styles.formGroup}>
-                                                        <label className={styles.formLabel}>First Name</label>
-                                                        <input
-                                                            type="text"
-                                                            value={firstName}
-                                                            onChange={(e) => setFirstName(e.target.value)}
-                                                            className={`${styles.formInput} ${errors.first_name ? styles.isInvalid : ""}`}
-                                                        />
-                                                        {errors.first_name && <div className={styles.errorText}>{errors.first_name}</div>}
-                                                    </div>
-                                                </div>
-                                                <div className="d-flex flex-column pe-md-3">
-                                                    <div className={styles.formGroup}>
-                                                        <label className={styles.formLabel}>Last Name</label>
-                                                        <input
-                                                            type="text"
-                                                            value={lastName}
-                                                            onChange={(e) => setLastName(e.target.value)}
-                                                            className={`${styles.formInput} ${errors.last_name ? styles.isInvalid : ""}`}
-                                                        />
-                                                        {errors.last_name && <div className={styles.errorText}>{errors.last_name}</div>}
-                                                    </div>
-                                                </div>
-                                                <div className="d-flex flex-column pe-md-3 mt-3">
-                                                    <div className={styles.formGroup}>
-                                                        <label className={styles.formLabel}>Mobile Number</label>
-                                                        <input
-                                                            type="number"
-                                                            value={mobileNumber}
-                                                            onChange={(e) => setMobileNumber(e.target.value)}
-                                                            className={`${styles.formInput} ${errors.mobile_no ? styles.isInvalid : ""}`}
-                                                        />
-                                                        {errors.mobile_no && <div className={styles.errorText}>{errors.mobile_no}</div>}
-                                                    </div>
-                                                </div>
-                                                <div className="d-flex flex-column pe-md-3 mt-3">
-                                                    <div className={styles.formGroup}>
-                                                        <label className={styles.formLabel}>Email</label>
-                                                        <input
-                                                            type="email"
-                                                            value={myEmail}
-                                                            onChange={(e) => setMyEmail(e.target.value)}
-                                                            className={`${styles.formInput} ${errors.email ? styles.isInvalid : ""}`}
-                                                        />
-                                                        {errors.email && <div className={styles.errorText}>{errors.email}</div>}
-                                                    </div>
-                                                </div>
+                    <div className={styles.card}>
+                        <div className={`${styles.scrollContent} custom-scroll`}>
+                            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || "general")} id="profile-tabs" className="mb-3">
+
+                                {/* ── General Tab ── */}
+                                <Tab eventKey="general" title="General">
+                                    <div className="p-0 row row-cols-1 row-cols-md-2 overflow-hidden w-100 mt-2">
+                                        <div className="d-flex flex-column pe-md-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>First Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={firstName}
+                                                    onChange={(e) => setFirstName(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.first_name ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.first_name && <div className={styles.errorText}>{errors.first_name}</div>}
                                             </div>
-                                        </Tab>
-
-                                        <Tab eventKey="signature" title="Digital Signature">
-                                            <div className="d-flex flex-column gap-4 mt-2">
-                                                <div className="d-flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        className={`${styles.btnToggle} ${signatureMode === "upload" ? styles.active : ""}`}
-                                                        onClick={() => setSignatureMode("upload")}
-                                                    >
-                                                        <IoImageOutline fontSize={16} /> Upload PNG
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className={`${styles.btnToggle} ${signatureMode === "draw" ? styles.active : ""}`}
-                                                        onClick={() => setSignatureMode("draw")}
-                                                    >
-                                                        <IoCreateOutline fontSize={16} /> Draw Signature
-                                                    </button>
-                                                </div>
-
-                                                {signatureMode === "upload" ? (
-                                                    <div className="col-12 col-md-6 col-lg-4">
-                                                        <div className={styles.imageCard}>
-                                                            {signature ? (
-                                                                <img
-                                                                    src={signature}
-                                                                    alt="Digital Signature"
-                                                                    className="card-img-top w-100"
-                                                                    style={{
-                                                                        maxHeight: '120px',
-                                                                        objectFit: 'contain',
-                                                                        borderRadius: '0.5rem',
-                                                                        backgroundColor: '#f9fafb'
-                                                                    }}
-                                                                    onError={(e) => {
-                                                                        const target = e.target as HTMLImageElement;
-                                                                        target.style.display = 'none';
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <div className="d-flex align-items-center justify-content-center bg-light rounded" style={{ height: "120px" }}>
-                                                                    <span className="text-muted">No signature uploaded</span>
-                                                                </div>
-                                                            )}
-                                                            <div className="pt-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={triggerSignatureInput}
-                                                                    className={styles.btnSave}
-                                                                    style={{ width: '100%' }}
-                                                                >
-                                                                    <IoImageOutline fontSize={16} /> Change Signature
-                                                                </button>
-                                                                <input
-                                                                    type="file"
-                                                                    ref={signatureInputRef}
-                                                                    accept="image/png"
-                                                                    style={{ display: "none" }}
-                                                                    onChange={handleSignatureChange}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="col-12 col-lg-8">
-                                                        <div className="border rounded p-3 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
-                                                            <p className={styles.formLabel}>Draw your signature</p>
-                                                            <SignaturePad onSave={handleSignatureDraw} />
-                                                            <p className="text-muted mt-2 small">Your signature will be saved as a transparent PNG.</p>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Last Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={lastName}
+                                                    onChange={(e) => setLastName(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.last_name ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.last_name && <div className={styles.errorText}>{errors.last_name}</div>}
                                             </div>
-                                        </Tab>
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3 mt-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Mobile Number</label>
+                                                <input
+                                                    type="number"
+                                                    value={mobileNumber}
+                                                    onChange={(e) => setMobileNumber(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.mobile_no ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.mobile_no && <div className={styles.errorText}>{errors.mobile_no}</div>}
+                                            </div>
+                                        </div>
+                                        <div className="d-flex flex-column pe-md-3 mt-3">
+                                            <div className={styles.formGroup}>
+                                                <label className={styles.formLabel}>Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={myEmail}
+                                                    onChange={(e) => setMyEmail(e.target.value)}
+                                                    className={`${styles.formInput} ${errors.email ? styles.isInvalid : ""}`}
+                                                />
+                                                {errors.email && <div className={styles.errorText}>{errors.email}</div>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Tab>
 
-                                        <Tab eventKey="mfa" title="Security & MFA">
-                                            <div className="d-flex flex-column gap-3 mt-2 col-12 col-lg-8">
-                                                <div className="p-4 rounded border shadow-sm bg-white">
-                                                    <h4 className="font-weight-bold mb-2 text-primary">Multi-Factor Authentication (MFA)</h4>
-                                                    <p className="text-muted small">
-                                                        Protect your account using standard TOTP-based Authenticator applications like Google Authenticator or Microsoft Authenticator.
-                                                    </p>
+                                {/* ── Digital Signature Tab ── */}
+                                <Tab eventKey="signature" title="Digital Signature">
+                                    <div className="d-flex flex-column gap-4 mt-2">
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                type="button"
+                                                className={`${styles.btnToggle} ${signatureMode === "upload" ? styles.active : ""}`}
+                                                onClick={() => setSignatureMode("upload")}
+                                            >
+                                                <IoImageOutline fontSize={16} /> Upload PNG
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={`${styles.btnToggle} ${signatureMode === "draw" ? styles.active : ""}`}
+                                                onClick={() => setSignatureMode("draw")}
+                                            >
+                                                <IoCreateOutline fontSize={16} /> Draw Signature
+                                            </button>
+                                        </div>
 
-                                                    {mfaEnabled ? (
-                                                        <div className="mt-3">
-                                                            <div className="d-flex align-items-center mb-3">
-                                                                <span className="badge bg-success p-2 me-2" style={{ fontSize: "0.9rem" }}>Active / Secure</span>
-                                                                <span className="text-muted small">MFA is fully enabled and active on your account.</span>
-                                                            </div>
-
-                                                            {mfaSetupStep !== "disabling" ? (
-                                                                <button
-                                                                    type="button"
-                                                                    className="btn btn-outline-danger btn-sm"
-                                                                    onClick={() => setMfaSetupStep("disabling")}
-                                                                >
-                                                                    Disable Multi-Factor Authentication
-                                                                </button>
-                                                            ) : (
-                                                                <div className="p-3 bg-light rounded border mt-3">
-                                                                    <h5 className="font-weight-bold text-danger mb-2">Disable Multi-Factor Authentication</h5>
-                                                                    <p className="text-muted small">Please confirm your identity by entering your account password and the 6-digit OTP code.</p>
-
-                                                                    <div className="mb-2">
-                                                                        <label className="form-label small font-weight-bold">Account Password</label>
-                                                                        <input
-                                                                            type="password"
-                                                                            className="form-control form-control-sm"
-                                                                            placeholder="Enter password"
-                                                                            value={mfaPassword}
-                                                                            onChange={(e) => setMfaPassword(e.target.value)}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="mb-3">
-                                                                        <label className="form-label small font-weight-bold">Authenticator Code</label>
-                                                                        <input
-                                                                            type="text"
-                                                                            maxLength={6}
-                                                                            className="form-control form-control-sm"
-                                                                            placeholder="6-digit code"
-                                                                            value={mfaVerificationCode}
-                                                                            onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ""))}
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="d-flex gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            className="btn btn-danger btn-sm"
-                                                                            onClick={handleDisableMfa}
-                                                                        >
-                                                                            Confirm Disable
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="btn btn-outline-secondary btn-sm"
-                                                                            onClick={() => {
-                                                                                setMfaSetupStep("idle");
-                                                                                setMfaPassword("");
-                                                                                setMfaVerificationCode("");
-                                                                            }}
-                                                                        >
-                                                                            Cancel
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
+                                        {signatureMode === "upload" ? (
+                                            <div className="col-12 col-md-6 col-lg-4">
+                                                <div className={styles.imageCard}>
+                                                    {signature ? (
+                                                        <img
+                                                            src={signature}
+                                                            alt="Digital Signature"
+                                                            className="card-img-top w-100"
+                                                            style={{
+                                                                maxHeight: '120px',
+                                                                objectFit: 'contain',
+                                                                borderRadius: '0.5rem',
+                                                                backgroundColor: '#f9fafb'
+                                                            }}
+                                                            onError={(e) => {
+                                                                const target = e.target as HTMLImageElement;
+                                                                target.style.display = 'none';
+                                                            }}
+                                                        />
                                                     ) : (
-                                                        <div className="mt-3">
-                                                            {mfaSetupStep === "idle" && (
-                                                                <div>
-                                                                    <p className="text-warning font-weight-bold small">⚠️ MFA is currently disabled. Enable it to secure your documents.</p>
-                                                                    <button
-                                                                        type="button"
-                                                                        className="btn btn-primary btn-sm mt-2"
-                                                                        onClick={handleStartMfaSetup}
-                                                                    >
-                                                                        Set up Authenticator App
-                                                                    </button>
-                                                                </div>
-                                                            )}
+                                                        <div className="d-flex align-items-center justify-content-center bg-light rounded" style={{ height: "120px" }}>
+                                                            <span className="text-muted">No signature uploaded</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="pt-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={triggerSignatureInput}
+                                                            className={styles.btnSave}
+                                                            style={{ width: '100%' }}
+                                                        >
+                                                            <IoImageOutline fontSize={16} /> Change Signature
+                                                        </button>
+                                                        <input
+                                                            type="file"
+                                                            ref={signatureInputRef}
+                                                            accept="image/png"
+                                                            style={{ display: "none" }}
+                                                            onChange={handleSignatureChange}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="col-12 col-lg-8">
+                                                <div className="border rounded p-3 bg-white shadow-sm" style={{ border: '1px solid #e5e7eb' }}>
+                                                    <p className={styles.formLabel}>Draw your signature</p>
+                                                    <SignaturePad onSave={handleSignatureDraw} />
+                                                    <p className="text-muted mt-2 small">Your signature will be saved as a transparent PNG.</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </Tab>
 
-                                                            {mfaSetupStep === "enrolling" && (
-                                                                <div className="p-3 bg-light rounded border mt-3">
-                                                                    <h5 className="font-weight-bold mb-3">1. Scan the QR Code</h5>
-                                                                    <p className="text-muted small">Scan this image using your Google Authenticator or Microsoft Authenticator app.</p>
+                                {/* ── Security & MFA Tab ── */}
+                                <Tab eventKey="mfa" title="Security & MFA">
+                                    <div className="d-flex flex-column gap-3 mt-2 col-12 col-lg-8">
+                                        <div className="p-4 rounded border shadow-sm bg-white">
+                                            <h4 className="font-weight-bold mb-2 text-primary">Multi-Factor Authentication (MFA)</h4>
+                                            <p className="text-muted small">
+                                                Protect your account using standard TOTP-based Authenticator applications like Google Authenticator or Microsoft Authenticator.
+                                            </p>
 
-                                                                    <div className="d-flex justify-content-center p-3 bg-white border rounded mb-3">
-                                                                        {mfaQrCode && <img src={mfaQrCode} alt="MFA QR" width={180} height={180} />}
-                                                                    </div>
+                                            {mfaEnabled ? (
+                                                <div className="mt-3">
+                                                    <div className="d-flex align-items-center mb-3">
+                                                        <span className="badge bg-success p-2 me-2" style={{ fontSize: "0.9rem" }}>Active / Secure</span>
+                                                        <span className="text-muted small">MFA is fully enabled and active on your account.</span>
+                                                    </div>
 
-                                                                    <div className="mb-3">
-                                                                        <span className="text-muted small font-weight-bold">Manual Entry Code:</span>
-                                                                        <div className="bg-white p-2 border rounded font-monospace text-center font-weight-bold mt-1" style={{ letterSpacing: "0.1rem" }}>
-                                                                            {mfaSecret}
-                                                                        </div>
-                                                                    </div>
+                                                    {mfaSetupStep !== "disabling" ? (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger btn-sm"
+                                                            onClick={() => setMfaSetupStep("disabling")}
+                                                        >
+                                                            Disable Multi-Factor Authentication
+                                                        </button>
+                                                    ) : (
+                                                        <div className="p-3 bg-light rounded border mt-3">
+                                                            <h5 className="font-weight-bold text-danger mb-2">Disable Multi-Factor Authentication</h5>
+                                                            <p className="text-muted small">Please confirm your identity by entering your account password and the 6-digit OTP code.</p>
 
-                                                                    <h5 className="font-weight-bold mb-2">2. Save Emergency Recovery Codes</h5>
-                                                                    <p className="text-muted small mb-2">If you lose your device, these codes can recover your account. Save them securely.</p>
-                                                                    <div className="row g-2 mb-3 bg-white p-2 border rounded">
-                                                                        {mfaRecoveryCodes.map((code, idx) => (
-                                                                            <div key={idx} className="col-6 font-monospace small text-center p-1 bg-light border rounded">
-                                                                                {code}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
+                                                            <div className="mb-2">
+                                                                <label className="form-label small font-weight-bold">Account Password</label>
+                                                                <input
+                                                                    type="password"
+                                                                    className="form-control form-control-sm"
+                                                                    placeholder="Enter password"
+                                                                    value={mfaPassword}
+                                                                    onChange={(e) => setMfaPassword(e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="mb-3">
+                                                                <label className="form-label small font-weight-bold">Authenticator Code</label>
+                                                                <input
+                                                                    type="text"
+                                                                    maxLength={6}
+                                                                    className="form-control form-control-sm"
+                                                                    placeholder="6-digit code"
+                                                                    value={mfaVerificationCode}
+                                                                    onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ""))}
+                                                                />
+                                                            </div>
 
-                                                                    <h5 className="font-weight-bold mb-2">3. Verify Connection</h5>
-                                                                    <p className="text-muted small">Enter the 6-digit OTP generated by your authenticator app to verify.</p>
-
-                                                                    <div className="mb-3">
-                                                                        <input
-                                                                            type="text"
-                                                                            maxLength={6}
-                                                                            className="form-control text-center font-weight-bold"
-                                                                            placeholder="e.g. 123456"
-                                                                            style={{ fontSize: "1.2rem", letterSpacing: "0.2rem" }}
-                                                                            value={mfaVerificationCode}
-                                                                            onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ""))}
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="d-flex gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            className="btn btn-success btn-sm"
-                                                                            onClick={handleEnableMfa}
-                                                                        >
-                                                                            Verify and Enable
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="btn btn-outline-secondary btn-sm"
-                                                                            onClick={() => {
-                                                                                setMfaSetupStep("idle");
-                                                                                setMfaVerificationCode("");
-                                                                            }}
-                                                                        >
-                                                                            Cancel
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )}
+                                                            <div className="d-flex gap-2">
+                                                                <button type="button" className="btn btn-danger btn-sm" onClick={handleDisableMfa}>
+                                                                    Confirm Disable
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    onClick={() => { setMfaSetupStep("idle"); setMfaPassword(""); setMfaVerificationCode(""); }}
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
-                                            </div>
-                                        </Tab>
-                                    </Tabs>
-                                </div>
+                                            ) : (
+                                                <div className="mt-3">
+                                                    {mfaSetupStep === "idle" && (
+                                                        <div>
+                                                            <p className="text-warning font-weight-bold small">⚠️ MFA is currently disabled. Enable it to secure your documents.</p>
+                                                            <button
+                                                                type="button"
+                                                                className="btn btn-primary btn-sm mt-2"
+                                                                onClick={handleStartMfaSetup}
+                                                            >
+                                                                Set up Authenticator App
+                                                            </button>
+                                                        </div>
+                                                    )}
 
-                                <div className={styles.formActions}>
-                                    <button onClick={handleSubmit} className={styles.btnSave}>
-                                        <IoSaveOutline fontSize={16} /> Save Changes
-                                    </button>
-                                    <button onClick={() => router.push("/")} className={styles.btnCancel}>
-                                        <MdOutlineCancel fontSize={16} /> Cancel
-                                    </button>
-                                </div>
+                                                    {mfaSetupStep === "enrolling" && (
+                                                        <div className="p-3 bg-light rounded border mt-3">
+                                                            <h5 className="font-weight-bold mb-3">1. Scan the QR Code</h5>
+                                                            <p className="text-muted small">Scan this image using your Google Authenticator or Microsoft Authenticator app.</p>
+
+                                                            <div className="d-flex justify-content-center p-3 bg-white border rounded mb-3">
+                                                                {mfaQrCode && <img src={mfaQrCode} alt="MFA QR" width={180} height={180} />}
+                                                            </div>
+
+                                                            <div className="mb-3">
+                                                                <span className="text-muted small font-weight-bold">Manual Entry Code:</span>
+                                                                <div className="bg-white p-2 border rounded font-monospace text-center font-weight-bold mt-1" style={{ letterSpacing: "0.1rem" }}>
+                                                                    {mfaSecret}
+                                                                </div>
+                                                            </div>
+
+                                                            <h5 className="font-weight-bold mb-2">2. Save Emergency Recovery Codes</h5>
+                                                            <p className="text-muted small mb-2">If you lose your device, these codes can recover your account. Save them securely.</p>
+                                                            <div className="row g-2 mb-3 bg-white p-2 border rounded">
+                                                                {mfaRecoveryCodes.map((code, idx) => (
+                                                                    <div key={idx} className="col-6 font-monospace small text-center p-1 bg-light border rounded">
+                                                                        {code}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+
+                                                            <h5 className="font-weight-bold mb-2">3. Verify Connection</h5>
+                                                            <p className="text-muted small">Enter the 6-digit OTP generated by your authenticator app to verify.</p>
+
+                                                            <div className="mb-3">
+                                                                <input
+                                                                    type="text"
+                                                                    maxLength={6}
+                                                                    className="form-control text-center font-weight-bold"
+                                                                    placeholder="e.g. 123456"
+                                                                    style={{ fontSize: "1.2rem", letterSpacing: "0.2rem" }}
+                                                                    value={mfaVerificationCode}
+                                                                    onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ""))}
+                                                                />
+                                                            </div>
+
+                                                            <div className="d-flex gap-2">
+                                                                <button type="button" className="btn btn-success btn-sm" onClick={handleEnableMfa}>
+                                                                    Verify and Enable
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-outline-secondary btn-sm"
+                                                                    onClick={() => { setMfaSetupStep("idle"); setMfaVerificationCode(""); }}
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Tab>
+
+                            </Tabs>
+                        </div>
+
+                        <div className={styles.formActions}>
+                            <button onClick={handleSubmit} className={styles.btnSave}>
+                                <IoSaveOutline fontSize={16} /> Save Changes
+                            </button>
+                            <button onClick={() => router.push("/")} className={styles.btnCancel}>
+                                <MdOutlineCancel fontSize={16} /> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </DashboardLayout>
+
+            {/* Change Password Modal */}
+            <Modal show={show} onHide={handleClose} centered className="smallModel">
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <div className="d-flex flex-row align-items-center">
+                            <Heading text="Reset Password" color="#444" />
+                        </div>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="custom-scroll" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                        <div className="d-flex flex-column w-100">
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Email</label>
+                                <input
+                                    type="email"
+                                    className={styles.formInput}
+                                    value={myEmail || ""}
+                                    onChange={(e) => setMyEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Current Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>New Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
+                            <div className={styles.formGroup + " mb-3"}>
+                                <label className={styles.formLabel}>Confirm Password</label>
+                                <input
+                                    type="password"
+                                    className={styles.formInput}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                />
                             </div>
                         </div>
-                    </DashboardLayout>
-                    <Modal
-                        show={show}
-                        onHide={handleClose}
-                        centered
-                        className="smallModel"
-                    >
-                        <Modal.Header closeButton>
-                            <Modal.Title>
-                                <div className="d-flex flex-row align-items-center">
-                                    <Heading text="Reset Password" color="#444" />
-                                </div>
-                            </Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                            <div className="custom-scroll" style={{ maxHeight: "70vh", overflowY: "auto" }}>
-                                <div className="d-flex flex-column w-100">
-                                    <div className={styles.formGroup + " mb-3"}>
-                                        <label className={styles.formLabel}>Email</label>
-                                        <input
-                                            type="email"
-                                            className={styles.formInput}
-                                            value={myEmail || ""}
-                                            onChange={(e) => setMyEmail(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.formGroup + " mb-3"}>
-                                        <label className={styles.formLabel}>Current Password</label>
-                                        <input
-                                            type="password"
-                                            className={styles.formInput}
-                                            onChange={(e) => setCurrentPassword(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.formGroup + " mb-3"}>
-                                        <label className={styles.formLabel}>New Password</label>
-                                        <input
-                                            type="password"
-                                            className={styles.formInput}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.formGroup + " mb-3"}>
-                                        <label className={styles.formLabel}>Confirm Password</label>
-                                        <input
-                                            type="password"
-                                            className={styles.formInput}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                                {error && <p className="text-danger small mt-2">{error}</p>}
-                                <div className={styles.formActions + " mt-4"}>
-                                    <button onClick={handleResetPassword} className={styles.btnSave}>
-                                        <IoSaveOutline fontSize={16} /> Update Password
-                                    </button>
-                                    <button onClick={handleClose} className={styles.btnCancel}>
-                                        <MdOutlineCancel fontSize={16} /> Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        </Modal.Body>
-                    </Modal>
-                    <ToastMessage
-                        message={toastMessage}
-                        show={showToast}
-                        onClose={() => setShowToast(false)}
-                        type={toastType}
-                    />
-                </>
-            );
-        }
+                        {error && <p className="text-danger small mt-2">{error}</p>}
+                        <div className={styles.formActions + " mt-4"}>
+                            <button onClick={handleResetPassword} className={styles.btnSave}>
+                                <IoSaveOutline fontSize={16} /> Update Password
+                            </button>
+                            <button onClick={handleClose} className={styles.btnCancel}>
+                                <MdOutlineCancel fontSize={16} /> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </Modal.Body>
+            </Modal>
+
+            <ToastMessage
+                message={toastMessage}
+                show={showToast}
+                onClose={() => setShowToast(false)}
+                type={toastType}
+            />
+        </>
+    );
+}

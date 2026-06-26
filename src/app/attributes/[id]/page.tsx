@@ -8,7 +8,7 @@ import useAuth from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { IoAdd, IoClose, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 import { useUserContext } from "@/context/userContext";
@@ -20,6 +20,7 @@ import {
 import {
   CategoryDropdownItem
 } from "@/types/types";
+import { getFlattenedCategories } from "@/utils/commonFunctions";
 import { useParams } from "next/navigation";
 
 export default function AllDocTable() {
@@ -202,22 +203,16 @@ export default function AllDocTable() {
                     className="custom-dropdown-text-start text-start w-100"
                     onSelect={(value) => handleCategorySelect(value || "")}
                   >
-                    {categoryDropDownData.map((category) => (
+                    {getFlattenedCategories(categoryDropDownData).map((category) => (
                       <Dropdown.Item
                         key={category.id}
                         eventKey={category.id.toString()}
                         style={{
-                          fontWeight:
-                            category.parent_category === "none"
-                              ? "bold"
-                              : "normal",
-                          paddingLeft:
-                            category.parent_category === "none"
-                              ? "10px"
-                              : "20px",
+                          fontWeight: category.level === 0 ? "bold" : "normal",
+                          paddingLeft: `${category.level * 15 + 10}px`,
                         }}
                       >
-                        {category.category_name}
+                        {category.level > 0 ? "- ".repeat(category.level) : ""}{category.category_name}
                       </Dropdown.Item>
                     ))}
                   </DropdownButton>
@@ -340,7 +335,7 @@ export default function AllDocTable() {
               href="/attributes"
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </Link>
           </div>
         </div>

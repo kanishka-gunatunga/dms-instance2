@@ -25,7 +25,7 @@ import {
     MdOutlineKeyboardDoubleArrowRight,
 } from "react-icons/md";
 import { IoAdd, IoCheckmark, IoClose, IoFolder, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import {
     fetchCategoryChildrenData,
     fetchCategoryData,
@@ -34,6 +34,7 @@ import {
 import { deleteWithAuth, getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoMdCloudDownload } from "react-icons/io";
 import DashboardLayoutSuperAdmin from "@/components/DashboardLayoutSuperAdmin";
+import { getFlattenedCategories } from "@/utils/commonFunctions";
 
 interface Category {
     id: number;
@@ -43,6 +44,53 @@ interface Category {
     status: string;
     children?: Category[];
 }
+
+interface FlattenedCategory extends Category {
+    depth: number;
+}
+
+const flattenCategories = (
+    categories: Category[],
+    depth = 0,
+    result: FlattenedCategory[] = [],
+    parentCollapsed = false,
+    collapsedMap: Record<number, boolean> = {}
+): FlattenedCategory[] => {
+    for (const cat of categories) {
+        if (!parentCollapsed) {
+            result.push({ ...cat, depth });
+        }
+        if (cat.children && cat.children.length > 0) {
+            const isExpanded = !!collapsedMap[cat.id];
+            flattenCategories(cat.children, depth + 1, result, parentCollapsed || !isExpanded, collapsedMap);
+        }
+    }
+    return result;
+};
+
+const getDescendantIds = (catId: number, categories: Category[]): number[] => {
+    const ids: number[] = [];
+    const find = (list: Category[]) => {
+        for (const cat of list) {
+            if (cat.id === catId) {
+                const collect = (node: Category) => {
+                    if (node.children) {
+                        for (const child of node.children) {
+                            ids.push(child.id);
+                            collect(child);
+                        }
+                    }
+                };
+                collect(cat);
+                break;
+            } else if (cat.children) {
+                find(cat.children);
+            }
+        }
+    };
+    find(categories);
+    return ids;
+};
 
 export default function AllDocTable() {
     const [category_name, setCategoryName] = useState<string>("");
@@ -178,6 +226,8 @@ export default function AllDocTable() {
         currentPage * itemsPerPage
     );
 
+    const visibleRows = flattenCategories(paginatedData, 0, [], false, collapsedRows);
+
     const addAttribute = () => {
         if (currentAttribue.trim() !== "" && !attributeData.includes(currentAttribue.trim())) {
             setattributeData((prev) => [...prev, currentAttribue.trim()]);
@@ -259,7 +309,7 @@ export default function AllDocTable() {
     const handleAddChildCategory = async () => {
         try {
             const formData = new FormData();
-            formData.append("parent_category", selectedParentId?.toString() || "none");
+            formData.append("parent_category", selectedCategoryId || "none");
             formData.append("category_name", category_name || "");
             formData.append("description", description);
 
@@ -456,6 +506,12 @@ export default function AllDocTable() {
         }
     };
 
+    const descendants = getDescendantIds(selectedItemId ? selectedItemId : 0, dummyData);
+    const excludedIds = [selectedItemId ? selectedItemId : 0, ...descendants];
+    const editDropdownItems = getFlattenedCategories(categoryDropDownData).filter(
+        (item) => !excludedIds.includes(item.id)
+    );
+
     return (
         <>
             <DashboardLayoutSuperAdmin>
@@ -481,24 +537,24 @@ export default function AllDocTable() {
                             <Table responsive>
                                 <thead className="sticky-header">
                                     <tr>
-                                        <th className="text-center" style={{ width: "10%" }}></th>
-                                        <th className="text-start" style={{ width: "20%" }}>
+                                        <th className="text-center" style={{ width: "5%" }}></th>
+                                        <th className="text-start" style={{ width: "25%" }}>
                                             Action
                                         </th>
-                                        <th className="text-start" style={{ width: "70%" }}>
+                                        <th className="text-start" style={{ width: "50%" }}>
                                             Name
                                         </th>
-                                        <th className="text-start" style={{ width: "70%" }}>
+                                        <th className="text-start" style={{ width: "20%" }}>
                                             Template
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {paginatedData.length > 0 ? (
-                                        paginatedData.map((item) => (
-                                            <React.Fragment key={item.id}>
-                                                <tr className="border-bottom" >
-                                                    <td className="border-0">
+                                    {visibleRows.length > 0 ? (
+                                        visibleRows.map((item) => (
+                                            <tr key={item.id} className="border-bottom">
+                                                <td className="border-0 text-center">
+                                                    {item.children && item.children.length > 0 ? (
                                                         <button
                                                             onClick={() => toggleCollapse(item.id)}
                                                             className="custom-icon-button text-secondary"
@@ -513,176 +569,73 @@ export default function AllDocTable() {
                                                                 />
                                                             )}
                                                         </button>
-                                                    </td>
-                                                    <td className="border-0">
-                                                        <div className="d-flex flex-row">
-
-                                                            <button
-                                                                onClick={() => {
-                                                                    handleOpenModal("editModel");
-                                                                    setSelectedItemId(item.id);
-                                                                }}
-                                                                className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                                                            >
-                                                                <MdOutlineEdit fontSize={16} className="me-1" />{" "}
-                                                                Edit
-                                                            </button>
-
-                                                            <button
-                                                                onClick={() => {
-                                                                    handleOpenModal("deleteModel");
-                                                                    setSelectedItemId(item.id);
-                                                                }}
-                                                                className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                                                            >
-                                                                <AiOutlineDelete
-                                                                    fontSize={16}
-                                                                    className="me-1"
-                                                                />{" "}
-                                                                Disable
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                    <td className="border-0">
-                                                        <div className="d-flex flex-row align-items-center">
-                                                            {item.category_name}
-                                                            <span className={`ms-2 mb-0 badge ${item.status === 'active' ? 'active-badge' : 'inactive-badge'}`}>
-                                                                {item.status}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="border-0">
-                                                        <div className="col-12 col-lg-12 d-flex flex-column mt-2 pe-2">
-                                                            {item.status === 'active' && (
-                                                                <a href={item.template} download style={{ color: "#333" }} className="d-flex flex-row align-items-center ms-0">
-                                                                    <div className="d-flex flex-row align-items-center custom-icon-button button-success px-3 py-1 rounded">
-                                                                        <IoMdCloudDownload />
-                                                                        <p className="ms-3 mb-0">Download Template</p>
-                                                                    </div>
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                </tr>
-
-                                                {collapsedRows[item.id] && (
-                                                    <tr>
-                                                        <td
-                                                            colSpan={3}
-                                                            style={{
-                                                                paddingLeft: "10%",
-                                                                paddingRight: "10%",
+                                                    ) : null}
+                                                </td>
+                                                <td className="border-0">
+                                                    <div className="d-flex flex-row">
+                                                        <button
+                                                            onClick={() => {
+                                                                handleOpenModal("editModel");
+                                                                setSelectedItemId(item.id);
                                                             }}
+                                                            className="custom-icon-button button-success px-3 py-1 rounded me-2"
                                                         >
-                                                            <table className="table rounded">
-                                                                <thead>
-                                                                    <tr className="border-bottom" >
-                                                                        <td colSpan={2}>
-                                                                            <div className="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center">
-                                                                                <div className="col-lg-auto pe-lg-3 mb-2 mb-lg-0">
-                                                                                    <Paragraph
-                                                                                        color="#333"
-                                                                                        text="Child Categories"
-                                                                                    />
-                                                                                </div>
-                                                                                <div className="col-lg-7 text-end">
+                                                            <MdOutlineEdit fontSize={16} className="me-1" />{" "}
+                                                            Edit
+                                                        </button>
 
-                                                                                    <button
-                                                                                        onClick={() => {
-                                                                                            handleOpenModal(
-                                                                                                "addChildCategory"
-                                                                                            );
-                                                                                            setSelectedParentId(item.id);
-                                                                                        }}
-                                                                                        className="addButton bg-success text-white border border-success rounded px-3 py-1"
-                                                                                    >
-                                                                                        <FaPlus className="me-1" /> Add Child Category
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <th className="text-start">Actions</th>
-                                                                        <th className="text-start">Name</th>
-                                                                        <th className="text-start">
-                                                                            Template
-                                                                        </th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {item.children && item.children.length > 0 ? (
-                                                                        item.children.map((child) => (
-                                                                            <tr key={child.id} className="border-bottom" >
-                                                                                <td className=" border-0">
-                                                                                    <div className="d-flex flex-row">
-                                                                                        <button
-                                                                                            onClick={() => {
-                                                                                                handleOpenModal("editModel");
-                                                                                                setSelectedItemId(child.id);
-                                                                                            }}
-                                                                                            className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                                                                                        >
-                                                                                            <MdOutlineEdit
-                                                                                                fontSize={16}
-                                                                                                className="me-1"
-                                                                                            />{" "}
-                                                                                            Edit
-                                                                                        </button>
-                                                                                        <button
-                                                                                            onClick={() => {
-                                                                                                handleOpenModal("deleteModel");
-                                                                                                setSelectedItemId(child.id);
-                                                                                            }}
-                                                                                            className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                                                                                        >
-                                                                                            <AiOutlineDelete
-                                                                                                fontSize={16}
-                                                                                                className="me-1"
-                                                                                            />{" "}
-                                                                                            Disable
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td className="border-0">
-                                                                                    {child.category_name}
-                                                                                    <span className={`ms-2 mb-0 badge ${item.status === 'active' ? 'active-badge' : 'inactive-badge'}`}>
-                                                                                        {item.status}
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td className=" border-0">
-                                                                                    <div className="col-12 col-lg-12 d-flex flex-column pe-2">
-                                                                                        <a href={child.template} download style={{ color: "#333" }} className="d-flex flex-row align-items-center ms-0 ">
-                                                                                            <div className="d-flex flex-row align-items-center custom-icon-button button-success px-3 py-1 rounded ">
-                                                                                                <IoMdCloudDownload />
-                                                                                                <p className="ms-3 mb-0">Download Template</p>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        ))
-                                                                    ) : (
-                                                                        <tr>
-                                                                            <td
-                                                                                colSpan={2}
-                                                                                className="text-center py-3"
-                                                                            >
-                                                                                No child categories available.
-                                                                            </td>
-                                                                        </tr>
-                                                                    )}
-                                                                </tbody>
-                                                            </table>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
+                                                        <button
+                                                            onClick={() => {
+                                                                handleOpenModal("addChildCategory");
+                                                                setSelectedCategoryId(item.id.toString());
+                                                            }}
+                                                            className="custom-icon-button button-success px-3 py-1 rounded me-2"
+                                                            style={{ backgroundColor: "#198754", borderColor: "#198754", color: "#fff" }}
+                                                        >
+                                                            <FaPlus className="me-1" /> Add Sub
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => {
+                                                                handleOpenModal("deleteModel");
+                                                                setSelectedItemId(item.id);
+                                                            }}
+                                                            className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+                                                        >
+                                                            <AiOutlineDelete
+                                                                fontSize={16}
+                                                                className="me-1"
+                                                            />{" "}
+                                                            Disable
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                                <td className="border-0">
+                                                    <div className="d-flex flex-row align-items-center" style={{ paddingLeft: `${item.depth * 24}px` }}>
+                                                        <IoFolder className="me-2 text-primary" style={{ minWidth: "16px" }} />
+                                                        <span>{item.category_name}</span>
+                                                        <span className={`ms-2 mb-0 badge ${item.status === 'active' ? 'active-badge' : 'inactive-badge'}`}>
+                                                            {item.status}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="border-0">
+                                                    <div className="col-12 col-lg-12 d-flex flex-column mt-2 pe-2">
+                                                        {item.status === 'active' && (
+                                                            <a href={item.template} download style={{ color: "#333" }} className="d-flex flex-row align-items-center ms-0">
+                                                                <div className="d-flex flex-row align-items-center custom-icon-button button-success px-3 py-1 rounded">
+                                                                    <IoMdCloudDownload />
+                                                                    <p className="ms-3 mb-0">Download Template</p>
+                                                                </div>
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={3} className="text-start w-100 py-3">
+                                            <td colSpan={4} className="text-start w-100 py-3">
                                                 <Paragraph text="No data available" color="#333" />
                                             </td>
                                         </tr>
@@ -791,20 +744,18 @@ export default function AllDocTable() {
                                 >
                                     None
                                 </Dropdown.Item>
-                                {categoryDropDownData
-                                    .filter((category) => category.parent_category === "none")
-                                    .map((category) => (
-                                        <Dropdown.Item
-                                            key={category.id}
-                                            eventKey={category.id.toString()}
-                                            style={{
-                                                fontWeight: "bold",
-                                                marginLeft: "0px",
-                                            }}
-                                        >
-                                            {category.category_name}
-                                        </Dropdown.Item>
-                                    ))}
+                                {getFlattenedCategories(categoryDropDownData).map((category) => (
+                                    <Dropdown.Item
+                                        key={category.id}
+                                        eventKey={category.id.toString()}
+                                        style={{
+                                            marginLeft: "0px",
+                                            paddingLeft: `${category.level * 15 + 12}px`,
+                                        }}
+                                    >
+                                        {category.level > 0 ? "— ".repeat(category.level) : ""}{category.category_name}
+                                    </Dropdown.Item>
+                                ))}
                             </DropdownButton>
                         </div>
                         <div className="col-12 col-lg-12 d-flex flex-column mb-2 pe-2">
@@ -980,7 +931,7 @@ export default function AllDocTable() {
                             }}
                             className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                         >
-                            <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                            <MdCancel fontSize={16} className="me-1" /> Cancel
                         </button>
                     </div>
                 </Modal.Footer>
@@ -1044,20 +995,18 @@ export default function AllDocTable() {
                                 >
                                     None
                                 </Dropdown.Item>
-                                {categoryDropDownData
-                                    .filter((category) => category.parent_category === "none")
-                                    .map((category) => (
-                                        <Dropdown.Item
-                                            key={category.id}
-                                            eventKey={category.id.toString()}
-                                            style={{
-                                                fontWeight: "bold",
-                                                marginLeft: "0px",
-                                            }}
-                                        >
-                                            {category.category_name}
-                                        </Dropdown.Item>
-                                    ))}
+                                {getFlattenedCategories(categoryDropDownData).map((category) => (
+                                    <Dropdown.Item
+                                        key={category.id}
+                                        eventKey={category.id.toString()}
+                                        style={{
+                                            marginLeft: "0px",
+                                            paddingLeft: `${category.level * 15 + 12}px`,
+                                        }}
+                                    >
+                                        {category.level > 0 ? "— ".repeat(category.level) : ""}{category.category_name}
+                                    </Dropdown.Item>
+                                ))}
                             </DropdownButton>
                         </div>
                         <div className="col-12 col-lg-12 d-flex flex-column mb-2">
@@ -1234,7 +1183,7 @@ export default function AllDocTable() {
                             }}
                             className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                         >
-                            <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                            <MdCancel fontSize={16} className="me-1" /> Cancel
                         </button>
                     </div>
                 </Modal.Footer>
@@ -1297,21 +1246,18 @@ export default function AllDocTable() {
                                 >
                                     None
                                 </Dropdown.Item>
-
-                                {categoryDropDownData
-                                    .filter((category) => category.parent_category === "none")
-                                    .map((category) => (
-                                        <Dropdown.Item
-                                            key={category.id}
-                                            eventKey={category.id.toString()}
-                                            style={{
-                                                fontWeight: "bold",
-                                                marginLeft: "0px",
-                                            }}
-                                        >
-                                            {category.category_name}
-                                        </Dropdown.Item>
-                                    ))}
+                                {editDropdownItems.map((category) => (
+                                    <Dropdown.Item
+                                        key={category.id}
+                                        eventKey={category.id.toString()}
+                                        style={{
+                                            marginLeft: "0px",
+                                            paddingLeft: `${category.level * 15 + 12}px`,
+                                        }}
+                                    >
+                                        {category.level > 0 ? "— ".repeat(category.level) : ""}{category.category_name}
+                                    </Dropdown.Item>
+                                ))}
                             </DropdownButton>
                         </div>
                         <div className="col-12 col-lg-12 d-flex flex-column mb-2">
@@ -1499,7 +1445,7 @@ export default function AllDocTable() {
                             }}
                             className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                         >
-                            <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                            <MdCancel fontSize={16} className="me-1" /> Cancel
                         </button>
                     </div>
                 </Modal.Footer>
@@ -1543,7 +1489,7 @@ export default function AllDocTable() {
                                 }}
                                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                             >
-                                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                                <MdCancel fontSize={16} className="me-1" /> No
                             </button>
                         </div>
                     </div>

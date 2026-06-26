@@ -20,6 +20,7 @@ import type { RadioChangeEvent } from 'antd';
 import { useParams } from 'next/navigation';
 import dayjs from "dayjs";
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import styles from "../add/reminders-add.module.css";
 
 dayjs.extend(customParseFormat);
 
@@ -437,29 +438,21 @@ export default function AllDocTable() {
     return (
         <>
             <DashboardLayout>
-                <div className="d-flex justify-content-between align-items-center pt-2">
-                    <Heading text="Manage Reminder" color="#444" />
-                </div>
+                <div className={styles.pageWrapper}>
+                    <div className={styles.pageHeader}>
+                        <Heading text="Manage Reminder" color="#444" />
+                    </div>
 
-                <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-                    <div
-                        style={{
-                            maxHeight: "70vh",
-                            overflowY: "auto",
-                            overflowX: "hidden",
-                        }}
-                        className="custom-scroll"
-                    >
-                        <div
-                            className="d-flex flex-column mb-3 custom-scroll"
-                        >
-                            <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                    <div className={`d-flex flex-column ${styles.card} ${styles.formCard}`}>
+                        <div className={`${styles.formContent} custom-scroll`}>
+                        <div className={`d-flex flex-column mb-3 ${styles.formGroup}`}>
+                            <p className={styles.formLabel}>
                                 Subject
                             </p>
                             <div className="input-group mb-2">
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={`form-control ${styles.formInput}`}
                                     id="subject"
                                     value={addReminder?.subject || ""}
                                     onChange={(e) =>
@@ -484,12 +477,12 @@ export default function AllDocTable() {
                                     required
                                 />
                             </div>
-                            <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
+                            <p className={styles.formLabel}>
                                 Message
                             </p>
                             <div className="input-group mb-2">
                                 <textarea
-                                    className="form-control"
+                                    className={`form-control ${styles.formTextarea}`}
                                     id="message"
                                     value={addReminder?.message || ""}
                                     onChange={(e) =>
@@ -516,9 +509,9 @@ export default function AllDocTable() {
                             </div>
                         </div>
                         <div className="d-flex flex-column">
-                            <div className="d-flex flex-column-reverse flex-lg-row">
-                                <div className="col-12 col-lg-5 mb-3">
-                                    <label className="d-flex flex-row mt-2">
+                            <div className={styles.fourColRow}>
+                                <div className={styles.fourColItem}>
+                                    <label className="d-flex flex-row">
                                         <Checkbox
                                             checked={addReminder?.is_repeat === "1"}
                                             onChange={(e) =>
@@ -542,17 +535,14 @@ export default function AllDocTable() {
                                             }
                                             className="me-2"
                                         >
-                                            <p
-                                                className="mb-0 text-start w-100"
-                                                style={{ fontSize: "14px" }}
-                                            >
+                                            <p className={`mb-0 text-start w-100 ${styles.formLabel}`}>
                                                 Repeat Reminder
                                             </p>
                                         </Checkbox>
                                     </label>
                                 </div>
-                                <div className="col-12 col-lg-4 d-flex flex-column flex-lg-row align-items-lg-center mb-3 pe-2">
-                                    <label className="col-3 d-flex flex-row me-2 align-items-center">
+                                <div className={styles.fourColItem}>
+                                    <label className="d-flex flex-row">
                                         <Checkbox
                                             checked={addReminder?.send_email === "1"}
                                             onChange={(e) =>
@@ -576,96 +566,85 @@ export default function AllDocTable() {
                                             }
                                             className="me-2"
                                         >
-                                            <p
-                                                className="mb-0 text-start w-100"
-                                                style={{ fontSize: "14px" }}
-                                            >
+                                            <p className={`mb-0 text-start w-100 ${styles.formLabel}`}>
                                                 Send Email
                                             </p>
-
                                         </Checkbox>
                                     </label>
-                                    <div className="col-lg-9 d-flex flex-column flex-lg-row">
-                                        <div className="col-lg-6 d-flex flex-column position-relative w-100  me-1">
-                                            <DropdownButton
-                                                id="dropdown-category-button-2"
-                                                title={users.length > 0 ? users.join(", ") : "Select Users"}
-                                                className="custom-dropdown-text-start text-start w-100"
-                                                onSelect={(value) => {
-                                                    if (value) handleUserSelect(value);
-                                                }}
+                                </div>
+                                <div className={`${styles.fourColItem} d-flex flex-column`}>
+                                    <DropdownButton
+                                        id="dropdown-category-button-2"
+                                        title={users.length > 0 ? users.join(", ") : "Select Users"}
+                                        className="custom-dropdown-text-start text-start w-100"
+                                        onSelect={(value) => {
+                                            if (value) handleUserSelect(value);
+                                        }}
+                                    >
+                                        {userDropDownData.length > 0 ? (
+                                            userDropDownData.map((user) => (
+                                                <Dropdown.Item key={user.id} eventKey={user.id}>
+                                                    {user.user_name}
+                                                </Dropdown.Item>
+                                            ))
+                                        ) : (
+                                            <Dropdown.Item disabled>No users available</Dropdown.Item>
+                                        )}
+                                    </DropdownButton>
+                                    <div className="mt-1">
+                                        {users.map((user, index) => (
+                                            <span
+                                                key={index}
+                                                className={styles.badgeTag}
                                             >
-                                                {userDropDownData.length > 0 ? (
-                                                    userDropDownData.map((user) => (
-                                                        <Dropdown.Item key={user.id} eventKey={user.id}>
-                                                            {user.user_name}
-                                                        </Dropdown.Item>
-                                                    ))
-                                                ) : (
-                                                    <Dropdown.Item disabled>No users available</Dropdown.Item>
-                                                )}
-                                            </DropdownButton>
-
-                                            <div className="mt-1">
-                                                {users.map((user, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="badge bg-primary text-light me-2 p-2 d-inline-flex align-items-center"
-                                                    >
-                                                        {user}
-                                                        <IoClose
-                                                            className="ms-2"
-                                                            style={{ cursor: "pointer" }}
-                                                            onClick={() => handleUserRemove(user)}
-                                                        />
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="col-lg-6 d-flex flex-column position-relative w-100">
-                                            <div className="d-flex flex-column position-relative">
-                                                <DropdownButton
-                                                    id="dropdown-category-button"
-                                                    title={
-                                                        roles.length > 0 ? roles.join(", ") : "Select Roles"
-                                                    }
-                                                    className="custom-dropdown-text-start text-start w-100"
-                                                    onSelect={(value) => {
-                                                        if (value) handleRoleSelect(value);
-                                                    }}
-                                                >
-                                                    {roleDropDownData.length > 0 ? (
-                                                        roleDropDownData.map((role) => (
-                                                            <Dropdown.Item key={role.id} eventKey={role.id}>
-                                                                {role.role_name}
-                                                            </Dropdown.Item>
-                                                        ))
-                                                    ) : (
-                                                        <Dropdown.Item disabled>
-                                                            No Roles available
-                                                        </Dropdown.Item>
-                                                    )}
-                                                </DropdownButton>
-
-                                                <div className="mt-1">
-                                                    {roles.map((role, index) => (
-                                                        <span
-                                                            key={index}
-                                                            className="badge bg-primary text-light me-2 p-2 d-inline-flex align-items-center"
-                                                        >
-                                                            {role}
-                                                            <IoClose
-                                                                className="ms-2"
-                                                                style={{ cursor: "pointer" }}
-                                                                onClick={() => handleRemoveRole(role)}
-                                                            />
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
+                                                {user}
+                                                <IoClose
+                                                    className="ms-2"
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => handleUserRemove(user)}
+                                                />
+                                            </span>
+                                        ))}
                                     </div>
-
+                                </div>
+                                <div className={`${styles.fourColItem} d-flex flex-column`}>
+                                    <DropdownButton
+                                        id="dropdown-category-button"
+                                        title={
+                                            roles.length > 0 ? roles.join(", ") : "Select Roles"
+                                        }
+                                        className="custom-dropdown-text-start text-start w-100"
+                                        onSelect={(value) => {
+                                            if (value) handleRoleSelect(value);
+                                        }}
+                                    >
+                                        {roleDropDownData.length > 0 ? (
+                                            roleDropDownData.map((role) => (
+                                                <Dropdown.Item key={role.id} eventKey={role.id}>
+                                                    {role.role_name}
+                                                </Dropdown.Item>
+                                            ))
+                                        ) : (
+                                            <Dropdown.Item disabled>
+                                                No Roles available
+                                            </Dropdown.Item>
+                                        )}
+                                    </DropdownButton>
+                                    <div className="mt-1">
+                                        {roles.map((role, index) => (
+                                            <span
+                                                key={index}
+                                                className={styles.badgeTag}
+                                            >
+                                                {role}
+                                                <IoClose
+                                                    className="ms-2"
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => handleRemoveRole(role)}
+                                                />
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                             <div className="d-flex flex-column flex-lg-row">
@@ -727,7 +706,7 @@ export default function AllDocTable() {
                                                                 onChange={() => handleDailyCheckboxChange(day)}
                                                                 className="me-2"
                                                             >
-                                                                <p className="mb-0 text-start w-100" style={{ fontSize: "14px" }}>
+                                                                <p className={`mb-0 text-start w-100 ${styles.formLabel}`}>
                                                                     {day}
                                                                 </p>
                                                             </Checkbox>
@@ -766,7 +745,7 @@ export default function AllDocTable() {
                                                         className="d-flex flex-column flex-lg-row"
                                                     >
                                                         {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
-                                                            <label key={day} style={{ display: "block", marginBottom: "5px" }}>
+                                                            <label key={day} className={`d-block mb-1 ${styles.formLabel}`}>
                                                                 <Radio value={day}>{day}</Radio>
                                                             </label>
                                                         ))}
@@ -997,13 +976,11 @@ export default function AllDocTable() {
                                         <div className="d-flex flex-column flex-lg-row w-100  pe-lg-2 mb-3">
                                             <div className="col-12 col-lg-6 d-flex flex-column pe-lg-1">
                                                 <label className="d-flex flex-column w-100">
-                                                    <p
-                                                        className="mb-1 text-start w-100"
-                                                        style={{ fontSize: "14px" }}
-                                                    >
+                                                    <p className={`mb-1 text-start w-100 ${styles.formLabel}`}>
                                                         Reminder Start Date
                                                     </p>
                                                 </label>
+                                                <div className={styles.datePickerWrapper}>
                                                 <DatePicker
                                                     showTime
                                                     defaultValue={dayjs(addReminder.start_date_time, "YYYY-MM-DD HH:mm:ss")}
@@ -1012,17 +989,15 @@ export default function AllDocTable() {
                                                     }}
                                                     onOk={(value) => onStartDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                                                 />
-
+                                                </div>
                                             </div>
                                             <div className="col-12 col-lg-6 d-flex flex-column  ps-lg-1">
                                                 <label className="d-flex flex-column w-100">
-                                                    <p
-                                                        className="mb-1 text-start w-100"
-                                                        style={{ fontSize: "14px" }}
-                                                    >
+                                                    <p className={`mb-1 text-start w-100 ${styles.formLabel}`}>
                                                         Reminder End Date
                                                     </p>
                                                 </label>
+                                                <div className={styles.datePickerWrapper}>
                                                 <DatePicker
                                                     showTime
                                                     defaultValue={dayjs(addReminder.end_date_time, "YYYY-MM-DD HH:mm:ss")}
@@ -1030,6 +1005,7 @@ export default function AllDocTable() {
                                                     }}
                                                     onOk={(value) => onEndDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                                                 />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1037,14 +1013,12 @@ export default function AllDocTable() {
                                     <div className="w-100">
                                         <div className="col-12 col-md-6 d-flex flex-column">
                                             <label className="d-block w-100">
-                                                <p
-                                                    className="mb-1 text-start w-100"
-                                                    style={{ fontSize: "14px" }}
-                                                >
+                                                <p className={`mb-1 text-start w-100 ${styles.formLabel}`}>
                                                     Reminder Date
                                                 </p>
                                             </label>
 
+                                            <div className={styles.datePickerWrapper}>
                                             <DatePicker
                                                 showTime
                                                 defaultValue={dayjs(addReminder?.date_time, "YYYY-MM-DD HH:mm:ss")}
@@ -1053,28 +1027,29 @@ export default function AllDocTable() {
                                                 }}
                                                 onOk={(value) => onDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                                             />
+                                            </div>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-                        <div className="d-flex flex-row mt-3">
+                        <div className={styles.formActions}>
                             <button
                                 onClick={() => handleAddReminder()}
-                                className="custom-icon-button button-success px-3 py-1 rounded me-2"
+                                className={styles.btnSave}
                             >
-                                <IoSaveOutline fontSize={16} className="me-1" /> Save
+                                <IoSaveOutline fontSize={16} /> Save
                             </button>
                             <button
                                 onClick={() => window.location.href = "/reminders"}
-                                className="custom-icon-button button-danger px-3 py-1 rounded me-2"
+                                className={styles.btnCancel}
                             >
-                                <IoClose fontSize={16} className="me-1" /> Cancel
+                                <IoClose fontSize={16} /> Cancel
                             </button>
                         </div>
 
                     </div>
-
+                </div>
                 </div>
                 <ToastMessage
                     message={toastMessage}

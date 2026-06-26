@@ -90,7 +90,7 @@ const page = () => {
         const expiresIn = 1;
         Cookies.set("authToken", data.data.token, {
           expires: expiresIn,
-          secure: true,
+          secure: false,
           sameSite: "strict",
         });
 

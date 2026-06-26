@@ -10,11 +10,13 @@ import { DropdownButton, Dropdown } from "react-bootstrap";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { useRouter } from "next/navigation";
 import { IoClose, IoSaveOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import ToastMessage from "@/components/common/Toast";
 import { fetchRoleData, fetchSectors } from "@/utils/dataFetchFunctions";
 import { RoleDropdownItem } from "@/types/types";
 import { SectorDropdownItem } from "@/types/types";
+import { getFlattenedSectors } from "@/utils/commonFunctions";
+import styles from "../add-user/add-user.module.css";
 
 type Params = {
   id: string;
@@ -50,7 +52,7 @@ export default function AllDocTable({ params }: Props) {
   );
   const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
-  const [selectedSectorId, setSelectedSectorId] = useState<string>("");
+  const [selectedSectorIds, setSelectedSectorIds] = useState<string[]>([]);
   const [sectorDropDownData, setSectorDropDownData] = useState<
     SectorDropdownItem[]
   >([]);
@@ -59,7 +61,13 @@ export default function AllDocTable({ params }: Props) {
   const id = params?.id;
 
   const handleSectorSelect = (sectorId: string) => {
-    setSelectedSectorId(sectorId);
+    if (!selectedSectorIds.includes(sectorId)) {
+      setSelectedSectorIds((prev) => [...prev, sectorId]);
+    }
+  };
+
+  const handleRemoveSector = (sectorId: string) => {
+    setSelectedSectorIds((prev) => prev.filter((id) => id !== sectorId));
   };
 
   useEffect(() => {
@@ -76,10 +84,11 @@ export default function AllDocTable({ params }: Props) {
         setMobileNumber(response.user_details.mobile_no?.toString() || "");
         setEmail(response.email || "");
         const roleIds = parseRoles(response.role);
-        setSelectedSectorId(response.user_details.sector);
+        const sectorIds = parseSectors(response.user_details.sector);
+        setSelectedSectorIds(sectorIds);
         setSelectedRoleIds(roleIds);
-      } catch (error) {
-        console.error("Failed to fetch profile data:", error);
+      } catch {
+        console.error("Failed to fetch profile data:");
       }
     };
 
@@ -87,6 +96,27 @@ export default function AllDocTable({ params }: Props) {
       fetchUserDetails();
     }
   }, [id]);
+
+  const parseSectors = (sectorData: any): string[] => {
+    if (typeof sectorData === "string") {
+      try {
+        const parsed = JSON.parse(sectorData);
+        if (Array.isArray(parsed)) {
+          return parsed.map(String);
+        }
+      } catch {
+        const cleanedData = sectorData.replace(/[^0-9,]/g, '');
+        if (cleanedData) {
+          return cleanedData.split(',').filter((id) => id.trim() !== "");
+        }
+      }
+    } else if (typeof sectorData === "number") {
+      return [sectorData.toString()];
+    } else if (Array.isArray(sectorData)) {
+      return sectorData.map(String);
+    }
+    return [];
+  };
 
   const parseRoles = (roleData: any): string[] => {
     if (typeof roleData === "string") {
@@ -135,7 +165,7 @@ export default function AllDocTable({ params }: Props) {
     if (!mobileNumber.trim()) newErrors.mobile_no = "Mobile number is required.";
     if (!email.trim()) newErrors.email = "Email is required.";
     if (selectedRoleIds.length === 0) newErrors.role = "Role is required.";
-    if (!selectedSectorId) newErrors.sector = "Sector is required.";
+    if (selectedSectorIds.length === 0) newErrors.sector = "Sector is required.";
     return newErrors;
   };
   const handleSubmit = async () => {
@@ -152,7 +182,7 @@ export default function AllDocTable({ params }: Props) {
     formData.append("mobile_no", mobileNumber);
     formData.append("email", email);
     formData.append("role", JSON.stringify(selectedRoleIds));
-    formData.append("sector", selectedSectorId);
+    formData.append("sector", JSON.stringify(selectedSectorIds));
 
     try {
       const response = await postWithAuth(`user-details/${id}`, formData);
@@ -160,17 +190,14 @@ export default function AllDocTable({ params }: Props) {
         setToastType("error");
         setToastMessage("Failed to update user!");
         setShowToast(true);
-        setTimeout(() => {
-          setShowToast(false);
-        }, 5000);
+        setTimeout(() => setShowToast(false), 5000);
+      } else {
+        setToastType("success");
+        setToastMessage("User Updated successfully!");
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 5000);
+        // setSuccess("Form submitted successfully");
       }
-      setToastType("success");
-      setToastMessage("User Updated successfully!");
-      setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-      }, 5000);
-      // setSuccess("Form submitted successfully");
     } catch (error) {
       console.error("Error submitting form:", error);
     }
@@ -179,77 +206,58 @@ export default function AllDocTable({ params }: Props) {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Manage Users" color="#444" />
-        </div>
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Manage Users" color="#444" />
+          </div>
 
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div
-            style={{ maxHeight: "380px", overflowY: "auto" }}
-            className="custom-scroll"
-          >
-            <div className="p-0 row row-cols-1 row-cols-md-2 overflow-hidden w-100">
-              <div className="d-flex flex-column">
-                <p className="mb-1" style={{ fontSize: "14px" }}>
-                  First Name
-                </p>
-                <div className="input-group mb-3 pe-lg-4">
+          <div className={`d-flex flex-column ${styles.card} ${styles.formCard}`}>
+            <div className={`${styles.formContent} custom-scroll`}>
+              <div className="p-0 row row-cols-1 row-cols-md-2 w-100">
+                <div className={`d-flex flex-column ${styles.formGroup}`}>
+                  <p className={styles.formLabel}>First Name</p>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className={`${errors.first_name ? "is-invalid" : ""} form-control`}
+                    className={`${styles.formInput} ${errors.first_name ? styles.isInvalid : ""}`}
                   />
                   {errors.first_name && <div className="invalid-feedback">{errors.first_name}</div>}
                 </div>
-              </div>
-              <div className="d-flex flex-column">
-                <p className="mb-1" style={{ fontSize: "14px" }}>
-                  Last Name
-                </p>
-                <div className="input-group mb-3 pe-lg-4">
+                <div className={`d-flex flex-column ${styles.formGroup}`}>
+                  <p className={styles.formLabel}>Last Name</p>
                   <input
                     type="text"
-                    className={`${errors.last_name ? "is-invalid" : ""} form-control`}
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    className={`${styles.formInput} ${errors.last_name ? styles.isInvalid : ""}`}
                   />
                   {errors.last_name && <div className="invalid-feedback">{errors.last_name}</div>}
                 </div>
-              </div>
-              <div className="d-flex flex-column">
-                <p className="mb-1" style={{ fontSize: "14px" }}>
-                  Mobile Number
-                </p>
-                <div className="input-group mb-3 pe-lg-4">
+                <div className={`d-flex flex-column ${styles.formGroup}`}>
+                  <p className={styles.formLabel}>Mobile Number</p>
                   <input
-                    type="number"
-                    className={`${errors.mobile_no ? "is-invalid" : ""} form-control`}
+                    type="tel"
+                    inputMode="numeric"
                     value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
+                    onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ""))}
+                    className={`${styles.formInput} ${errors.mobile_no ? styles.isInvalid : ""}`}
                   />
                   {errors.mobile_no && <div className="invalid-feedback">{errors.mobile_no}</div>}
                 </div>
-              </div>
-              <div className="d-flex flex-column">
-                <p className="mb-1" style={{ fontSize: "14px" }}>
-                  Email
-                </p>
-                <div className="input-group mb-3 pe-lg-4">
+                <div className={`d-flex flex-column ${styles.formGroup}`}>
+                  <p className={styles.formLabel}>Email</p>
                   <input
                     type="email"
-                    className={`${errors.email ? "is-invalid" : ""} form-control`}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className={`${styles.formInput} ${errors.email ? styles.isInvalid : ""}`}
                   />
                   {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                 </div>
-              </div>
-              <div className="d-flex flex-column">
-                <p className="mb-1" style={{ fontSize: "14px" }}>
-                  Roles
-                </p>
-                <div className="mb-3 pe-lg-4">
+                <div className={`d-flex flex-column ${styles.formGroup}`}>
+                  <p className={styles.formLabel}>Roles</p>
+                  <div className="mb-3 pe-lg-4">
                   <DropdownButton
                     id="dropdown-category-button"
                     title={roles.length > 0 ? roles[0] : "Select Role"}
@@ -277,7 +285,7 @@ export default function AllDocTable({ params }: Props) {
                       return role ? (
                         <span
                           key={index}
-                          className="badge bg-primary text-light me-2 p-2 d-inline-flex align-items-center"
+                          className={`${styles.badgeTag} d-inline-flex align-items-center`}
                         >
                           {roleName}
                           <IoClose
@@ -292,71 +300,81 @@ export default function AllDocTable({ params }: Props) {
                 </div>
 
               </div>
-              <div className="col-12 col-lg-6 d-flex flex-column">
-                <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
-                  Sector
-                </p>
+              <div className={`col-12 col-lg-6 d-flex flex-column ${styles.formGroup}`}>
+                <p className={`${styles.formLabel} text-start w-100`}>Sector</p>
                 <div className="d-flex flex-column position-relative">
                   <DropdownButton
                     id="dropdown-category-button"
                     title={
-                      selectedSectorId
-                        ? sectorDropDownData.find(
-                          (item) => item.id.toString() === selectedSectorId
-                        )?.sector_name
+                      selectedSectorIds.length > 0
+                        ? `${selectedSectorIds.length} Sectors Selected`
                         : "Select Sector"
                     }
                     className="custom-dropdown-text-start text-start w-100"
                     onSelect={(value) => handleSectorSelect(value || "")}
                   >
-                    {sectorDropDownData.map((sector) => (
+                    {getFlattenedSectors(sectorDropDownData).map((sector) => (
                       <Dropdown.Item
                         key={sector.id}
                         eventKey={sector.id.toString()}
                         style={{
-                          fontWeight:
-                            sector.parent_sector === "none"
-                              ? "bold"
-                              : "normal",
-                          paddingLeft:
-                            sector.parent_sector === "none"
-                              ? "10px"
-                              : "20px",
+                          fontWeight: sector.level === 0 ? "bold" : "normal",
+                          paddingLeft: `${sector.level * 20 + 10}px`,
                         }}
                       >
                         {sector.sector_name}
                       </Dropdown.Item>
                     ))}
                   </DropdownButton>
-                  {errors.sector && <div style={{ color: "red", fontSize: "12px" }}>{errors.sector}</div>}
+                  {errors.sector && <div className={styles.errorText}>{errors.sector}</div>}
+                  <div className="mt-1">
+                    {selectedSectorIds.map((sectorId) => {
+                      const sector = sectorDropDownData.find(
+                        (item) => item.id.toString() === sectorId
+                      );
+                      return sector ? (
+                        <span
+                          key={sectorId}
+                          className={`${styles.badgeTag} d-inline-flex align-items-center`}
+                        >
+                          {sector.sector_name}
+                          <IoClose
+                            className="ms-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => handleRemoveSector(sectorId)}
+                          />
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
                 </div>
               </div>
-              <div className="d-flex"></div>
+            </div>
+            </div>
+
+            <div className={styles.formActions}>
+              <button
+                onClick={handleSubmit}
+                className={styles.btnSave}
+              >
+                <IoSaveOutline fontSize={16} /> Save
+              </button>
+              <button
+                onClick={() => router.push("/users")}
+                className={styles.btnCancel}
+              >
+                <MdCancel fontSize={16} /> Cancel
+              </button>
             </div>
           </div>
-          <div className="d-flex flex-row mt-5">
-            <button
-              onClick={handleSubmit}
-              className="custom-icon-button button-success px-3 py-1 rounded me-2"
-            >
-              <IoSaveOutline fontSize={16} className="me-1" /> Save
-            </button>
-            <button
-              onClick={() => router.push("/users")}
-              className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-            >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
-            </button>
-          </div>
         </div>
-      </DashboardLayout>
-      {/* toast message */}
-      <ToastMessage
+        <ToastMessage
         message={toastMessage}
         show={showToast}
         onClose={() => setShowToast(false)}
         type={toastType}
-      />
+        />
+      </DashboardLayout>
     </>
   );
 }

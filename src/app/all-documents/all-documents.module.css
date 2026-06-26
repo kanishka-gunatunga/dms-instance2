@@ -1,0 +1,585 @@
+/* All Documents page – theme-aligned modern UI */
+/* Theme: primary #EA580C, light #FFF4E8, text #0A0A0A, muted #717182 */
+
+.pageWrapper {
+  padding-bottom: 1.5rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+@media (min-width: 992px) {
+  .pageHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.pageTitle {
+  color: #0A0A0A !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+.pageHeader :global(h3) {
+  color: #0A0A0A !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: 0;
+}
+
+.headerActions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btnAdd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  background: #EA580C !important;
+  border: 1px solid #EA580C !important;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.25);
+}
+.btnAdd:hover {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  transform: translateY(-1px);
+}
+
+.card {
+  background: #ffffff !important;
+  border-radius: 1rem;
+  padding: 1rem 1.5rem !important;
+  margin-top: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Clean grid layout: all 5 filters share width equally */
+.filtersRow {
+  --filter-height: 38px;
+  --filter-radius: 0.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  align-items: stretch;
+}
+@media (min-width: 992px) {
+  .filtersRow {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+.filterItem {
+  min-width: 0;
+  max-width: 100%;
+}
+/* Input groups (search fields) */
+.filterItem .input-group {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+}
+.filterItem .input-group input,
+.filterItem .input-group .dropdown,
+.filterItem .input-group button,
+.filterItem .input-group .dropdown-toggle {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+}
+.filterItem .input-group .dropdown,
+.filterItem .input-group .btn-group {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+/* Direct dropdown/DatePicker (no input-group wrapper) */
+.filterItem > :global(.dropdown),
+.filterItem > :global(.btn-group) {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+}
+.filterItem .dropdown-toggle,
+.filterItem .btn.dropdown-toggle {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  justify-content: flex-start !important;
+}
+
+/* Override globals.css .input-group input { max-height: 33px } */
+.searchInput,
+.filtersRow .input-group input,
+.filtersRow .input-group .form-control {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  color: #0A0A0A !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.searchInput::placeholder,
+.filtersRow .input-group input::placeholder {
+  color: #9CA3AF;
+}
+.searchInput:focus,
+.filtersRow .input-group input:focus,
+.filtersRow .input-group .form-control:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15) !important;
+  outline: none !important;
+}
+
+/* Remove borders from dropdown wrapper divs - Bootstrap adds borders here causing double border */
+.filtersRow :global(.dropdown),
+.filtersRow :global(.btn-group) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.filtersRow :global(.dropdown:hover),
+.filtersRow :global(.dropdown:focus),
+.filtersRow :global(.dropdown:focus-within),
+.filtersRow :global(.dropdown.show),
+.filtersRow :global(.btn-group:hover),
+.filtersRow :global(.btn-group:focus),
+.filtersRow :global(.btn-group:focus-within),
+.filtersRow :global(.btn-group.show) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove Bootstrap input-group border and ensure consistent height */
+.filtersRow :global(.input-group) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  height: var(--filter-height) !important;
+  min-height: var(--filter-height) !important;
+}
+.filtersRow :global(.input-group:hover),
+.filtersRow :global(.input-group:focus),
+.filtersRow :global(.input-group:focus-within) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove border from dropdownToggle wrapper div when inside input-group */
+.filtersRow :global(.input-group .dropdownToggle),
+.filtersRow :global(.input-group .dropdown) {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Remove ALL Bootstrap default borders from dropdown buttons */
+.filtersRow :global(.input-group button.btn),
+.filtersRow :global(.input-group button.btn-primary),
+.filtersRow :global(.input-group button.dropdown-toggle),
+.filtersRow :global(.input-group button.btn.dropdown-toggle),
+.filtersRow :global(.input-group button.btn-primary.dropdown-toggle),
+.filtersRow :global(.input-group .btn),
+.filtersRow :global(.input-group .btn-primary),
+.filtersRow :global(.input-group .dropdown-toggle),
+.filtersRow :global(.input-group .btn.dropdown-toggle),
+.filtersRow :global(.input-group .btn-primary.dropdown-toggle),
+.card .filtersRow .filterItem :global(button.btn),
+.card .filtersRow .filterItem :global(button.dropdown-toggle) {
+  border: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: #fff !important;
+  color: #0A0A0A !important;
+}
+
+/* Apply custom single border to dropdown buttons (in input-group or direct) */
+/* Override globals.css .dropdown-toggle { max-height: 33px; border-radius: 3px } - use high specificity */
+.card .filtersRow :global(.input-group button.btn-primary.dropdown-toggle),
+.card .filtersRow :global(.input-group button.btn.dropdown-toggle),
+.card .filtersRow :global(.input-group .dropdown-toggle),
+.card .filtersRow :global(.input-group .btn-primary.dropdown-toggle),
+.card .filtersRow .filterItem :global(.dropdown-toggle),
+.card .filtersRow .filterItem :global(button.dropdown-toggle),
+.card .filtersRow :global(.dropdown .dropdown-toggle) {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  line-height: 1 !important;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  position: relative !important;
+  font-size: 0.875rem !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* Vertically center dropdown arrow - override globals.css .custom-dropdown-text-start button::after { top: 14px } */
+.card .filtersRow :global(.dropdown-toggle::after),
+.card .filtersRow :global(button.dropdown-toggle::after) {
+  position: absolute !important;
+  right: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-left: 0 !important;
+  margin-top: 0 !important;
+}
+.filtersRow :global(.input-group button.btn-primary.dropdown-toggle:hover),
+.filtersRow :global(.input-group button.btn-primary.dropdown-toggle:focus),
+.filtersRow :global(.input-group button.btn.dropdown-toggle:hover),
+.filtersRow :global(.input-group button.btn.dropdown-toggle:focus),
+.filtersRow :global(.input-group .dropdown-toggle:hover),
+.filtersRow :global(.input-group .dropdown-toggle:focus),
+.card .filtersRow .filterItem :global(.dropdown-toggle:hover),
+.card .filtersRow .filterItem :global(.dropdown-toggle:focus),
+.card .filtersRow .filterItem :global(button.dropdown-toggle:hover),
+.card .filtersRow .filterItem :global(button.dropdown-toggle:focus) {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1) !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+}
+
+/* DropdownToggle class for use outside input-group */
+.dropdownToggle {
+  border-radius: var(--filter-radius) !important;
+  border: 1px solid #e5e7eb !important;
+  font-size: 0.875rem !important;
+  padding: 0.5rem 0.75rem !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+  height: var(--filter-height) !important;
+  min-height: var(--filter-height) !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.dropdownToggle:hover,
+.dropdownToggle:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1) !important;
+  color: #0A0A0A !important;
+  background: #fff !important;
+}
+
+/* DatePicker in filters */
+.datePickerWrapper {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: var(--filter-height);
+}
+.datePickerWrapper :global(.ant-picker) {
+  border-radius: var(--filter-radius) !important;
+  border: 1px solid #e5e7eb !important;
+  font-size: 0.875rem !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: var(--filter-height) !important;
+  min-height: var(--filter-height) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.datePickerWrapper :global(.ant-picker:hover),
+.datePickerWrapper :global(.ant-picker-focused) {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1) !important;
+}
+
+.tableWrapper {
+  max-height: 350px;
+  overflow-y: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+}
+
+.tableWrapper :global(.table) {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+}
+.tableWrapper :global(.table thead th) {
+  background: #FFF4E8 !important;
+  color: #0A0A0A;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  border-top: none;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 1px 0 0 #e5e7eb;
+}
+.tableWrapper :global(.table tbody td) {
+  padding: 0.75rem 1rem;
+  color: #374151;
+  vertical-align: middle;
+}
+.tableWrapper :global(.table tbody tr:hover) {
+  background: #FFFBF7 !important;
+}
+.tableWrapper :global(.table-hover > tbody > tr:hover > *) {
+  background: transparent;
+}
+
+.tableWrapper :global(.dropdown-toggle) {
+  color: #717182 !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+}
+.tableWrapper :global(.dropdown-toggle:hover) {
+  color: #EA580C !important;
+  background: #FFF4E8 !important;
+}
+
+.paginationFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  align-items: flex-start;
+}
+@media (min-width: 992px) {
+  .paginationFooter {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.paginationFooter :global(.form-select) {
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+  color: #0A0A0A;
+}
+.paginationFooter :global(.form-select):focus {
+  border-color: #EA580C;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.1);
+}
+
+.paginationInfo {
+  font-size: 0.875rem !important;
+  color: #717182;
+}
+
+.paginationFooter :global(.pagination) {
+  gap: 0.25rem;
+}
+.paginationFooter :global(.page-link) {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e5e7eb !important;
+  color: #374151 !important;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+.paginationFooter :global(.page-link:hover) {
+  background: #FFF4E8 !important;
+  border-color: #EA580C !important;
+  color: #EA580C !important;
+}
+.paginationFooter :global(.page-item.disabled .page-link) {
+  background: #f9fafb;
+  color: #9CA3AF;
+}
+
+.noData {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #717182;
+  font-size: 0.875rem;
+}
+
+/* Tab Navigation Styles */
+.tabsContainer {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #717182;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease, font-weight 0.2s ease;
+  border-radius: 0.375rem;
+}
+
+.tabButton:hover {
+  color: #EA580C;
+  background: #FFF4E8;
+}
+
+.tabButtonActive {
+  color: #EA580C;
+  font-weight: 600;
+  background: #FFF4E8;
+}
+
+.tabButtonActive::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #EA580C;
+  border-radius: 2px;
+}
+
+/* Address Bar and Breadcrumbs */
+.addressBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover:not(:disabled) {
+  background: #FFF4E8;
+  border-color: #EA580C;
+  color: #EA580C;
+}
+
+.backButton:disabled {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  color: #374151;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.breadcrumbItem {
+  color: #374151;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.breadcrumbItem:hover {
+  color: #EA580C;
+  text-decoration: underline;
+}
+
+.breadcrumbItem:last-child {
+  color: #0A0A0A;
+  font-weight: 600;
+  cursor: default;
+}
+
+.breadcrumbItem:last-child:hover {
+  text-decoration: none;
+}
+
+.separator {
+  color: #9ca3af;
+  user-select: none;
+  margin: 0 0.25rem;
+}
+
+.folderRow {
+  transition: background-color 0.2s ease;
+}
+
+.folderRow:hover {
+  background: #FFFBF7 !important;
+}
+
+.folderName {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  color: #0A0A0A;
+}
+

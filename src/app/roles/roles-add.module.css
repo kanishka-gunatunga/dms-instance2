@@ -1,0 +1,213 @@
+/* Roles add/edit pages – theme-aligned modern UI */
+/* Theme: primary #EA580C, light #FFF4E8, text #0A0A0A, muted #717182 */
+
+.pageWrapper {
+  padding-bottom: 2rem;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+@media (min-width: 992px) {
+  .pageHeader {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.pageHeader :global(h3) {
+  color: #0A0A0A !important;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main card with sticky actions */
+.card {
+  background: #ffffff !important;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem !important;
+  margin-top: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.cardWithStickyActions {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 200px);
+}
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.stickyActions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+/* Form card – parent for Ant Design checkbox/divider styling */
+.formCard {}
+
+/* Form groups */
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  color: #0A0A0A;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Native input – role name */
+.formInput {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0A0A0A;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.formInput::placeholder {
+  color: #9CA3AF;
+}
+.formInput:hover {
+  border-color: #EA580C;
+}
+.formInput:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.15) !important;
+  outline: none !important;
+}
+.formInput.isInvalid,
+.isInvalid {
+  border-color: #dc3545 !important;
+}
+
+/* Ant Design Checkbox */
+.formCard :global(.ant-checkbox-wrapper) {
+  font-size: 0.875rem;
+  color: #0A0A0A;
+}
+.formCard :global(.ant-checkbox-wrapper:hover .ant-checkbox-inner) {
+  border-color: #EA580C;
+}
+.formCard :global(.ant-checkbox-checked .ant-checkbox-inner) {
+  background: #EA580C !important;
+  border-color: #EA580C !important;
+}
+.formCard :global(.ant-checkbox-wrapper:hover .ant-checkbox-checked .ant-checkbox-inner) {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+}
+.formCard :global(.ant-divider) {
+  border-color: #e5e7eb;
+  margin: 0.75rem 0;
+}
+
+/* Permission section heading */
+.sectionHeading {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #0A0A0A;
+  margin: 0 0 0.75rem 0;
+}
+
+/* Permission group wrapper */
+.permissionGroup {
+  margin-bottom: 1rem;
+}
+
+/* Indent for permission items */
+.permissionItems {
+  margin-left: 20px;
+}
+
+/* Validation error */
+.errorText {
+  color: #dc3545;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Action buttons */
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  background: #EA580C !important;
+  border: 1px solid #EA580C !important;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.btnSave:hover {
+  background: #c24a0a !important;
+  border-color: #c24a0a !important;
+  color: #fff !important;
+}
+.btnSave:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.btnCancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff !important;
+  background: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  text-decoration: none !important;
+}
+.btnCancel:hover {
+  background: #bb2d3b !important;
+  border-color: #bb2d3b !important;
+  color: #fff !important;
+}

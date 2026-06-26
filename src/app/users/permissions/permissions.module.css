@@ -1,0 +1,25 @@
+/* Permissions page – card fits viewport, buttons always visible */
+
+.cardWithStickyActions {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 200px);
+}
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.stickyActions {
+  flex-shrink: 0;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}

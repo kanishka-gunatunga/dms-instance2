@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import React, {useEffect, useState} from 'react';
-import {Button, Calendar, Tag, message, Modal as AntModal} from 'antd';
-import {Modal} from "react-bootstrap";
-import {BsEye, BsDownload, BsArrowRepeat} from 'react-icons/bs';
-import dayjs, {Dayjs} from 'dayjs';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Button, Calendar, Tag, message, Modal as AntModal } from 'antd';
+import { Modal } from "react-bootstrap";
+import { BsEye, BsDownload, BsArrowRepeat } from 'react-icons/bs';
+import dayjs, { Dayjs } from 'dayjs';
 import Image from "next/image";
-import {handleDownload} from "@/utils/documentFunctions";
-import {getWithAuth, postWithAuth} from "@/utils/apiClient";
+import { handleDownload } from "@/utils/documentFunctions";
+import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import Link from "next/link";
-import {IoClose} from "react-icons/io5";
-import {MdOutlineCancel} from "react-icons/md";
-import {useUserContext} from "@/context/userContext";
+import { IoClose } from "react-icons/io5";
+import { MdCancel } from "react-icons/md";
+import { useUserContext } from "@/context/userContext";
 
 
 interface NearExpiryDocument {
@@ -54,11 +54,11 @@ const getPriorityTag = (daysLeft: number) => {
 };
 
 const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
-                                                                           initialDocuments,
-                                                                           userId,
-                                                                           isAdmin,
-                                                                           onRefresh
-                                                                       }) => {
+    initialDocuments,
+    userId,
+    isAdmin,
+    onRefresh
+}) => {
     const [documents, setDocuments] = useState<NearExpiryDocument[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState<NearExpiryDocument | null>(null);
@@ -101,20 +101,13 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
         deleteBulkFileModel: false,
     });
 
-    const {userName} = useUserContext();
+    const { userName } = useUserContext();
 
     useEffect(() => {
         setDocuments(initialDocuments);
     }, [initialDocuments]);
 
-    useEffect(() => {
-        if (modalStates.viewModel && selectedDocumentId !== null) {
-            handleGetViewData(selectedDocumentId);
-            // console.log("View Document : ", viewDocument)
-        }
-    }, [modalStates.viewModel, selectedDocumentId]);
-
-    const handleGetViewData = async (id: number) => {
+    const handleGetViewData = useCallback(async (id: number) => {
         try {
             const response = await getWithAuth(`view-document/${id}/${userId}`);
             const data = response.data;
@@ -123,10 +116,17 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
         } catch (error) {
             console.error("Error :", error);
         }
-    };
+    }, [userId, setViewDocument]);
+
+    useEffect(() => {
+        if (modalStates.viewModel && selectedDocumentId !== null) {
+            handleGetViewData(selectedDocumentId);
+            // console.log("View Document : ", viewDocument)
+        }
+    }, [modalStates.viewModel, selectedDocumentId, handleGetViewData]);
 
     const handleCloseModal = (modalName: keyof typeof modalStates) => {
-        setModalStates((prev) => ({...prev, [modalName]: false}));
+        setModalStates((prev) => ({ ...prev, [modalName]: false }));
     };
 
     const handleRenewClick = (doc: NearExpiryDocument) => {
@@ -168,7 +168,7 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                 setDocuments(prevDocs =>
                     prevDocs.map(doc =>
                         doc.id === selectedDocument.id
-                            ? {...doc, expiration_date: newExpiryDate.format('YYYY-MM-DD')}
+                            ? { ...doc, expiration_date: newExpiryDate.format('YYYY-MM-DD') }
                             : doc
                     )
                 );
@@ -193,23 +193,23 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
         if (documentId) setSelectedDocumentId(documentId);
         if (documentName) setSelectedDocumentName(documentName);
 
-        setModalStates((prev) => ({...prev, [modalName]: true}));
+        setModalStates((prev) => ({ ...prev, [modalName]: true }));
     };
 
     const currentDateTime = new Date().toLocaleString();
 
     return (
         <>
-            <div className="calendarWrapper" style={{marginTop: "20px", marginBottom: '90px'}}>
+            <div className="calendarWrapper nearly-expired-section">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="d-flex align-items-center gap-2">
-                        <Image src="/warning.svg" alt="warning icon" width={20} height={20}/>
-                        <h5 className="mb-0" style={{color: '#0A0A0A', fontSize: '16px', fontWeight: 'normal'}}>Nearly
+                        <Image src="/warning.svg" alt="warning icon" width={20} height={20} />
+                        <h5 className="mb-0" style={{ color: '#0A0A0A', fontSize: '16px', fontWeight: 'normal' }}>Nearly
                             Expired Documents</h5>
                         {documents.filter((doc) => doc.days_to_expire > 0).length > 0 &&
                             <Tag color="red">{documents.filter((doc) => doc.days_to_expire > 0).length} Documents</Tag>}
                     </div>
-                    <Button icon={<BsArrowRepeat/>} onClick={onRefresh}>Refresh</Button>
+                    <Button icon={<BsArrowRepeat />} onClick={onRefresh}>Refresh</Button>
                 </div>
 
                 <div>
@@ -222,7 +222,7 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                                     <div className="col-12 col-md-6 mb-3 mb-md-0">
                                         <div className="d-flex align-items-center gap-2 mb-2">
                                             <h6 className="mb-0"
-                                                style={{color: '#0A0A0A', fontSize: '14px'}}>{doc.name}</h6>
+                                                style={{ color: '#0A0A0A', fontSize: '14px' }}>{doc.name}</h6>
                                             {getPriorityTag(doc.days_to_expire)}
                                         </div>
                                         <div className="documentMeta">
@@ -238,14 +238,14 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                                     <div
                                         className="col-12 col-md-6 d-flex justify-content-md-end align-items-center gap-2">
                                         <Button type="text"
-                                                icon={<BsEye/>}
+                                            icon={<BsEye />}
                                             // onClick={() => handleView(doc.id, userId)}
-                                                onClick={() =>
-                                                    handleOpenModal("viewModel", doc.id, doc.name)
-                                                }
+                                            onClick={() =>
+                                                handleOpenModal("viewModel", doc.id, doc.name)
+                                            }
                                         />
-                                        <Button type="text" icon={<BsDownload/>}
-                                                onClick={() => handleDownload(doc.id, userId)}/>
+                                        <Button type="text" icon={<BsDownload />}
+                                            onClick={() => handleDownload(doc.id, userId)} />
 
                                         {isAdmin === 1 && (
                                             <Button onClick={() => handleRenewClick(doc)}>Renew</Button>
@@ -258,10 +258,10 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                 </div>
 
                 <div className="d-flex justify-content-between align-items-center mt-4 text-muted"
-                     style={{fontSize: '14px', borderTop: '1px solid rgba(0, 0, 0, 0.1)', paddingTop: '10px'}}>
+                    style={{ fontSize: '14px', borderTop: '1px solid rgba(0, 0, 0, 0.1)', paddingTop: '10px' }}>
                     <small
-                        style={{color: '#717182'}}>Showing {documents.filter((doc) => doc.days_to_expire > 0).length} documents</small>
-                    <Link href="/all-documents" className="text-decoration-none" style={{color: '#F54900'}}>View All
+                        style={{ color: '#717182' }}>Showing {documents.filter((doc) => doc.days_to_expire > 0).length} documents</small>
+                    <Link href="/all-documents" className="text-decoration-none" style={{ color: '#F54900' }}>View All
                         Expired
                         Documents</Link>
                 </div>
@@ -329,14 +329,14 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                 <Modal.Header>
                     <div className="d-flex w-100 justify-content-end">
                         <div className="col-11 d-flex flex-row">
-                            <p className="mb-0" style={{fontSize: "16px", color: "#333"}}>
+                            <p className="mb-0" style={{ fontSize: "16px", color: "#333" }}>
                                 View Document : {viewDocument?.name || ""}
                             </p>
                         </div>
                         <div className="col-1 d-flex  justify-content-end">
                             <IoClose
                                 fontSize={20}
-                                style={{cursor: "pointer"}}
+                                style={{ cursor: "pointer" }}
                                 onClick={() => {
                                     handleCloseModal("viewModel");
                                     // setMetaTags([])
@@ -351,28 +351,28 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                             <>
                                 {/* Image Preview */}
                                 {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
-                                        <Image
-                                            src={viewDocument.url}
-                                            alt={viewDocument.name}
-                                            width={600}
-                                            height={600}
-                                        />
-                                    ) :
+                                    <Image
+                                        src={viewDocument.url}
+                                        alt={viewDocument.name}
+                                        width={600}
+                                        height={600}
+                                    />
+                                ) :
                                     /* TXT / CSV / LOG Preview */
                                     ["txt", "csv", "log"].includes(viewDocument.type) ? (
-                                            <div className="text-preview" style={{width: "100%"}}>
-                                                <iframe
-                                                    src={viewDocument.url}
-                                                    title="Text Preview"
-                                                    style={{
-                                                        width: "100%",
-                                                        height: "500px",
-                                                        border: "1px solid #ccc",
-                                                        background: "#fff"
-                                                    }}
-                                                ></iframe>
-                                            </div>
-                                        ) :
+                                        <div className="text-preview" style={{ width: "100%" }}>
+                                            <iframe
+                                                src={viewDocument.url}
+                                                title="Text Preview"
+                                                style={{
+                                                    width: "100%",
+                                                    height: "500px",
+                                                    border: "1px solid #ccc",
+                                                    background: "#fff"
+                                                }}
+                                            ></iframe>
+                                        </div>
+                                    ) :
                                         /* PDF or Office Docs */
                                         (viewDocument.type === "pdf" || viewDocument.enable_external_file_view === 1) ? (
                                             <div
@@ -386,7 +386,7 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                                                             : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(viewDocument.url)}`
                                                     }
                                                     title="Document Preview"
-                                                    style={{width: "100%", height: "500px", border: "none"}}
+                                                    style={{ width: "100%", height: "500px", border: "none" }}
                                                 ></iframe>
                                             </div>
                                         ) : (
@@ -599,7 +599,7 @@ const NearlyExpiredDocuments: React.FC<NearlyExpiredDocumentsProps> = ({
                             }}
                             className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                         >
-                            <MdOutlineCancel fontSize={16} className="me-1"/> Cancel
+                            <MdCancel fontSize={16} className="me-1" /> Cancel
                         </button>
                     </div>
                 </Modal.Footer>

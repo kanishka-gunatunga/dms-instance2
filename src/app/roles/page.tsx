@@ -1,7 +1,6 @@
 "use client";
 
 import Heading from "@/components/common/Heading";
-import Paragraph from "@/components/common/Paragraph";
 import DashboardLayout from "@/components/DashboardLayout";
 import useAuth from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
@@ -14,10 +13,11 @@ import { FiTrash } from "react-icons/fi";
 import Link from "next/link";
 import { getWithAuth } from "@/utils/apiClient";
 import ToastMessage from "@/components/common/Toast";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import { usePermissions } from "@/context/userPermissions";
 import { hasPermission } from "@/utils/permission";
+import styles from "./roles.module.css";
 
 interface TableItem {
   id: number;
@@ -130,24 +130,21 @@ export default function AllDocTable() {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Roles" color="#444" />
-          {hasPermission(permissions, "Role", "Create Role") && (
-            <button
-              onClick={handleAddRole}
-              className="addButton bg-white text-dark border border-success rounded px-3 py-1"
-            >
-              <FaPlus className="me-1" /> Add Role
-            </button>
-          )}
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Roles" color="#444" />
+            {hasPermission(permissions, "Role", "Create Role") && (
+              <button
+                onClick={handleAddRole}
+                className={styles.btnAdd}
+              >
+                <FaPlus /> Add Role
+              </button>
+            )}
+          </div>
 
-        </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div>
-            <div
-              style={{ maxHeight: "380px", overflowY: "auto" }}
-              className="custom-scroll"
-            >
+          <div className={styles.card}>
+            <div className={`${styles.tableWrapper} custom-scroll`}>
               {/* {hasPermission(permissions, "Reminder", "View Roles") && ( */}
                 <Table hover responsive>
                   <thead className="sticky-header">
@@ -162,44 +159,40 @@ export default function AllDocTable() {
                     {paginatedData.length > 0 ? (
                       paginatedData.map((item) => (
                         <tr key={item.id} className="border-bottom">
-                          <td className="d-flex flex-row border-0">
+                          <td className="d-flex flex-row border-0 gap-2">
                             {hasPermission(permissions, "Role", "Edit Role") && (
-                              <Link href={`/roles/${item.id}`} className="custom-icon-button button-success px-2 py-1 rounded me-2">
-                                <TiEdit fontSize={16} className="me-1" />{" "}
-                                Edit
+                              <Link href={`/roles/${item.id}`} className={styles.btnEdit}>
+                                <TiEdit fontSize={16} /> Edit
                               </Link>
                             )}
                             {hasPermission(permissions, "Role", "Delete Role") && (
-                              <button onClick={() => handleOpenModal("deleteRoleModel", item.id, item.role_name)} className="custom-icon-button button-danger text-white bg-danger px-2 py-1 rounded">
-                                <FiTrash fontSize={16} className="me-1" />{" "}
-                                Delete
+                              <button onClick={() => handleOpenModal("deleteRoleModel", item.id, item.role_name)} className={styles.btnDelete}>
+                                <FiTrash fontSize={16} /> Delete
                               </button>
-                           )}
+                            )}
                           </td>
                           <td className="border-0">{item.role_name}</td>
                         </tr>
                       ))
                     ) : (
-                      <div className="text-start w-100 py-3">
-                        <Paragraph text="No data available" color="#333" />
-                      </div>
+                      <tr>
+                        <td colSpan={2} className={styles.noData}>
+                          No data available
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </Table>
               {/* )} */}
             </div>
 
-            <div className="d-flex flex-column flex-lg-row paginationFooter">
+            <div className={styles.paginationFooter}>
               <div className="d-flex justify-content-between align-items-center">
-                <p className="pagintionText mb-0 me-2">Items per page:</p>
+                <p className={`${styles.paginationLabel} mb-0`}>Items per page:</p>
                 <Form.Select
                   onChange={handleItemsPerPageChange}
                   value={itemsPerPage}
-                  style={{
-                    width: "100px",
-                    padding: "5px 10px !important",
-                    fontSize: "12px",
-                  }}
+                  style={{ width: "100px", padding: "5px 10px", fontSize: "0.875rem" }}
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -207,10 +200,9 @@ export default function AllDocTable() {
                 </Form.Select>
               </div>
               <div className="d-flex flex-row align-items-center px-lg-5">
-                <div className="pagination-info" style={{ fontSize: "14px" }}>
+                <div className={styles.paginationInfo}>
                   {startIndex} – {endIndex} of {totalItems}
                 </div>
-
                 <Pagination className="ms-3">
                   <Pagination.Prev
                     onClick={handlePrev}
@@ -225,21 +217,18 @@ export default function AllDocTable() {
             </div>
           </div>
         </div>
-      </DashboardLayout>
-      {/* delete share document model */}
-      <Modal
-        centered
-        show={modalStates.deleteRoleModel}
-        onHide={() => handleCloseModal("deleteRoleModel")}
-      >
+
+        <Modal
+          centered
+          show={modalStates.deleteRoleModel}
+          onHide={() => handleCloseModal("deleteRoleModel")}
+          className={styles.modalContent}
+        >
         <Modal.Body>
           <div className="d-flex flex-column">
             <div className="d-flex w-100 justify-content-end">
               <div className="col-11 d-flex flex-row">
-                <p
-                  className="mb-0 text-danger"
-                  style={{ fontSize: "18px", color: "#333" }}
-                >
+                <p className={`mb-0 ${styles.modalConfirmText}`} style={{ color: "#dc3545" }}>
                   Are you sure you want to delete?
                 </p>
               </div>
@@ -251,35 +240,36 @@ export default function AllDocTable() {
                 />
               </div>
             </div>
-            <div className="d-flex py-3">
+            <div className="d-flex py-3" style={{ color: "#0A0A0A", fontSize: "0.875rem" }}>
               {selectedRoleName || ""}
             </div>
-            <div className="d-flex flex-row">
+            <div className={styles.modalFooter}>
               <button
                 onClick={() => handleDeleteRole(selectedRoleId!)}
-                className="custom-icon-button button-success px-3 py-1 rounded me-2"
+                className={styles.btnSave}
               >
-                <IoCheckmark fontSize={16} className="me-1" /> Yes
+                <IoCheckmark fontSize={16} /> Yes
               </button>
               <button
                 onClick={() => {
                   handleCloseModal("deleteRoleModel");
                   setSelectedRoleId(null);
                 }}
-                className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+                className={styles.btnCancel}
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} /> No
               </button>
             </div>
           </div>
         </Modal.Body>
-      </Modal>
-      <ToastMessage
-        message={toastMessage}
-        show={showToast}
-        onClose={() => setShowToast(false)}
-        type={toastType}
-      />
+        </Modal>
+        <ToastMessage
+          message={toastMessage}
+          show={showToast}
+          onClose={() => setShowToast(false)}
+          type={toastType}
+        />
+      </DashboardLayout>
     </>
   );
 }

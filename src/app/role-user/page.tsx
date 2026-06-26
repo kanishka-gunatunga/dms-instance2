@@ -13,7 +13,7 @@ import { fetchAndMapRoleUserData, fetchRoleData } from "@/utils/dataFetchFunctio
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { usePermissions } from "@/context/userPermissions";
 import { hasPermission } from "@/utils/permission";
-
+import styles from "./role-user.module.css";
 
 export default function AllDocTable() {
   const isAuthenticated = useAuth();
@@ -25,6 +25,7 @@ export default function AllDocTable() {
   });
   const [allUsers, setAllUsers] = useState<RoleUserItem[]>([]);
   const [roleUsers, setRoleUsers] = useState<RoleUserItem[]>([]);
+  const [dragOverTarget, setDragOverTarget] = useState<'all' | 'role' | null>(null);
 
   const fetchUserByRoleData = async (roleId: number) => {
     try {
@@ -112,6 +113,7 @@ export default function AllDocTable() {
   };
 
   const handleDrop = (e: React.DragEvent, target: 'role' | 'all') => {
+    setDragOverTarget(null);
     const draggedUser: RoleUserItem = JSON.parse(e.dataTransfer.getData('user'));
 
     if (target === 'role') {
@@ -121,8 +123,13 @@ export default function AllDocTable() {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, target?: 'role' | 'all') => {
     e.preventDefault();
+    if (target) setDragOverTarget(target);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverTarget(null);
   };
 
   if (!isAuthenticated) {
@@ -131,85 +138,86 @@ export default function AllDocTable() {
 
   return (
     <DashboardLayout>
-      <div className="d-flex justify-content-between align-items-center pt-2">
-        <Heading text="Role User" color="#444" />
-      </div>
-      <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-        <div className="role-user-dropdown">
-          <p className="mb-1" style={{ fontSize: '14px' }}>Select Role</p>
-          <DropdownButton
-            id="dropdown-category-button"
-            title={selectedRole.name}
-            className="custom-dropdown-secondary"
-          >
-            {roleDropDownData.length > 0 ? (
-              roleDropDownData.map((role) => (
-                <Dropdown.Item
-                  key={role.id}
-                  onClick={() => handleRoleSelect(role.id, role.role_name)}
-                  style={{fontSize: "14px !important"}}
-                >
-                  {role.role_name}
-                </Dropdown.Item>
-              ))
-            ) : (
-              <Dropdown.Item disabled>No roles available</Dropdown.Item>
-            )}
-          </DropdownButton>
-          <p className="mb-1 text-danger mt-2" style={{ fontSize: '14px' }}>
-            Note: In order to add user to role. Please Drag it from All Users to Role Users
-          </p>
+      <div className={styles.pageWrapper}>
+        <div className={styles.pageHeader}>
+          <Heading text="Role User" color="#444" />
         </div>
-        {hasPermission(permissions, "User", "Assign User Role") && (
-          <div className="d-flex flex-column flex-lg-row w-100">
-            {/* All Users Column */}
-            <div
-              className="col bg-light p-3 rounded"
-              onDrop={(e) => handleDrop(e, 'all')}
-              onDragOver={handleDragOver}
-            >
-              <h6 className="text-primary">All Users</h6>
-              {allUsers.length > 0 ? (
-                allUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, user)}
-                    className="card p-2 mb-2"
-                  >
-                    {`${user.firstName} ${user.lastName} (${user.email})`}
-                  </div>
-                ))
-              ) : (
-                <div>No users available</div>
-              )}
-            </div>
 
-            {/* Role Users Column */}
-            <div
-              className="col bg-light p-3 rounded"
-              onDrop={(e) => handleDrop(e, 'role')}
-              onDragOver={handleDragOver}
+        <div className={styles.card}>
+          <div className={styles.dropdownSection}>
+            <label className={styles.formLabel}>Select Role</label>
+            <DropdownButton
+              id="dropdown-category-button"
+              title={selectedRole.name}
             >
-              <h5>Role Users</h5>
-              {roleUsers.length > 0 ? (
-                roleUsers.map((user) => (
-                  <div
-                    key={user.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, user)}
-                    className="card p-2 mb-2"
+              {roleDropDownData.length > 0 ? (
+                roleDropDownData.map((role) => (
+                  <Dropdown.Item
+                    key={role.id}
+                    onClick={() => handleRoleSelect(role.id, role.role_name)}
                   >
-                    {`${user.firstName} ${user.lastName} (${user.email})`}
-                  </div>
+                    {role.role_name}
+                  </Dropdown.Item>
                 ))
               ) : (
-                <div>No role users assigned</div>
+                <Dropdown.Item disabled>No roles available</Dropdown.Item>
               )}
-            </div>
+            </DropdownButton>
+            <p className={styles.noteText}>
+              Note: To add a user to a role, drag them from All Users to Role Users.
+            </p>
           </div>
-        )}
 
+          {hasPermission(permissions, "User", "Assign User Role") && (
+            <div className={styles.columnsRow}>
+              <div
+                className={`${styles.column} ${dragOverTarget === 'all' ? styles.dragOver : ''}`}
+                onDrop={(e) => handleDrop(e, 'all')}
+                onDragOver={(e) => handleDragOver(e, 'all')}
+                onDragLeave={handleDragLeave}
+              >
+                <h6 className={styles.columnTitle}>All Users</h6>
+                {allUsers.length > 0 ? (
+                  allUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, user)}
+                      className={styles.userCard}
+                    >
+                      {`${user.firstName} ${user.lastName} (${user.email})`}
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>No users available</div>
+                )}
+              </div>
+
+              <div
+                className={`${styles.column} ${dragOverTarget === 'role' ? styles.dragOver : ''}`}
+                onDrop={(e) => handleDrop(e, 'role')}
+                onDragOver={(e) => handleDragOver(e, 'role')}
+                onDragLeave={handleDragLeave}
+              >
+                <h6 className={styles.columnTitle}>Role Users</h6>
+                {roleUsers.length > 0 ? (
+                  roleUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, user)}
+                      className={styles.userCard}
+                    >
+                      {`${user.firstName} ${user.lastName} (${user.email})`}
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>No role users assigned</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -4,11 +4,11 @@
 
 import Heading from "@/components/common/Heading";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
-import Paragraph from "@/components/common/Paragraph";
 import DashboardLayout from "@/components/DashboardLayout";
 import useAuth from "@/hooks/useAuth";
 import { CategoryDropdownItem, UserDropdownItem } from "@/types/types";
 import { fetchAndMapUserData, fetchCategoryData, fetchDocumentAuditTrail } from "@/utils/dataFetchFunctions";
+import { getFlattenedCategories } from "@/utils/commonFunctions";
 import React, { useEffect, useState } from "react";
 import {
   Dropdown,
@@ -22,6 +22,7 @@ import { AuditTrialItem } from "@/types/types";
 import { postWithAuth } from "@/utils/apiClient";
 import LoadingBar from "@/components/common/LoadingBar";
 import { DatePicker, DatePickerProps } from "antd";
+import styles from "./documents-audit-trail.module.css";
 // interface Category {
 //   category_name: string;
 // }
@@ -202,224 +203,216 @@ export default function AllDocTable() {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Documents Audit Trail" color="#444" />
-        </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div className="d-flex flex-column flex-lg-row">
-            <div className="col-12 col-lg-4 d-flex flex-column flex-lg-row">
-              <div className="input-group mb-3 pe-lg-2">
-                {/* <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search by name"
-                  onChange={(e) => handleNameSearch(e.target.value)}
-                ></input> */}
-                <DatePicker placeholder="Created Date" onChange={handleDateChange} />
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Documents Audit Trail" color="#444" />
+          </div>
+
+          <div className={styles.card}>
+            <div className={styles.filtersRow}>
+              <div className={styles.filterItem}>
+                <div className={styles.datePickerWrapper}>
+                  {/* <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by name"
+                    onChange={(e) => handleNameSearch(e.target.value)}
+                  ></input> */}
+                  <DatePicker placeholder="Created Date" onChange={handleDateChange} />
+                </div>
               </div>
-            </div>
-            {/* <div className="col-12 col-lg-4">
+              {/* <div className="col-12 col-lg-4">
                 <div className="input-group mb-3 mb-lg-0">
                   <DatePicker placeholder="Created Date" onChange={handleDateChange} />
                 </div>
               </div> */}
-            <div className="col-12 col-lg-8 d-flex flex-column flex-lg-row">
-
-              <div className="col-12 col-lg-6">
-                <div className="input-group mb-3">
-                  <DropdownButton
-                    id="dropdown-user-button"
-                    title={
-                      filterData.user
-                        ? userDropDownData.find(
+              <div className={styles.filterItem}>
+                <DropdownButton
+                  id="dropdown-user-button"
+                  title={
+                    filterData.user
+                      ? userDropDownData.find(
                           (item) => item.id.toString() === filterData.user
                         )?.user_name
-                        : "Select User"
-                    }
-                    className="custom-dropdown-text-start text-start w-100"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onSelect={(value: any) => handleUserSelect(value)}
-                  >
-                    {userDropDownData.map((user) => (
-                      <Dropdown.Item
-                        key={user.id}
-                        eventKey={user.id.toString()}
-                      >
-                        {user.user_name}
-                      </Dropdown.Item>
-                    ))}
-                  </DropdownButton>
-                  {/* <DropdownButton
-                    id="dropdown-category-button"
-                    title={
-                      filterData.category
-                        ? userDropDownData.find(
+                      : "Select User"
+                  }
+                  className="text-start w-100"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  onSelect={(value: any) => handleUserSelect(value)}
+                >
+                  {userDropDownData.map((user) => (
+                    <Dropdown.Item
+                      key={user.id}
+                      eventKey={user.id.toString()}
+                    >
+                      {user.user_name}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton>
+                {/* <DropdownButton
+                  id="dropdown-category-button"
+                  title={
+                    filterData.category
+                      ? userDropDownData.find(
                           (item) => item.id.toString() === filterData.user
                         )?.user_name
-                        : "Select User"
-                    }
-                    className="custom-dropdown-text-start text-start w-100"
-                    onSelect={(value) => handleUserSelect(value || "")}
-                  >
-                    {userDropDownData.map((user) => (
-                      <Dropdown.Item
-                        key={user.id}
-                        eventKey={user.id.toString()}
-                      >
-                        {user.user_name}
-                      </Dropdown.Item>
-                    ))}
-                  </DropdownButton> */}
-                </div>
+                      : "Select User"
+                  }
+                  className="custom-dropdown-text-start text-start w-100"
+                  onSelect={(value) => handleUserSelect(value || "")}
+                >
+                  {userDropDownData.map((user) => (
+                    <Dropdown.Item
+                      key={user.id}
+                      eventKey={user.id.toString()}
+                    >
+                      {user.user_name}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton> */}
               </div>
-              <div className="col-12 col-lg-6">
-                <div className="input-group mb-3 ps-lg-2">
-                  <DropdownButton
-                    id="dropdown-storage-button"
-                    title={filterData.type || "Select Type"}
-                    className="w-100 custom-dropdown-text-start"
-                  >
-                    <Dropdown.Item onClick={() => handleTypeSelect("")}>
-                      None
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("document")}>
-                      Document
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("user")}>
-                      User
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("user")}>
-                      Category
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("sector")}>
-                      Sector
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("role")}>
-                      Role
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("reminder")}>
-                      Reminder
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("smtp")}>
-                      SMTP
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => handleTypeSelect("company")}>
-                      Company
-                    </Dropdown.Item>
-                  </DropdownButton>
-                  {/* <DropdownButton
-                    id="dropdown-category-button"
-                    title={
-                      filterData.category
-                        ? categoryDropDownData.find(
+              <div className={styles.filterItem}>
+                <DropdownButton
+                  id="dropdown-storage-button"
+                  title={filterData.type || "Select Type"}
+                  className="w-100 text-start"
+                >
+                  <Dropdown.Item onClick={() => handleTypeSelect("")}>
+                    None
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("document")}>
+                    Document
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("user")}>
+                    User
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("user")}>
+                    Category
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("sector")}>
+                    Sector
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("role")}>
+                    Role
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("reminder")}>
+                    Reminder
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("smtp")}>
+                    SMTP
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleTypeSelect("company")}>
+                    Company
+                  </Dropdown.Item>
+                </DropdownButton>
+                {/* <DropdownButton
+                  id="dropdown-category-button"
+                  title={
+                    filterData.category
+                      ? categoryDropDownData.find(
                           (item) => item.id.toString() === filterData.category
                         )?.category_name
-                        : "Category"
-                    }
-                    className="custom-dropdown-text-start text-start w-100"
-                    onSelect={(value) => handleCategorySelect(value || "")}
-                  >
-                    {categoryDropDownData.map((category) => (
-                      <Dropdown.Item
-                        key={category.id}
-                        eventKey={category.id.toString()}
-                        style={{
-                          fontWeight:
-                            category.parent_category === "none" ? "bold" : "normal",
-                          marginLeft: category.parent_category === "none" ? "0px" : "20px",
-                        }}
-                      >
-                        {category.category_name}
-                      </Dropdown.Item>
-                    ))}
-                  </DropdownButton> */}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div>
-            {isLoadingTable && <LoadingBar />}
-          </div>
-          <div>
-            <div
-              style={{ maxHeight: "380px", overflowY: "auto" }}
-              className="custom-scroll"
-            >
-              <Table hover responsive>
-                <thead className="sticky-header">
-                  <tr>
-                    <th className="text-start" onClick={handleSort} style={{ cursor: "pointer" }}>
-                      Action Date{" "}
-                      {sortAsc ? (
-                        <MdArrowDropUp fontSize={20} />
-                      ) : (
-                        <MdArrowDropDown fontSize={20} />
-                      )}
-                    </th>
-                    <th className="text-start">Changed Source</th>
-                    <th className="text-start">Type</th>
-                    <th className="text-start">Operation</th>
-                    <th className="text-start">By Whom</th>
-                    <th className="text-start">To whom User</th>
-                    <th className="text-start">To whom Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length > 0 ? (
-                    paginatedData.map((item) => (
-                      <tr key={item.id}>
-                        <td className="text-start">{item.date_time}</td>
-                        <td className="text-start">
-                          {item.changed_source}
-                        </td>
-                        <td className="text-start">{item.type}</td>
-                        <td className="text-start">{item.operation}</td>
-                        <td className="text-start">{item.user}</td>
-                        <td className="text-start">{item.asigned_users}</td>
-                        <td className="text-start">{item.asigned_roles}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <div className="text-start w-100 py-3">
-                      <Paragraph text="No data available" color="#333" />
-                    </div>
-                  )}
-                </tbody>
-              </Table>
-            </div>
-
-            <div className="d-flex flex-column flex-lg-row paginationFooter">
-              <div className="d-flex justify-content-between align-items-center">
-                <p className="pagintionText mb-0 me-2">Items per page:</p>
-                <Form.Select
-                  onChange={handleItemsPerPageChange}
-                  value={itemsPerPage}
-                  style={{
-                    width: "100px",
-                    padding: "5px 10px !important",
-                    fontSize: "12px",
-                  }}
+                      : "Category"
+                  }
+                  className="custom-dropdown-text-start text-start w-100"
+                  onSelect={(value) => handleCategorySelect(value || "")}
                 >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={30}>30</option>
-                </Form.Select>
+                  {getFlattenedCategories(categoryDropDownData).map((category) => (
+                    <Dropdown.Item
+                      key={category.id}
+                      eventKey={category.id.toString()}
+                      style={{
+                        fontWeight: category.level === 0 ? "bold" : "normal",
+                        paddingLeft: `${category.level * 15 + 10}px`,
+                      }}
+                    >
+                      {category.level > 0 ? "- ".repeat(category.level) : ""}{category.category_name}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton> */}
               </div>
-              <div className="d-flex flex-row align-items-center px-lg-5">
-                <div className="pagination-info" style={{ fontSize: "14px" }}>
-                  {startIndex} – {endIndex} of {totalItems}
-                </div>
+            </div>
 
-                <Pagination className="ms-3">
-                  <Pagination.Prev
-                    onClick={handlePrev}
-                    disabled={currentPage === 1}
-                  />
-                  <Pagination.Next
-                    onClick={handleNext}
-                    disabled={currentPage === totalPages}
-                  />
-                </Pagination>
+            <div>
+              {isLoadingTable && <LoadingBar />}
+            </div>
+
+            <div>
+              <div className={`${styles.tableWrapper} custom-scroll`}>
+                <Table hover responsive>
+                  <thead className="sticky-header">
+                    <tr>
+                      <th
+                        className={`text-start ${styles.sortableTh}`}
+                        onClick={handleSort}
+                      >
+                        Action Date{" "}
+                        {sortAsc ? (
+                          <MdArrowDropUp fontSize={20} />
+                        ) : (
+                          <MdArrowDropDown fontSize={20} />
+                        )}
+                      </th>
+                      <th className="text-start">Changed Source</th>
+                      <th className="text-start">Type</th>
+                      <th className="text-start">Operation</th>
+                      <th className="text-start">By Whom</th>
+                      <th className="text-start">To whom User</th>
+                      <th className="text-start">To whom Role</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((item) => (
+                        <tr key={item.id}>
+                          <td className="text-start">{item.date_time}</td>
+                          <td className="text-start">{item.changed_source}</td>
+                          <td className="text-start">{item.type}</td>
+                          <td className="text-start">{item.operation}</td>
+                          <td className="text-start">{item.user}</td>
+                          <td className="text-start">{item.asigned_users}</td>
+                          <td className="text-start">{item.asigned_roles}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className={styles.noData}>
+                          No data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+
+              <div className={`d-flex flex-column flex-lg-row ${styles.paginationFooter}`}>
+                <div className="d-flex justify-content-between align-items-center">
+                  <p className={`${styles.paginationLabel} mb-0`}>Items per page:</p>
+                  <Form.Select
+                    onChange={handleItemsPerPageChange}
+                    value={itemsPerPage}
+                    style={{ width: "100px", padding: "5px 10px", fontSize: "0.875rem" }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                  </Form.Select>
+                </div>
+                <div className="d-flex flex-row align-items-center px-lg-5">
+                  <div className={styles.paginationInfo}>
+                    {startIndex} – {endIndex} of {totalItems}
+                  </div>
+                  <Pagination className="ms-3">
+                    <Pagination.Prev
+                      onClick={handlePrev}
+                      disabled={currentPage === 1}
+                    />
+                    <Pagination.Next
+                      onClick={handleNext}
+                      disabled={currentPage === totalPages}
+                    />
+                  </Pagination>
+                </div>
               </div>
             </div>
           </div>

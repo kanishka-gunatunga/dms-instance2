@@ -282,6 +282,8 @@ export default function ChatWindow() {
   useEffect(() => {
     if (!isOpen || !action) return;
 
+    // Disabled automatic background processing
+    /*
     if (action === 'summarize') {
       autoSummarize();
     } else if (action === 'tone') {
@@ -291,16 +293,18 @@ export default function ChatWindow() {
       console.log("translate: ", action)
       translate();
     } else {
-      const systemMessage: Message = {
-        type: 'system',
-        text: `You are now in ${action.toUpperCase()} mode.`,
-      };
-      setChatHistories((prev) => ({
-        ...prev,
-        [action]: [...(prev[action] ?? []), systemMessage],
-      }));
-    }
+    */
+    const systemMessage: Message = {
+      type: 'system',
+      text: `You are now in ${action.toUpperCase()} mode.`,
+    };
+    setChatHistories((prev) => ({
+      ...prev,
+      [action]: [...(prev[action] ?? []), systemMessage],
+    }));
+    // }
   }, [isOpen, action]);
+
 
   useEffect(() => {
     if (!isOpen) {

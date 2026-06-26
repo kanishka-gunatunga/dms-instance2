@@ -129,7 +129,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     window.addEventListener('beforeunload', handleUnload);
     return () => window.removeEventListener('beforeunload', handleUnload);
-  }, [chatId]);
+  }, [chatId, action]);
 
   return (
     <ChatContext.Provider value={{ isOpen, toggleChat, chatId, documentId, documentName, documentState, action, updateAction }}>

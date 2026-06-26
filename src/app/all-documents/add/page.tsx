@@ -10,14 +10,15 @@ import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { DropdownButton, Dropdown } from "react-bootstrap";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoAdd, IoClose, IoSaveOutline, IoTrashOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
-import { formatDateForSQL } from "@/utils/commonFunctions";
+import { formatDateForSQL, getFlattenedSectors, getFlattenedCategories } from "@/utils/commonFunctions";
 import {
   fetchAndMapUserData,
   fetchCategoryData,
   fetchRoleData,
   fetchSectors,
+  fetchSectorsForUser,
 } from "@/utils/dataFetchFunctions";
 import {
   CategoryDropdownItem,
@@ -28,17 +29,18 @@ import {
 import ToastMessage from "@/components/common/Toast";
 import Link from "next/link";
 import { Checkbox, DatePicker, DatePickerProps } from "antd";
+import styles from "./add-document.module.css";
 
 export default function AllDocTable() {
   const isAuthenticated = useAuth();
-  const { userId } = useUserContext();
+  const { userId, userType } = useUserContext();
 
   // console.log("user id: ", userId);
 
   const [name, setName] = useState<string>("");
   const [document, setDocument] = useState<File | null>(null);
   const [documentPreview, setDocumentPreview] = useState<File | null>(null);
-  const [storage, setStorage] = useState<string>("");
+  // const [storage, setStorage] = useState<string>("");
   const [roleDropDownData, setRoleDropDownData] = useState<RoleDropdownItem[]>(
     []
   );
@@ -68,6 +70,7 @@ export default function AllDocTable() {
   const [userExpireDate, setUserExpireDate] = useState<string>("");
   const [userEndDate, setUserEndDate] = useState<string>("");
   const [userDownloadable, setUserDownloadable] = useState<boolean>(false);
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
 
   const [categoryDropDownData, setCategoryDropDownData] = useState<
     CategoryDropdownItem[]
@@ -104,11 +107,36 @@ export default function AllDocTable() {
 
 
   useEffect(() => {
-    fetchCategoryData(setCategoryDropDownData);
     fetchRoleData(setRoleDropDownData);
     fetchAndMapUserData(setUserDropDownData);
-    fetchSectors(setSectorDropDownData)
-  }, []);
+    if (userId) {
+      fetchSectorsForUser(userId, setSectorDropDownData);
+    }
+
+    const fetchTags = async () => {
+      try {
+        const response = await getWithAuth("get-all-meta-tags");
+        if (Array.isArray(response)) {
+          const tags = response.map((t: any) => {
+            if (typeof t === "string") return t;
+            if (t.tag_name) return t.tag_name;
+            if (t.name) return t.name;
+            if (t.meta_tag) return t.meta_tag;
+            if (t.tag) return t.tag;
+            const values = Object.values(t);
+            return values.find(v => typeof v === "string");
+          }).filter(Boolean);
+          setSuggestedTags(tags);
+        } else if (response && Array.isArray(response.data)) {
+          const tags = response.data.map((t: any) => typeof t === "string" ? t : t.tag_name || t.name || t.meta_tag || t.tag).filter(Boolean);
+          setSuggestedTags(tags);
+        }
+      } catch (err) {
+        console.error("Failed to fetch meta tags:", err);
+      }
+    };
+    fetchTags();
+  }, [userId]);
 
 
   useEffect(() => {
@@ -121,8 +149,23 @@ export default function AllDocTable() {
     handleGetAttributes(categoryId)
   };
 
-  const handleSectorSelect = (sectorId: string) => {
+  const handleSectorSelect = async (sectorId: string) => {
     setSelectedSectorId(sectorId);
+    setSelectedCategoryId("");
+    setAttributes([]);
+    setFormAttributeData([]);
+
+    if (sectorId) {
+      try {
+        const response = await getWithAuth(`sector-details/${sectorId}`);
+        setCategoryDropDownData(response?.categories || []);
+      } catch (error) {
+        console.error("Failed to load categories for sector:", error);
+        setCategoryDropDownData([]);
+      }
+    } else {
+      setCategoryDropDownData([]);
+    }
   };
 
 
@@ -255,9 +298,9 @@ export default function AllDocTable() {
       validationErrors.category = "Category is required.";
     }
 
-    if (!storage) {
-      validationErrors.storage = "Storage is required.";
-    }
+    // if (!storage) {
+    //   validationErrors.storage = "Storage is required.";
+    // }
 
     if (!document) {
       validationErrors.document = "Document is required.";
@@ -289,7 +332,7 @@ export default function AllDocTable() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || formSubmitted) return;
-
+    
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -302,7 +345,7 @@ export default function AllDocTable() {
     formData.append("document", document || "");
     formData.append("category", selectedCategoryId);
     formData.append("sector_category", selectedSectorId);
-    formData.append("storage", storage);
+    // formData.append("storage", storage);
     formData.append("description", description);
     formData.append("document_preview", documentPreview || "");
     formData.append("meta_tags", JSON.stringify(metaTags));
@@ -403,223 +446,210 @@ export default function AllDocTable() {
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Add Document" color="#444" />
-        </div>
+        <div className={`${styles.pageWrapper}`}>
+          <div className={styles.pageHeader}>
+            <Heading text="Add Document" color="#0A0A0A" />
+          </div>
 
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div
-            style={{
-              maxHeight: "380px",
-              overflowY: "auto",
-              overflowX: "hidden",
-            }}
-            className="custom-scroll"
-          >
+          <div className={`${styles.formCard} d-flex flex-column`}>
+          <div className={`${styles.formContent} custom-scroll`}>
             <div className="d-flex flex-column">
-              <div className="row row-cols-1 row-cols-lg-4 d-flex justify-content-around px-lg-3 mb-lg-3">
-                <div className="col d-flex flex-column  justify-content-center align-items-center p-0 px-3 px-lg-0">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Document
-                  </p>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Document</label>
                   <input
                     type="file"
-                    style={{ border: "solid 1px #eee" }}
+                    className={styles.fileInput}
                     id="document"
                     onChange={handleFileChange}
                   />
-                  {errors.document && <div style={{ color: "red" }}>{errors.document}</div>}
+                  {errors.document && <div className={styles.errorMessage}>{errors.document}</div>}
                 </div>
-                <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2 px-3 px-lg-0">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Name
-                  </p>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Name</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${styles.formInput}`}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
-                  {errors.name && <div style={{ color: "red" }}>{errors.name}</div>}
+                  {errors.name && <div className={styles.errorMessage}>{errors.name}</div>}
                 </div>
-                <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2 px-3 px-lg-0">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Category
-                  </p>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Sectors</label>
                   <DropdownButton
-                    id="dropdown-category-button"
-                    title={
-                      selectedCategoryId
-                        ? categoryDropDownData.find(
-                          (item) => item.id.toString() === selectedCategoryId
-                        )?.category_name
-                        : "Select Category"
-                    }
-                    className="custom-dropdown-text-start text-start w-100"
-                    onSelect={(value) => handleCategorySelect(value || "")}
-                  >
-                    {categoryDropDownData
-                      .filter((category) => category.parent_category === "none") // Get only parent categories
-                      .map((parentCategory) => (
-                        <React.Fragment key={parentCategory.id}>
+                        id="dropdown-sectors-button"
+                        title={
+                          selectedSectorId
+                            ? sectorDropDownData.find((item) => item.id.toString() === selectedSectorId)?.sector_name
+                            : "Select Sector"
+                        }
+                        className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
+                        onSelect={(value) => handleSectorSelect(value || "")}
+                      >
+                        {getFlattenedSectors(sectorDropDownData).map((sector) => (
                           <Dropdown.Item
-                            eventKey={parentCategory.id.toString()}
-                            style={{ fontWeight: "bold", paddingLeft: "10px" }}
+                            key={sector.id}
+                            eventKey={sector.id.toString()}
+                            style={{
+                              fontWeight: sector.level === 0 ? "bold" : "normal",
+                              paddingLeft: `${sector.level * 20 + 10}px`,
+                            }}
                           >
-                            {parentCategory.category_name}
+                            {sector.sector_name}
                           </Dropdown.Item>
-                          {categoryDropDownData
-                            .filter(
-                              (childCategory) =>
-                                childCategory.parent_category.toString() === parentCategory.id.toString()
-                            )
-                            .map((childCategory) => (
-                              <Dropdown.Item
-                                key={childCategory.id}
-                                eventKey={childCategory.id.toString()}
-                                style={{ paddingLeft: "20px" }} // Indent child categories
-                              >
-                                {childCategory.category_name}
-                              </Dropdown.Item>
-                            ))}
-                        </React.Fragment>
-                      ))}
-                  </DropdownButton>
-
-                  {errors.category && <div style={{ color: "red" }}>{errors.category}</div>}
+                        ))}
+                      </DropdownButton>
                 </div>
-                <div className="col d-flex flex-column justify-content-center align-items-center p-0 ps-lg-2 px-3 px-lg-0">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Storage
-                  </p>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Category</label>
                   <DropdownButton
-                    id="dropdown-category-button"
+                        id="dropdown-category-button"
+                        title={
+                          selectedCategoryId
+                            ? categoryDropDownData.find(
+                                (item) => item.id.toString() === selectedCategoryId
+                              )?.category_name
+                            : "Select Category"
+                        }
+                        className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
+                        onSelect={(value) => handleCategorySelect(value || "")}
+                      >
+                        {getFlattenedCategories(categoryDropDownData).map((cat) => (
+                          <Dropdown.Item
+                            key={cat.id}
+                            eventKey={cat.id.toString()}
+                            style={{
+                              fontWeight: cat.level === 0 ? "bold" : "normal",
+                              paddingLeft: `${cat.level * 15 + 10}px`,
+                            }}
+                          >
+                            {cat.level > 0 ? "— ".repeat(cat.level) : ""}{cat.category_name}
+                          </Dropdown.Item>
+                        ))}
+                      </DropdownButton>
+
+                  {errors.category && <div className={styles.errorMessage}>{errors.category}</div>}
+                </div>
+                {/* <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Storage</label>
+                  <DropdownButton
+                    id="dropdown-storage-button"
                     title={storage || "Select"}
-                    className="custom-dropdown-text-start text-start w-100"
+                    className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
                     onSelect={(value) => setStorage(value || "")}
                   >
                     <Dropdown.Item eventKey="Local Disk (Default)">
                       Local Disk (Default)
                     </Dropdown.Item>
                   </DropdownButton>
-                  {errors.storage && <div style={{ color: "red" }}>{errors.storage}</div>}
-                </div>
+                  {errors.storage && <div className={styles.errorMessage}>{errors.storage}</div>}
+                </div> */}
               </div>
               {attributes.map((attribute, index) => {
                 const existingValue = formAttributeData.find((item) => item.attribute === attribute)?.value || "";
                 return (
-                  <div key={index} className="form-group">
-                    <p
-                      className="mb-1 text-start w-100"
-                      style={{ fontSize: "14px" }}
-                    >
-                      {attribute}
-                    </p>
+                  <div key={index} className={styles.formGroup}>
+                    <label className={styles.formLabel}>{attribute}</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${styles.formInput}`}
                       value={existingValue}
                       onChange={(e) => handleInputChange(attribute, e.target.value)}
                     />
                   </div>
                 )
               })}
-              <div className="d-flex flex-column flex-lg-row mb-3">
-                <div className="col-12 col-lg-4 d-flex flex-column">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Description
-                  </p>
+              <div className={styles.formRowFull}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Description</label>
                   <textarea
-                    className="form-control"
+                    className={`form-control ${styles.formTextarea}`}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
                   />
                 </div>
-                <div className="col-12 col-lg-4 d-flex flex-column ps-lg-2">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Preview image
-                  </p>
+              </div>
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Preview image</label>
                   <input
                     type="file"
-                    style={{ border: "solid 1px #eee" }}
-                    id="document"
+                    className={styles.fileInput}
+                    id="documentPreview"
                     accept=".png,.jpg,.jpeg,.tiff,.tif"
                     onChange={handlePreviewFileChange}
                   />
                 </div>
-                <div className="col-12 col-lg-4 d-flex flex-column ps-lg-2">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Meta tags
-                  </p>
-                  <div className="col-12">
-                    <div
-                      style={{ marginBottom: "10px" }}
-                      className="w-100 d-flex metaBorder"
-                    >
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Meta tags</label>
+                  <div style={{ width: "100%" }}>
+                    <div className={styles.metaTagRow} style={{ marginBottom: "0.5rem", position: "relative" }}>
                       <input
                         type="text"
                         value={currentMeta}
                         onChange={(e) => setCurrentMeta(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Enter a meta tag"
-                        style={{
-                          flex: 1,
-                          padding: "6px 10px",
-                          border: "1px solid #ccc",
-                          borderTopRightRadius: "0 !important",
-                          borderBottomRightRadius: "0 !important",
-                          backgroundColor: 'transparent',
-                          color: "#333",
-                        }}
+                        className={styles.metaTagInput}
                       />
                       <button
                         onClick={addMetaTag}
-                        className="successButton"
-                        style={{
-                          padding: "10px",
-                          backgroundColor: "#4CAF50",
-                          color: "white",
-                          border: "1px solid #4CAF50",
-                          borderLeft: "none",
-                          borderTopRightRadius: "4px",
-                          borderBottomRightRadius: "4px",
-                          cursor: "pointer",
-                        }}
+                        className={styles.metaTagAddButton}
                       >
                         <IoAdd />
                       </button>
+
+                      {currentMeta.trim() !== "" && suggestedTags.filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag)).length > 0 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: "42px",
+                            backgroundColor: "#fff",
+                            border: "1px solid #ccc",
+                            borderTop: "none",
+                            borderBottomLeftRadius: "4px",
+                            borderBottomRightRadius: "4px",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                            zIndex: 10,
+                            maxHeight: "150px",
+                            overflowY: "auto",
+                          }}
+                        >
+                          {suggestedTags
+                            .filter(tag => tag.toLowerCase().includes(currentMeta.trim().toLowerCase()) && !metaTags.includes(tag))
+                            .map((tag, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  setMetaTags((prev) => [...prev, tag]);
+                                  setCurrentMeta("");
+                                }}
+                                style={{
+                                  padding: "8px 12px",
+                                  cursor: "pointer",
+                                  fontSize: "14px",
+                                  color: "#333",
+                                  borderBottom: "1px solid #f9f9f9",
+                                  transition: "background-color 0.2s",
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f1f1f1")}
+                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                              >
+                                {tag}
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       {metaTags.map((tag, index) => (
                         <div
                           key={index}
-                          className="metaBorder"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            marginBottom: "5px",
-                          }}
+                          className={styles.metaTagItem}
                         >
                           <input
                             type="text"
@@ -627,29 +657,11 @@ export default function AllDocTable() {
                             onChange={(e) =>
                               updateMetaTag(index, e.target.value)
                             }
-                            style={{
-                              flex: 1,
-                              borderRadius: "0px",
-                              backgroundColor: 'transparent',
-                              border: "1px solid #ccc",
-                              color: "#333",
-                              padding: "6px 10px",
-                            }}
+                            className={styles.metaTagItemInput}
                           />
                           <button
                             onClick={() => removeMetaTag(index)}
-                            className="dangerButton"
-                            style={{
-                              padding: "10px !important",
-                              backgroundColor: "#f44336",
-                              color: "white",
-                              border: "1px solid #4CAF50",
-                              borderLeft: "none",
-                              borderTopRightRadius: "4px",
-                              borderBottomRightRadius: "4px",
-                              cursor: "pointer",
-                              height: "34px"
-                            }}
+                            className={styles.metaTagRemoveButton}
                           >
                             <IoTrashOutline />
                           </button>
@@ -660,21 +672,16 @@ export default function AllDocTable() {
                 </div>
               </div>
 
-              <div className="d-flex flex-column flex-lg-row">
-                <div className="col-12 col-lg-6 d-flex flex-column">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Assign/share with roles
-                  </p>
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Assign/share with roles</label>
                   <div className="d-flex flex-column position-relative">
                     <DropdownButton
-                      id="dropdown-category-button"
+                      id="dropdown-roles-button"
                       title={
                         roles.length > 0 ? roles.join(", ") : "Select Roles"
                       }
-                      className="custom-dropdown-text-start text-start w-100"
+                      className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
                       onSelect={(value) => {
                         if (value) handleRoleSelect(value);
                       }}
@@ -696,12 +703,11 @@ export default function AllDocTable() {
                       {roles.map((role, index) => (
                         <span
                           key={index}
-                          className="badge bg-primary text-light me-2 p-2 d-inline-flex align-items-center"
+                          className={styles.badge}
                         >
                           {role}
                           <IoClose
-                            className="ms-2"
-                            style={{ cursor: "pointer" }}
+                            className={styles.badgeClose}
                             onClick={() => handleRemoveRole(role)}
                           />
                         </span>
@@ -710,92 +716,74 @@ export default function AllDocTable() {
                   </div>
                   {roles.length > 0 && (
                     <div className="mt-1">
-                      <label className="d-flex flex-row mt-2">
+                      <label className={styles.checkboxLabel}>
                         <Checkbox
                           checked={isTimeLimited}
                           onChange={() => setIsTimeLimited(!isTimeLimited)}
                           className="me-2"
                         >
-                          <p
-                            className="mb-0 text-start w-100"
-                            style={{ fontSize: "14px" }}
-                          >
+                          <span className={styles.checkboxLabelText}>
                             Specify the Period
-                          </p>
-
+                          </span>
                         </Checkbox>
                       </label>
                       {isTimeLimited && (
-                        <div className="d-flex flex-column flex-lg-row gap-2">
-                          <div className="d-flex flex-column">
-                            <label className="d-flex flex-column">
+                        <div className="d-flex flex-column flex-lg-row gap-2 mt-2">
+                          <div className={`${styles.formGroup} flex-grow-1`}>
+                            <div className={styles.datePickerWrapper}>
                               <DatePicker
                                 showTime
                                 placeholder="Choose Start Date"
                                 onChange={(value, dateString) => {
-                                  // console.log('Selected Time: ', value);
-                                  // console.log('Formatted Selected Time: ', dateString);
                                   setStartDate(`${dateString}`)
                                 }}
                                 onOk={(value) => onStartDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                               />
-                              {errors.startDate && (
-                                <span className="text-danger">{errors.startDate}</span>
-                              )}
-                            </label>
-
+                            </div>
+                            {errors.startDate && (
+                              <div className={styles.errorMessage}>{errors.startDate}</div>
+                            )}
                           </div>
-                          <div className="d-flex flex-column">
-                            <label className="d-flex flex-column">
+                          <div className={`${styles.formGroup} flex-grow-1`}>
+                            <div className={styles.datePickerWrapper}>
                               <DatePicker
                                 showTime
                                 placeholder="Choose End Date"
                                 onChange={(value, dateString) => {
-                                  // console.log('Selected Time: ', value);
-                                  // console.log('Formatted Selected Time: ', dateString);
                                   setEndDate(`${dateString}`)
                                 }}
                                 onOk={(value) => onEndDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                               />
-                              {errors.endDate && (
-                                <span className="text-danger">{errors.endDate}</span>
-                              )}
-                            </label>
+                            </div>
+                            {errors.endDate && (
+                              <div className={styles.errorMessage}>{errors.endDate}</div>
+                            )}
                           </div>
                         </div>
                       )}
-                      <label className="d-flex flex-row mt-2">
+                      <label className={styles.checkboxLabel}>
                         <Checkbox
                           checked={downloadable}
                           onChange={() => setDownloadable(!downloadable)}
                           className="me-2"
                         >
-                          <p
-                            className="mb-0 text-start w-100"
-                            style={{ fontSize: "14px" }}
-                          >
+                          <span className={styles.checkboxLabelText}>
                             Downloadable
-                          </p>
-
+                          </span>
                         </Checkbox>
                       </label>
                     </div>
                   )}
                 </div>
-                <div className="col-12 col-lg-6 d-flex flex-column ps-lg-2">
-                  <p
-                    className="mb-1 text-start w-100"
-                    style={{ fontSize: "14px" }}
-                  >
-                    Assign/share with Users
-                  </p>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Assign/share with Users</label>
                   <div className="d-flex flex-column position-relative">
                     <DropdownButton
-                      id="dropdown-category-button-2"
+                      id="dropdown-users-button"
                       title={
                         users.length > 0 ? users.join(", ") : "Select Users"
                       }
-                      className="custom-dropdown-text-start text-start w-100"
+                      className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
                       onSelect={(value) => {
                         if (value) handleUserSelect(value);
                       }}
@@ -817,12 +805,11 @@ export default function AllDocTable() {
                       {users.map((user, index) => (
                         <span
                           key={index}
-                          className="badge bg-primary text-light me-2 p-2 d-inline-flex align-items-center"
+                          className={styles.badge}
                         >
                           {user}
                           <IoClose
-                            className="ms-2"
-                            style={{ cursor: "pointer" }}
+                            className={styles.badgeClose}
                             onClick={() => handleUserRole(user)}
                           />
                         </span>
@@ -831,7 +818,7 @@ export default function AllDocTable() {
                   </div>
                   {selectedUserIds.length > 0 && (
                     <div className="mt-1">
-                      <label className="d-flex flex-row mt-2">
+                      <label className={styles.checkboxLabel}>
                         <Checkbox
                           checked={isUserTimeLimited}
                           onChange={() =>
@@ -839,54 +826,46 @@ export default function AllDocTable() {
                           }
                           className="me-2"
                         >
-                          <p
-                            className="mb-0 text-start w-100"
-                            style={{ fontSize: "14px" }}
-                          >
+                          <span className={styles.checkboxLabelText}>
                             Specify the Period
-                          </p>
+                          </span>
                         </Checkbox>
                       </label>
                       {isUserTimeLimited && (
-                        <div className="d-flex flex-column flex-lg-row gap-2">
-                          <div className="d-flex flex-column">
-                            <label className="d-flex flex-column">
+                        <div className="d-flex flex-column flex-lg-row gap-2 mt-2">
+                          <div className={`${styles.formGroup} flex-grow-1`}>
+                            <div className={styles.datePickerWrapper}>
                               <DatePicker
                                 showTime
                                 placeholder="Choose Start Date"
                                 onChange={(value, dateString) => {
-                                  // console.log('Selected Time: ', value);
-                                  // console.log('Formatted Selected Time: ', dateString);
                                   setUserStartDate(`${dateString}`)
                                 }}
                                 onOk={(value) => onUserStartDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                               />
-                              {errors.userStartDate && (
-                                <span className="text-danger">{errors.userStartDate}</span>
-                              )}
-                            </label>
+                            </div>
+                            {errors.userStartDate && (
+                              <div className={styles.errorMessage}>{errors.userStartDate}</div>
+                            )}
                           </div>
-                          <div className="d-flex flex-column">
-                            <label className="d-flex flex-column">
+                          <div className={`${styles.formGroup} flex-grow-1`}>
+                            <div className={styles.datePickerWrapper}>
                               <DatePicker
                                 showTime
                                 placeholder="Choose End Date"
                                 onChange={(value, dateString) => {
-                                  // console.log('Selected Time: ', value);
-                                  // console.log('Formatted Selected Time: ', dateString);
                                   setUserEndDate(`${dateString}`)
                                 }}
                                 onOk={(value) => onUserEndDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
                               />
-                              {errors.userEndDate && (
-                                <span className="text-danger">{errors.userEndDate}</span>
-                              )}
-                            </label>
-
+                            </div>
+                            {errors.userEndDate && (
+                              <div className={styles.errorMessage}>{errors.userEndDate}</div>
+                            )}
                           </div>
                         </div>
                       )}
-                      <label className="d-flex flex-row mt-2">
+                      <label className={styles.checkboxLabel}>
                         <Checkbox
                           checked={userDownloadable}
                           onChange={() =>
@@ -894,89 +873,28 @@ export default function AllDocTable() {
                           }
                           className="me-2"
                         >
-                          <p
-                            className="mb-0 text-start w-100"
-                            style={{ fontSize: "14px" }}
-                          >
+                          <span className={styles.checkboxLabelText}>
                             Downloadable
-                          </p>
-
+                          </span>
                         </Checkbox>
-
                       </label>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="d-flex flex-column flex-lg-row w-100">
-                <div className="col-12 col-lg-6 d-flex flex-column">
-                  <div className="d-flex w-100 flex-column justify-content-center align-items-start p-1">
-                    <div className="d-flex flex-column w-100 pt-3">
-                      <p
-                        className="mb-1 text-start w-100"
-                        style={{ fontSize: "14px" }}
-                      >
-                        Sectors
-                      </p>
-                      <DropdownButton
-                        id="dropdown-category-button"
-                        title={
-                          selectedSectorId
-                            ? sectorDropDownData.find((item) => item.id.toString() === selectedSectorId)?.sector_name
-                            : "Select Sector"
-                        }
-                        className="custom-dropdown-text-start text-start w-100"
-                        onSelect={(value) => handleSectorSelect(value || "")}
-                      >
-                        {sectorDropDownData
-                          .filter((sector) => sector.parent_sector === "none")
-                          .map((parentSector) => (
-                            <React.Fragment key={parentSector.id}>
-                              <Dropdown.Item
-                                eventKey={parentSector.id.toString()}
-                                style={{ fontWeight: "bold", paddingLeft: "10px" }}
-                              >
-                                {parentSector.sector_name}
-                              </Dropdown.Item>
-                              {sectorDropDownData
-                                .filter((sector) => sector.parent_sector === parentSector.id.toString())
-                                .map((childSector) => (
-                                  <Dropdown.Item
-                                    key={childSector.id}
-                                    eventKey={childSector.id.toString()}
-                                    style={{ paddingLeft: "30px" }}
-                                  >
-                                    {childSector.sector_name}
-                                  </Dropdown.Item>
-                                ))}
-                            </React.Fragment>
-                          ))}
-                      </DropdownButton>
-
-                    </div>
-                  </div>
-                </div>
-                <div className="col-12 col-lg-6 d-flex flex-column justify-content-center">
-                  <div className="d-flex w-100 flex-column justify-content-center align-items-start p-1">
-                    <div className="d-flex flex-column w-100 pt-3">
-                      <p
-                        className="mb-1 text-start w-100"
-                        style={{ fontSize: "14px" }}
-                      >
-                        Select Expire Date
-                      </p>
-                      <label className="d-flex flex-column">
-                        <DatePicker
-                          showTime
-                          className={`w-100`}
-                          placeholder="Choose Expire Date"
-                          onChange={(value, dateString) => {
-                            setUserEndDate(`${dateString}`)
-                          }}
-                          onOk={(value) => onExpireDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
-                        />
-                      </label>
-                    </div>
+              <div className={styles.formRowTwoCol}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Select Expire Date</label>
+                  <div className={styles.datePickerWrapper}>
+                    <DatePicker
+                      showTime
+                      className={`w-100`}
+                      placeholder="Choose Expire Date"
+                      onChange={(value, dateString) => {
+                        setUserEndDate(`${dateString}`)
+                      }}
+                      onOk={(value) => onExpireDateTimeOk(value, value?.format('YYYY-MM-DD HH:mm:ss') ?? '')}
+                    />
                   </div>
                 </div>
               </div>
@@ -1027,11 +945,11 @@ export default function AllDocTable() {
             </div>
           </div>
 
-          <div className="d-flex flex-row mt-5">
+          <div className={styles.formActions}>
             <button
               disabled={loading || formSubmitted}
               onClick={handleSubmit}
-              className="custom-icon-button button-success px-3 py-1 rounded me-2"
+              className={styles.btnSave}
             >
               {loading ? (
                 "Submitting..."
@@ -1043,11 +961,12 @@ export default function AllDocTable() {
             </button>
             <Link
               href="/all-documents"
-              className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+              className={styles.btnCancel}
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </Link>
           </div>
+        </div>
         </div>
         <ToastMessage
           message={toastMessage}

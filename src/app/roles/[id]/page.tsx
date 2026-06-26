@@ -8,18 +8,19 @@ import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoSave } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import Link from "next/link";
 import { Checkbox, Divider } from "antd";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import ToastMessage from "@/components/common/Toast";
+import styles from "../roles-add.module.css";
 
 interface Props {
     params: { id: string };
-  }
-  
+}
 
-  export default function AllDocTable({ params }: Props) {
+
+export default function AllDocTable({ params }: Props) {
     const { id } = useParams();
 
     const [mounted, setMounted] = useState(false);
@@ -84,20 +85,21 @@ interface Props {
     const allGroups = [
         { name: "Dashboard", items: ["View Dashboard"] },
         { name: "All Documents", items: ["View Documents", "Create Document", "Edit Document", "Delete Document", "Archive Document", "Add Reminder", "Share Document", "Download Document", "Send Email", "Manage Sharable Link", "AI Options", "Upload New Version file", "Version History", "Comment", "Remove From Search"] },
-        { name: "Assigned Documents", items: ["Create Document", "Edit Document", "Share Document", "Upload New Version", "Delete Document", "Send Email", "Manage Sharable Link", "Upload New Version file", "Version History", "Comment", "Remove From Search", "Download", "Add Reminder", "Archive"] },
+        { name: "Assigned Documents", items: ["View Documents","Create Document", "Edit Document", "Share Document", "Upload New Version", "Delete Document", "Send Email", "Manage Sharable Link", "Upload New Version file", "Version History", "Comment", "Remove From Search", "Download", "Add Reminder", "Archive","AI Options"] },
         { name: "Archived Documents", items: ["View Documents", "Restore Document", "Delete Document"] },
         { name: "Advanced Search", items: ["Advanced Search"] },
         { name: "Deep Search", items: ["Deep Search", "Add Indexing", "Remove Indexing"] },
         { name: "Document Categories", items: ["Manage Document Category"] },
-        { name: "Bulk Upload", items: ["View Bulk Upload","Delete Bulk Upload","Create Bulk Upload", "Edit Bulk Upload",] },
-        { name: "FTP Accounts", items: ["View FTP Accounts","Delete FTP Accounts","Create FTP Accounts", "Edit FTP Accounts",] },
-        { name: "Attributes", items: ["View Attributes", "Add Attributes", "Edit Attributes","Delete Attributes"] },
+        { name: "Bulk Upload", items: ["View Bulk Upload", "Delete Bulk Upload", "Create Bulk Upload", "Edit Bulk Upload",] },
+        // { name: "FTP Accounts", items: ["View FTP Accounts", "Delete FTP Accounts", "Create FTP Accounts", "Edit FTP Accounts",] },
+        // { name: "Attributes", items: ["View Attributes", "Add Attributes", "Edit Attributes", "Delete Attributes"] },
         { name: "Sectors", items: ["Manage Sectors"] },
         { name: "Documents Audit Trail", items: ["View Document Audit Trail"] },
         { name: "User", items: ["View Users", "Create User", "Edit User", "Delete User", "Reset Password", "Assign User Role", "Assign Permission"] },
         { name: "Role", items: ["View Roles", "Create Role", "Edit Role", "Delete Role"] },
-        { name: "Email", items: ["Manage SMTP Settings"] },
+        // { name: "Email", items: ["Manage SMTP Settings"] },
         { name: "Settings", items: ["Manage Languages", "Storage Settings", "Manage Company Profile"] },
+         { name: "Signatures", items: ["Sign Approval","Sign Requests"] },
         { name: "Reminder", items: ["View Reminders", "Create Reminder", "Edit Reminder", "Delete Reminder"] },
         { name: "Login Audits", items: ["View Login Audit Logs"] },
         { name: "Page Helpers", items: ["Manage Page Helper"] },
@@ -197,103 +199,93 @@ interface Props {
     return (
         <>
             <DashboardLayout>
-                <div className="d-flex justify-content-between align-items-center pt-2">
-                    <Heading text="Manage Role" color="#444" />
-                </div>
-                <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
+                <div className={styles.pageWrapper}>
+                    <div className={styles.pageHeader}>
+                        <Heading text="Manage Role" color="#444" />
+                    </div>
 
-                    <div className="d-flex flex-column  custom-scroll" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-                        <div className="d-flex col-12 col-md-6 flex-column mb-3">
-                            <p className="mb-1" style={{ fontSize: "14px" }}>
-                                Role Name
-                            </p>
-                            <div className="input-group mb-1 pe-lg-4">
+                    <div className={`${styles.card} ${styles.cardWithStickyActions} ${styles.formCard}`}>
+                        <div className={`${styles.scrollArea} custom-scroll`}>
+                            <div className={`${styles.formGroup} col-12 col-md-6`}>
+                                <label className={styles.formLabel}>Role Name</label>
                                 <input
                                     type="text"
-                                    className={`form-control ${error ? "is-invalid" : ""}`}
+                                    className={`${styles.formInput} ${error ? styles.isInvalid : ""}`}
                                     value={roleName}
                                     onChange={(e) => setRoleName(e.target.value)}
                                 />
+                                {error && <div className={styles.errorText}>{error}</div>}
                             </div>
-                            {error && (
-                                <div className="text-danger" style={{ fontSize: "12px" }}>
-                                    {error}
-                                </div>
-                            )}
-                        </div>
-                            <Checkbox  className="mb-2"
+                            <Checkbox
+                                className="mb-2"
                                 checked={isAdmin}
                                 onChange={(e) => setIsAdmin(e.target.checked)}
                             >
                                 Enable Admin Dashboard
-                            </Checkbox>       
-                        <Heading text="Permission" color="#444" />
-                        <div className="mt-2">
-                            <Checkbox
-                                checked={Object.keys(selectedGroups).length === allGroups.length}
-                                indeterminate={
-                                    Object.keys(selectedGroups).length > 0 &&
-                                    Object.keys(selectedGroups).length < allGroups.length
-                                }
-                                onChange={(e) => handleSelectAll(e.target.checked)}
-                            >
-                                Select All
                             </Checkbox>
-                            <Divider />
+                            <h3 className={styles.sectionHeading}>Permission</h3>
+                            <div className="mt-2">
+                                <Checkbox
+                                    checked={Object.keys(selectedGroups).length === allGroups.length}
+                                    indeterminate={
+                                        Object.keys(selectedGroups).length > 0 &&
+                                        Object.keys(selectedGroups).length < allGroups.length
+                                    }
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                >
+                                    Select All
+                                </Checkbox>
+                                <Divider />
 
-                            {allGroups.map((group, groupIndex) => (
-                                <div key={groupIndex} className="mb-4">
-                                    <Checkbox
-                                        checked={selectedGroups[group.name]?.length === group.items.length}
-                                        indeterminate={
-                                            selectedGroups[group.name]?.length > 0 &&
-                                            selectedGroups[group.name]?.length < group.items.length
-                                        }
-                                        onChange={(e) => handleGroupSelect(e.target.checked, group.name, group.items)}
-                                        style={{fontWeight:"700"}}
-                                    >
-                                        {group.name}
-                                    </Checkbox>
-                                    <div style={{ marginLeft: "20px" }}>
-                                        {group.items.map((item, itemIndex) => (
-                                            <Checkbox
-                                                key={itemIndex}
-                                                checked={selectedGroups[group.name]?.includes(item)}
-                                                onChange={(e) => handleIndividualSelect(group.name, item, e.target.checked)}
-                                            >
-                                                {item}
-                                            </Checkbox>
-                                        ))}
+                                {allGroups.map((group, groupIndex) => (
+                                    <div key={groupIndex} className={styles.permissionGroup}>
+                                        <Checkbox
+                                            checked={selectedGroups[group.name]?.length === group.items.length}
+                                            indeterminate={
+                                                selectedGroups[group.name]?.length > 0 &&
+                                                selectedGroups[group.name]?.length < group.items.length
+                                            }
+                                            onChange={(e) => handleGroupSelect(e.target.checked, group.name, group.items)}
+                                            style={{ fontWeight: "700" }}
+                                        >
+                                            {group.name}
+                                        </Checkbox>
+                                        <div className={styles.permissionItems}>
+                                            {group.items.map((item, itemIndex) => (
+                                                <Checkbox
+                                                    key={itemIndex}
+                                                    checked={selectedGroups[group.name]?.includes(item)}
+                                                    onChange={(e) => handleIndividualSelect(group.name, item, e.target.checked)}
+                                                >
+                                                    {item}
+                                                </Checkbox>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                            <Divider />
-
-                            <div className="d-flex flex-row"
-                            >
-                                <button
-                                    onClick={() => handleAddRolePermission()}
-                                    className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                                >
-                                    <IoSave fontSize={16} className="me-1" /> Yes
-                                </button>
-                                <Link
-                                    href={"/roles"}
-                                    className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                                >
-                                    <MdOutlineCancel fontSize={16} className="me-1" /> No
-                                </Link>
+                                ))}
                             </div>
+                        </div>
+
+                        <div className={styles.stickyActions}>
+                            <button
+                                onClick={() => handleAddRolePermission()}
+                                className={styles.btnSave}
+                            >
+                                <IoSave fontSize={16} /> Yes
+                            </button>
+                            <Link href="/roles" className={styles.btnCancel}>
+                                <MdCancel fontSize={16} /> No
+                            </Link>
                         </div>
                     </div>
                 </div>
             </DashboardLayout>
             <ToastMessage
-        message={toastMessage}
-        show={showToast}
-        onClose={() => setShowToast(false)}
-        type={toastType}
-      />
+                message={toastMessage}
+                show={showToast}
+                onClose={() => setShowToast(false)}
+                type={toastType}
+            />
         </>
     );
 }

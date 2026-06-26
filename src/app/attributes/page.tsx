@@ -10,7 +10,7 @@ import { Dropdown, DropdownButton, Modal, Table } from "react-bootstrap";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEllipsisV } from "react-icons/fa";
 import { FaKey, FaPlus } from "react-icons/fa6";
-import { MdModeEditOutline, MdOutlineCancel, MdPeople } from "react-icons/md";
+import { MdModeEditOutline, MdCancel, MdPeople } from "react-icons/md";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoCheckmark, IoClose, IoSaveOutline } from "react-icons/io5";
@@ -210,7 +210,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </div>

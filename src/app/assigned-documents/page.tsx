@@ -34,6 +34,7 @@ import {
   IoShareSocial,
   IoTrash,
   IoTrashOutline,
+  IoArrowBack,
 } from "react-icons/io5";
 import { Button, Checkbox, DatePicker, Input, Radio } from "antd";
 import type { DatePickerProps } from "antd";
@@ -44,8 +45,8 @@ import {
   MdEmail,
   MdFileDownload,
   MdModeEditOutline,
-  MdOutlineCancel,
-  MdOutlineInsertLink,
+  MdCancel,
+  MdInsertLink,
   MdUpload,
 } from "react-icons/md";
 import InfoModal from "@/components/common/InfoModel";
@@ -63,6 +64,7 @@ import {
   fetchVersionHistory,
 } from "@/utils/dataFetchFunctions";
 import { useUserContext } from "@/context/userContext";
+import { useChat } from "@/context/ChatContext";
 import ToastMessage from "@/components/common/Toast";
 import { IoMdSend, IoMdTrash } from "react-icons/io";
 import {
@@ -86,20 +88,22 @@ import LoadingBar from "@/components/common/LoadingBar";
 import { usePermissions } from "@/context/userPermissions";
 import { hasPermission } from "@/utils/permission";
 import Image from "next/image";
+import styles from "./assigned-documents.module.css";
+import { getFlattenedCategories } from "@/utils/commonFunctions";
 
 interface Category {
   category_name: string;
 }
 
 interface TableItem {
-  sector_category: number;
   id: number;
   name: string;
   category: Category;
-  storage: string;
+  // storage: string;
   created_date: string;
   created_by: string;
   document_preview: string;
+  type?: string;
 }
 
 interface ShareItem {
@@ -135,8 +139,7 @@ interface ViewDocumentItem {
   attributes: string;
   type: string;
   url: string;
-  enable_external_file_view: number;
-  sector_category: number;
+  enable_external_file_view: number
 }
 
 interface CategoryDropdownItem {
@@ -154,6 +157,41 @@ interface HalfMonth {
 export default function AllDocTable() {
   const { userId, userName } = useUserContext();
   const permissions = usePermissions();
+  const { toggleChat } = useChat();
+  const [showSubMenu, setShowSubMenu] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const [activeTab, setActiveTab] = useState<"tab_view" | "folder_view">("tab_view");
+  const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
+  const [navigationHistory, setNavigationHistory] = useState<Array<{ id: number; name: string }>>([]);
+
+  const navigateToFolder = (folderId: number | null, folderName?: string) => {
+    if (folderId === null) {
+      setCurrentFolderId(null);
+      setNavigationHistory([]);
+    } else {
+      setCurrentFolderId(folderId);
+      const index = navigationHistory.findIndex((item) => item.id === folderId);
+      if (index !== -1) {
+        setNavigationHistory(navigationHistory.slice(0, index + 1));
+      } else {
+        setNavigationHistory([
+          ...navigationHistory,
+          { id: folderId, name: folderName || "" },
+        ]);
+      }
+    }
+    setCurrentPage(1); // Reset page number when navigating folder
+  };
+
+  const navigateBack = () => {
+    if (navigationHistory.length <= 1) {
+      navigateToFolder(null);
+    } else {
+      const prevFolder = navigationHistory[navigationHistory.length - 2];
+      navigateToFolder(prevFolder.id, prevFolder.name);
+    }
+  };
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
@@ -165,7 +203,7 @@ export default function AllDocTable() {
   const [comment, setComment] = useState("");
   const [allComment, setAllComment] = useState<CommentItem[]>([]);
   const [selectedComment, setSelectedComment] = useState("");
-  const [selectedStorage, setSelectedStorage] = useState<string>("Storage");
+  // const [selectedStorage, setSelectedStorage] = useState<string>("Storage");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [users, setUsers] = useState<string[]>([]);
@@ -309,7 +347,7 @@ export default function AllDocTable() {
     term: "",
     meta_tags: "",
     category: "",
-    storage: "",
+    // storage: "",
   });
   const [isLoadingTable, setIsLoadingTable] = useState(false);
 
@@ -404,12 +442,7 @@ export default function AllDocTable() {
 
   useEffect(() => {
     fetchCategoryData(setCategoryDropDownData);
-    fetchAssignedDocumentsData((data) => {
-      const filtered = data.filter((item: any) =>
-        hasPermission(permissions, "All Documents", "View Documents")
-      );
-      setDummyData(filtered);
-    });
+    fetchAssignedDocumentsData(setDummyData);
     fetchAndMapUserData(setUserDropDownData);
     fetchRoleData(setRoleDropDownData);
     fetchRemindersData(setTableData);
@@ -711,12 +744,12 @@ export default function AllDocTable() {
     }));
   };
 
-  const handleStorageSelect = (storage: string) => {
-    setFilterData((prevState) => ({
-      ...prevState,
-      storage: storage,
-    }));
-  };
+  // const handleStorageSelect = (storage: string) => {
+  //   setFilterData((prevState) => ({
+  //     ...prevState,
+  //     storage: storage,
+  //   }));
+  // };
 
   const handleDateChange: DatePickerProps["onChange"] = (date, dateString) => {
     if (typeof dateString === "string") {
@@ -763,9 +796,10 @@ export default function AllDocTable() {
       formData.append("meta_tags", filterData.meta_tags);
     } else if (filterData.category) {
       formData.append("category", filterData.category);
-    } else if (filterData.storage) {
-      formData.append("storage", filterData.storage);
     }
+    //  else if (filterData.storage) {
+    //   formData.append("storage", filterData.storage);
+    // }
 
 
     formData.forEach((value, key) => {
@@ -773,12 +807,7 @@ export default function AllDocTable() {
     });
 
     if (formData.entries().next().done) {
-      fetchAssignedDocumentsData((data) => {
-        const filtered = data.filter((item: any) =>
-          hasPermission(permissions, "All Documents", "View Documents")
-        );
-        setDummyData(filtered);
-      });
+      fetchAssignedDocumentsData(setDummyData);
       return;
     }
 
@@ -786,10 +815,7 @@ export default function AllDocTable() {
     setIsLoadingTable(true)
     try {
       const response = await postWithAuth("filter-assigned-documents", formData);
-      const filteredResponse = response.filter((item: any) =>
-        hasPermission(permissions, "All Documents", "View Documents")
-      );
-      setDummyData(filteredResponse);
+      setDummyData(response);
       setIsLoadingTable(false)
     } catch (error) {
       console.error("Failed to fetch filtered data", error);
@@ -1981,16 +2007,40 @@ export default function AllDocTable() {
     return <LoadingSpinner />;
   }
 
+  // Subcategories in the current folder
+  const currentFolderSubcategories = categoryDropDownData.filter((cat) => {
+    if (currentFolderId === null) {
+      return cat.parent_category === "none" || !cat.parent_category;
+    }
+    return cat.parent_category === currentFolderId.toString();
+  });
+
+  // Files/documents in the current folder
+  const currentFolderFiles = dummyData.filter((doc) => {
+    if (currentFolderId === null) {
+      return !doc.category || !doc.category?.category_name;
+    }
+    const docCat = doc.category as any;
+    const activeCategory = categoryDropDownData.find((c) => c.id === currentFolderId);
+    if (docCat?.id !== undefined && docCat?.id !== null) {
+      return Number(docCat.id) === Number(currentFolderId);
+    }
+    return docCat?.category_name === activeCategory?.category_name;
+  });
+
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center pt-2">
-          <Heading text="Assigned Documents" color="#444" />
-          <div className="d-flex flex-row mt-3 mt-lg-0">
+        <div className={styles.pageWrapper}>
+        <div className={`${styles.pageHeader} pt-2`}>
+          <div className={styles.pageTitle}>
+            <Heading text="Assigned Documents" color="#0A0A0A" />
+          </div>
+          <div className={styles.headerActions}>
             {hasPermission(permissions, "Assigned Documents", "Create Document") && (
               <Link
                 href="/all-documents/add"
-                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+                className={`${styles.btnAdd} me-2`}
               >
                 <FaPlus className="me-1" /> Add Document
               </Link>
@@ -1998,33 +2048,45 @@ export default function AllDocTable() {
             {hasPermission(permissions, "Reminder", "View Reminders") && (
               <button
                 onClick={() => handleOpenModal("myReminderModel")}
-                className="reminderButton bg-danger text-white border border-danger rounded px-3 py-1"
+                className={styles.btnReminders}
               >
                 <FaListUl className="me-1" /> My Reminders
               </button>
             )}
-
-
           </div>
         </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3 position-relative">
-          <div className="d-flex flex-column flex-lg-row">
+        <div className={`${styles.card} d-flex flex-column position-relative`}>
+          <div className={styles.tabsContainer}>
+            <button
+              className={`${styles.tabButton} ${activeTab === "tab_view" ? styles.tabButtonActive : ""}`}
+              onClick={() => setActiveTab("tab_view")}
+            >
+              Tab View
+            </button>
+            <button
+              className={`${styles.tabButton} ${activeTab === "folder_view" ? styles.tabButtonActive : ""}`}
+              onClick={() => setActiveTab("folder_view")}
+            >
+              Folder View
+            </button>
+          </div>
+          <div className={styles.filtersRow}>
             <div className="col-12 col-lg-6 d-flex flex-column flex-lg-row">
               <div className="input-group mb-3 pe-lg-2">
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${styles.searchInput}`}
                   placeholder="Search By Name Or Description"
                   onChange={(e) => handleTermSearch(e.target.value)}
-                ></input>
+                />
               </div>
               <div className="input-group mb-3 pe-lg-2">
                 <input
                   type="text"
-                  className="form-control"
+                  className={`form-control ${styles.searchInput}`}
                   placeholder="Search By Meta Tags"
                   onChange={(e) => handleMetaSearch(e.target.value)}
-                ></input>
+                />
               </div>
             </div>
             <div className="col-12 col-lg-6 d-flex flex-column flex-lg-row">
@@ -2039,35 +2101,34 @@ export default function AllDocTable() {
                         )?.category_name
                         : "Select Category"
                     }
-                    className="custom-dropdown-text-start text-start w-100"
+                    className={`custom-dropdown-text-start text-start w-100 ${styles.dropdownToggle}`}
                     onSelect={(value) => handleCategorySelect(value || "")}
                   >
                     <Dropdown.Item eventKey="" style={{ fontStyle: "italic", color: "gray" }}>
                       None
                     </Dropdown.Item>
 
-                    {categoryDropDownData.map((category) => (
+                    {getFlattenedCategories(categoryDropDownData).map((category) => (
                       <Dropdown.Item
                         key={category.id}
                         eventKey={category.id.toString()}
                         style={{
-                          fontWeight:
-                            category.parent_category === "none" ? "bold" : "normal",
-                          paddingLeft: category.parent_category === "none" ? "10px" : "20px",
+                          fontWeight: category.level === 0 ? "bold" : "normal",
+                          paddingLeft: `${category.level * 15 + 10}px`,
                         }}
                       >
-                        {category.category_name}
+                        {category.level > 0 ? "- ".repeat(category.level) : ""}{category.category_name}
                       </Dropdown.Item>
                     ))}
                   </DropdownButton>
                 </div>
               </div>
-              <div className="col-12 col-lg-6 px-lg-2">
+              {/* <div className="col-12 col-lg-6 px-lg-2">
                 <div className="input-group mb-3">
                   <DropdownButton
                     id="dropdown-storage-button"
                     title={filterData.storage || "Select Storage"}
-                    className="w-100 custom-dropdown-text-start"
+                    className={`w-100 custom-dropdown-text-start ${styles.dropdownToggle}`}
                   >
                     <Dropdown.Item onClick={() => handleStorageSelect("")}>
                       None
@@ -2080,7 +2141,7 @@ export default function AllDocTable() {
                     </Dropdown.Item>
                   </DropdownButton>
                 </div>
-              </div>
+              </div> */}
               {/* <div className="col-12 col-lg-4">
                 <div className="input-group">
                   <DatePicker onChange={handleDateChange} />
@@ -2093,11 +2154,9 @@ export default function AllDocTable() {
           </div>
 
 
+          {activeTab === "tab_view" ? (
           <div>
-            <div
-              style={{ maxHeight: "350px", overflowY: "auto" }}
-              className="custom-scroll "
-            >
+            <div className={`${styles.tableWrapper} custom-scroll`}>
               <Table hover responsive>
                 <thead className="sticky-header">
                   <tr>
@@ -2128,13 +2187,13 @@ export default function AllDocTable() {
                           className="no-caret position-static dropdown-toggle-bulk"
                           style={{ zIndex: "99999", padding: '0px !important', backgroundColor: "transparent", color: "#000" }}
                         >
-                          {/* {hasPermission(permissions, "All Documents", "Share Document") && (
+                          {/* {hasPermission(permissions, "Assigned Documents", "Share Document") && (
                             <Dropdown.Item onClick={() => handleOpenModal("allDocShareModel")} className="py-2">
                               <IoShareSocial className="me-2" />
                               Share
                             </Dropdown.Item>
                           )} */}
-                          {hasPermission(permissions, "All Documents", "Delete Document") && (
+                          {hasPermission(permissions, "Assigned Documents", "Delete Document") && (
                             <Dropdown.Item
                               onClick={() => handleOpenModal("deleteBulkFileModel")}
                               className="py-2"
@@ -2161,7 +2220,7 @@ export default function AllDocTable() {
                     <th>Actions</th>
                     <th className="text-start">Name</th>
                     <th className="text-start">Category Name</th>
-                    <th className="text-start">Storage</th>
+                    {/* <th className="text-start">Storage</th> */}
                     <th
                       className="text-start"
                       onClick={handleSort}
@@ -2215,7 +2274,7 @@ export default function AllDocTable() {
                             className="no-caret position-static"
                             style={{ zIndex: "99999" }}
                           >
-                            {hasPermission(permissions, "All Documents", "View Documents") && (
+                            {hasPermission(permissions, "Assigned Documents", "View Documents") && (
                               <Dropdown.Item
                                 className="py-2"
                                 onClick={() =>
@@ -2239,6 +2298,105 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
+                            {["pdf", "docx", "xlsx", "pptx", "txt"].includes(
+                              item.type || ""
+                            ) &&
+                              hasPermission(
+                                permissions,
+                                "Assigned Documents",
+                                "AI Options"
+                              ) && (
+                                <Dropdown.Item
+                                  onMouseEnter={(e) => {
+                                    setAnchorEl(e.currentTarget);
+                                    setShowSubMenu(true);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setShowSubMenu(false);
+                                  }}
+                                  className="py-2 position-relative"
+                                >
+                                  <Image
+                                    src="/icons8-ai-48.png"
+                                    alt="ai icon"
+                                    width={16}
+                                    height={16}
+                                    className="me-2"
+                                  />
+                                  AI Options
+                                  {showSubMenu && (
+                                    <div
+                                      onMouseEnter={() => setShowSubMenu(true)}
+                                      onMouseLeave={() => setShowSubMenu(false)}
+                                      className="position-absolute bg-white shadow rounded"
+                                      style={{
+                                        top: 0,
+                                        left: "100%",
+                                        zIndex: 100000,
+                                        minWidth: "200px",
+                                      }}
+                                    >
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          toggleChat({
+                                            documentId: item.id.toString(),
+                                            documentName: item.name,
+                                            action: "summarize",
+                                          })
+                                        }
+                                      >
+                                        Summarize Document
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          toggleChat({
+                                            documentId: item.id.toString(),
+                                            documentName: item.name,
+                                            action: "generate",
+                                          })
+                                        }
+                                      >
+                                        Content Generation
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          toggleChat({
+                                            documentId: item.id.toString(),
+                                            documentName: item.name,
+                                            action: "qa",
+                                          })
+                                        }
+                                      >
+                                        Ask Questions
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          toggleChat({
+                                            documentId: item.id.toString(),
+                                            documentName: item.name,
+                                            action: "tone",
+                                          })
+                                        }
+                                      >
+                                        Sentiment Analysis
+                                      </Dropdown.Item>
+                                      <Dropdown.Item
+                                        onClick={() =>
+                                          toggleChat({
+                                            documentId: item.id.toString(),
+                                            documentName: item.name,
+                                            action: "translate",
+                                          })
+                                        }
+                                      >
+                                        Translate Document
+                                      </Dropdown.Item>
+                                    </div>
+                                  )}
+                                </Dropdown.Item>
+                              )}
+
+
                             {hasPermission(permissions, "Assigned Documents", "Share Document") && (
                               <Dropdown.Item onClick={() =>
                                 handleOpenModal(
@@ -2259,7 +2417,7 @@ export default function AllDocTable() {
                                 }
                                 className="py-2"
                               >
-                                <MdOutlineInsertLink className="me-2" />
+                                <MdInsertLink className="me-2" />
                                 Get Shareable Link
                               </Dropdown.Item>
                             )}
@@ -2456,7 +2614,7 @@ export default function AllDocTable() {
                           )}
                         </td>
                         <td>{item.category?.category_name || ""}</td>
-                        <td>{item.storage}</td>
+                        {/* <td>{item.storage}</td> */}
                         <td>
                           {new Date(item.created_date).toLocaleDateString(
                             "en-GB"
@@ -2467,16 +2625,18 @@ export default function AllDocTable() {
                       </tr>
                     ))
                   ) : (
-                    <div className="text-start w-100 py-3">
-                      <Paragraph text="No data available" color="#333" />
-                    </div>
+                    <tr key="no-data">
+                      <td colSpan={8} className={styles.noData}>
+                        <Paragraph text="No data available" color="#717182" />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </Table>
             </div>
-            <div className="d-flex flex-column flex-lg-row paginationFooter">
+            <div className={`d-flex flex-column flex-lg-row ${styles.paginationFooter}`}>
               <div className="d-flex justify-content-between align-items-center">
-                <p className="pagintionText mb-0 me-2">Items per page:</p>
+                <p className="mb-0 me-2" style={{ fontSize: "0.875rem", color: "#717182" }}>Items per page:</p>
                 <Form.Select
                   onChange={handleItemsPerPageChange}
                   value={itemsPerPage}
@@ -2492,7 +2652,7 @@ export default function AllDocTable() {
                 </Form.Select>
               </div>
               <div className="d-flex flex-row align-items-center px-lg-5">
-                <div className="pagination-info" style={{ fontSize: "14px" }}>
+                <div className={styles.paginationInfo}>
                   {startIndex} – {endIndex} of {totalItems}
                 </div>
 
@@ -2509,6 +2669,478 @@ export default function AllDocTable() {
               </div>
             </div>
           </div>
+        ) : (
+          <div className="d-flex flex-column mt-2">
+            {/* Address Bar / Navigation */}
+            <div className={styles.addressBar}>
+              <button
+                className={styles.backButton}
+                onClick={navigateBack}
+                disabled={currentFolderId === null}
+                title="Go Back"
+              >
+                <IoArrowBack fontSize={16} />
+              </button>
+              <div className={styles.breadcrumbs}>
+                <span
+                  className={styles.breadcrumbItem}
+                  onClick={() => navigateToFolder(null)}
+                >
+                  Root
+                </span>
+                {navigationHistory.map((item, idx) => (
+                  <React.Fragment key={item.id}>
+                    <span className={styles.separator}>/</span>
+                    <span
+                      className={styles.breadcrumbItem}
+                      onClick={() => navigateToFolder(item.id, item.name)}
+                    >
+                      {item.name}
+                    </span>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            {/* Table wrapper for Windows Detailed View */}
+            <div className={`${styles.tableWrapper} custom-scroll`}>
+              <Table hover responsive>
+                <thead className="sticky-header">
+                  <tr>
+                    <th>
+                      {selectedItems.length > 0 ? (
+                        <DropdownButton
+                          id="dropdown-basic-button-folder"
+                          drop="end"
+                          title={<FaEllipsisV />}
+                          className="no-caret position-static dropdown-toggle-bulk"
+                          style={{
+                            zIndex: "99999",
+                            padding: "0px !important",
+                            backgroundColor: "transparent",
+                            color: "#000",
+                          }}
+                        >
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Share Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal("allDocShareModel")
+                                }
+                                className="py-2"
+                              >
+                                <IoShareSocial className="me-2" />
+                                Share
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Delete Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal("deleteBulkFileModel")
+                                }
+                                className="py-2"
+                              >
+                                <AiFillDelete className="me-2" />
+                                Delete
+                              </Dropdown.Item>
+                            )}
+                        </DropdownButton>
+                      ) : (
+                        <Checkbox
+                          checked={
+                            selectedItems.length === currentFolderFiles.length &&
+                            currentFolderFiles.length > 0
+                          }
+                          indeterminate={
+                            selectedItems.length > 0 &&
+                            selectedItems.length < currentFolderFiles.length
+                          }
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const allIds = currentFolderFiles.map((f) => f.id);
+                              const allNames = currentFolderFiles.map((f) => f.name);
+                              setSelectedItems(allIds);
+                              setSelectedItemsNames(allNames);
+                            } else {
+                              setSelectedItems([]);
+                              setSelectedItemsNames([]);
+                            }
+                          }}
+                          style={{
+                            display: "flex",
+                            alignSelf: "center",
+                            justifySelf: "center",
+                          }}
+                        />
+                      )}
+                    </th>
+                    <th>Action</th>
+                    <th className="text-start">Name</th>
+                    <th className="text-start">Type</th>
+                    <th className="text-start">Created Date</th>
+                    <th className="text-start">Created By</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Render Folders (Subcategories) */}
+                  {currentFolderSubcategories.map((folder) => (
+                    <tr
+                      key={`folder-${folder.id}`}
+                      className={styles.folderRow}
+                      onDoubleClick={() => navigateToFolder(folder.id, folder.category_name)}
+                      onClick={() => navigateToFolder(folder.id, folder.category_name)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>
+                        {/* Empty cell for checkboxes on folders */}
+                      </td>
+                      <td>
+                        {/* Folders don't have document dropdown actions */}
+                      </td>
+                      <td className="text-start">
+                        <span className={styles.folderName}>
+                          <IoFolder className="me-2 text-warning" fontSize={20} style={{ color: "#f59e0b" }} />
+                          {folder.category_name}
+                        </span>
+                      </td>
+                      <td className="text-start">File folder</td>
+                      <td className="text-start">-</td>
+                      <td className="text-start">-</td>
+                    </tr>
+                  ))}
+
+                  {/* Render Files (Documents) */}
+                  {currentFolderFiles.map((item) => (
+                    <tr
+                      key={`file-${item.id}`}
+                      onMouseEnter={() => setHoveredRow(item.id)}
+                      onMouseLeave={() => setHoveredRow(null)}
+                      onMouseMove={handleMouseMove}
+                    >
+                      <td>
+                        <Checkbox
+                          checked={selectedItems.includes(item.id)}
+                          onChange={() =>
+                            handleCheckboxChange(item.id, item.name)
+                          }
+                          style={{
+                            display: "flex",
+                            alignSelf: "center",
+                            justifySelf: "center",
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <DropdownButton
+                          id={`dropdown-file-${item.id}`}
+                          drop="end"
+                          title={<FaEllipsisV />}
+                          className="no-caret position-static"
+                          style={{ zIndex: "99999" }}
+                        >
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "View Documents"
+                          ) && (
+                              <Dropdown.Item
+                                className="py-2"
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "viewModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                              >
+                                <IoEye className="me-2" />
+                                View
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Edit Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "editModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <MdModeEditOutline className="me-2" />
+                                Edit
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Share Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "shareDocumentModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <IoShareSocial className="me-2" />
+                                Share
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Manage Sharable Link"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleGetShareableLinkModel(item.id)
+                                }
+                                className="py-2"
+                              >
+                                <MdInsertLink className="me-2" />
+                                Get Shareable Link
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Download Document"
+                          ) && (
+                              <Dropdown.Item className="py-2">
+                                <Link
+                                  href={"#"}
+                                  style={{ color: "#212529" }}
+                                  onClick={() =>
+                                    handleDownload(item.id, userId)
+                                  }
+                                >
+                                  <MdFileDownload className="me-2" />
+                                  Download
+                                </Link>
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Upload New Version file"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "uploadNewVersionFileModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <MdUpload className="me-2" />
+                                Upload New Version file
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Version History"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "versionHistoryModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <GoHistory className="me-2" />
+                                Version History
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Comment"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "commentModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <BiSolidCommentDetail className="me-2" />
+                                Comment
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Add Reminder"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "addReminderModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <BsBellFill className="me-2" />
+                                Add Reminder
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Send Email"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "sendEmailModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <MdEmail className="me-2" />
+                                Send Email
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Download Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "removeIndexingModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <AiOutlineZoomOut className="me-2" />
+                                Remove From Search
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Archive Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "docArchivedModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <FaArchive className="me-2" />
+                                Archive
+                              </Dropdown.Item>
+                            )}
+                          {hasPermission(
+                            permissions,
+                            "Assigned Documents",
+                            "Delete Document"
+                          ) && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal(
+                                    "deleteFileModel",
+                                    item.id,
+                                    item.name
+                                  )
+                                }
+                                className="py-2"
+                              >
+                                <AiFillDelete className="me-2" />
+                                Delete
+                              </Dropdown.Item>
+                            )}
+                        </DropdownButton>
+                      </td>
+                      <td className="text-start">
+                        {item.name}
+                        {hoveredRow === item.id && item.document_preview && (
+                          <div
+                            className="preview-image p-0"
+                            style={{
+                              position: "fixed",
+                              top: cursorPosition.y + 10,
+                              left: cursorPosition.x + 10,
+                              width: "200px",
+                              maxHeight: "200px",
+                              maxWidth: "200px",
+                              zIndex: 1000,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <Image
+                              src={item.document_preview}
+                              alt="Preview"
+                              width={200}
+                              height={200}
+                              style={{
+                                width: "200px",
+                                height: "200px",
+                              }}
+                            />
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-start">{item.type ? `${item.type.toUpperCase()} File` : "Document"}</td>
+                      <td className="text-start">
+                        {new Date(item.created_date).toLocaleDateString(
+                          "en-GB"
+                        )}
+                      </td>
+                      <td className="text-start">{item.created_by}</td>
+                    </tr>
+                  ))}
+
+                  {currentFolderSubcategories.length === 0 && currentFolderFiles.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className={styles.noData}>
+                        <Paragraph text="This folder is empty" color="#717182" />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+        )}
+        </div>
         </div>
         {/* Edit Modal */}
         <Modal
@@ -2577,12 +3209,16 @@ export default function AllDocTable() {
               className="custom-dropdown-text-start text-start w-100"
               onSelect={(value) => handleCategoryEditSelect(value || "")}
             >
-              {categoryDropDownData.map((category) => (
+              {getFlattenedCategories(categoryDropDownData).map((category) => (
                 <Dropdown.Item
                   key={category.id}
                   eventKey={category.id.toString()}
+                  style={{
+                    fontWeight: category.level === 0 ? "bold" : "normal",
+                    paddingLeft: `${category.level * 15 + 10}px`,
+                  }}
                 >
-                  {category.category_name}
+                  {category.level > 0 ? "- ".repeat(category.level) : ""}{category.category_name}
                 </Dropdown.Item>
               ))}
             </DropdownButton>
@@ -2731,7 +3367,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -3143,7 +3779,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3207,7 +3843,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -3267,7 +3903,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -3321,7 +3957,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3412,7 +4048,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3539,7 +4175,7 @@ export default function AllDocTable() {
                   type="file"
                   className="form-control p-1"
                   id="newVersionDocument"
-                  accept=".pdf,.doc,.docx,.png,.jpg,.mp4,.webm,.avi,.mov,.wmv,.mkv,.mp3,.wav,.flac,.ogg"
+                  accept=".pdf,.doc,.docx,.png,.jpg"
                   onChange={handleNewVersionFileChange}
                   required
                 ></input>
@@ -3578,7 +4214,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -3654,15 +4290,18 @@ export default function AllDocTable() {
               <p className="mb-1 text-start w-100" style={{ fontSize: "14px" }}>
                 Body
               </p>
-              <ReactQuill
-                value={sendEmailData?.body || ""}
-                onChange={(content) =>
-                  setSendEmailData((prev) => ({
-                    ...(prev || { subject: "", body: "", to: "" }),
-                    body: content,
-                  }))
-                }
-              />
+              {modalStates.sendEmailModel && (
+                <ReactQuill
+                  key={`quill-${selectedDocumentId || 'new'}`}
+                  value={sendEmailData?.body || ""}
+                  onChange={(content) =>
+                    setSendEmailData((prev) => ({
+                      ...(prev || { subject: "", body: "", to: "" }),
+                      body: content,
+                    }))
+                  }
+                />
+              )}
               <div className="d-flex w-100">
                 <p
                   className="mb-1 text-start w-100 px-3 py-2 rounded mt-2"
@@ -4919,7 +5558,7 @@ export default function AllDocTable() {
                   }}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> No
+                  <MdCancel fontSize={16} className="me-1" /> No
                 </button>
               </div>
             </div>
@@ -5389,7 +6028,7 @@ export default function AllDocTable() {
                   }}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> No
+                  <MdCancel fontSize={16} className="me-1" /> No
                 </button>
               </div>
             </div>
@@ -5691,26 +6330,26 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {viewDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
+                  {/* Image Preview */}
+                  {
+                  ["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
+                          <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
+                              <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the video tag.
+                          </video>
+                      </div>
+                  ) : 
+                  /* Audio Preview */
+                  ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
+                          <audio controls style={{ width: "100%" }}>
+                              <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the audio element.
+                          </audio>
+                      </div>
+                  ) :
+                  ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
                     <Image
                       src={viewDocument.url}
                       alt={viewDocument.name}
@@ -5757,7 +6396,7 @@ export default function AllDocTable() {
               Document Name : <span style={{ fontWeight: 600 }} >{viewDocument?.name || ""}</span>
             </p>
             <p className="mb-1" style={{ fontSize: "14px" }}>
-              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category.category_name}</span>
+              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category?.category_name ?? 'No Category'}</span>
             </p>
             <p className="mb-1 " style={{ fontSize: "14px" }}>
               Description : <span style={{ fontWeight: 600 }} >{viewDocument?.description || ""}</span>
@@ -5794,7 +6433,7 @@ export default function AllDocTable() {
             </div>
 
             <div className="d-flex flex-wrap gap-3 py-3">
-              {hasPermission(permissions, "All Documents", "Edit Document") && (
+              {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal("editModel", viewDocument?.id, viewDocument?.name)
@@ -5805,7 +6444,8 @@ export default function AllDocTable() {
                   Edit
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Share Document") && (
+              
+              {hasPermission(permissions, "Assigned Documents", "Share Document") && (
                 <button onClick={() =>
                   handleOpenModal(
                     "shareDocumentModel",
@@ -5816,7 +6456,7 @@ export default function AllDocTable() {
                   Share
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Manage Sharable Link") && (
+              {hasPermission(permissions, "Assigned Documents", "Manage Sharable Link") && (
                 <button onClick={() =>
                   handleGetShareableLinkModel(viewDocument?.id || 0)
                 }
@@ -5825,7 +6465,7 @@ export default function AllDocTable() {
                   Get Shareable Link
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Download Document") && viewDocument?.id && (
+              {hasPermission(permissions, "Assigned Documents", "Download Document") && viewDocument?.id && (
                 <button
                   onClick={() => handleDownload(viewDocument?.id || 0, userId)}
                   className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1">
@@ -5834,8 +6474,7 @@ export default function AllDocTable() {
                 </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Upload New Version file") && (
-                <button
+              <button
                 onClick={() =>
                   handleOpenModal(
                     "uploadNewVersionFileModel",
@@ -5847,9 +6486,7 @@ export default function AllDocTable() {
                 <MdUpload className="me-2" />
                 Upload New Version file
               </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Version History") && (
-                <button
+              <button
                 onClick={() =>
                   handleOpenModal(
                     "versionHistoryModel",
@@ -5861,9 +6498,7 @@ export default function AllDocTable() {
                 <GoHistory className="me-2" />
                 Version History
               </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Comment") && (
-                <button
+              <button
                 onClick={() =>
                   handleOpenModal(
                     "commentModel",
@@ -5875,9 +6510,8 @@ export default function AllDocTable() {
                 <BiSolidCommentDetail className="me-2" />
                 Comment
               </button>
-              )}
 
-              {hasPermission(permissions, "All Documents", "Add Reminder") && (
+              {hasPermission(permissions, "Assigned Documents", "Add Reminder") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5891,7 +6525,7 @@ export default function AllDocTable() {
                   Add Reminder
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Send Email") && (
+              {hasPermission(permissions, "Assigned Documents", "Send Email") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5905,8 +6539,7 @@ export default function AllDocTable() {
                   Send Email
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Remove From Search") && (
-                <button
+              <button
                 onClick={() =>
                   handleOpenModal(
                     "removeIndexingModel",
@@ -5918,9 +6551,8 @@ export default function AllDocTable() {
                 <AiOutlineZoomOut className="me-2" />
                 Remove From Search
               </button>
-              )}
 
-              {hasPermission(permissions, "All Documents", "Archive Document") && (
+              {hasPermission(permissions, "Assigned Documents", "Archive Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5934,7 +6566,7 @@ export default function AllDocTable() {
                   Archive
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Delete Document") && (
+              {hasPermission(permissions, "Assigned Documents", "Delete Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal(
@@ -5969,7 +6601,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -6006,26 +6638,8 @@ export default function AllDocTable() {
             <div className="d-flex preview-container">
               {oldVersionDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={oldVersionDocument.url} type={`video/${oldVersionDocument.type.toLowerCase() === 'mkv' ? 'webm' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={oldVersionDocument.url} type={`audio/${oldVersionDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
+                  {/* Image Preview */}
+                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
                     <Image
                       src={oldVersionDocument.url}
                       alt={oldVersionDocument.name}
@@ -6076,7 +6690,7 @@ export default function AllDocTable() {
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Close
+              <MdCancel fontSize={16} className="me-1" /> Close
             </button>
           </Modal.Footer>
         </Modal>

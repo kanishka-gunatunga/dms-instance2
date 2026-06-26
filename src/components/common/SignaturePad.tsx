@@ -40,8 +40,6 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, width = 400, height
     const pos = getPos(e);
     context?.lineTo(pos.x, pos.y);
     context?.stroke();
-
-    // Auto-save on every stroke for real-time preview if needed
     save();
   };
 
@@ -64,7 +62,6 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, width = 400, height
       clientY = e.clientY;
     }
 
-    // Scale coordinates to match canvas internal resolution
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
@@ -77,7 +74,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, width = 400, height
   const clear = () => {
     if (context && canvasRef.current) {
       context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      onSave(""); // Notify parent that it's cleared
+      onSave("");
     }
   };
 
@@ -89,7 +86,10 @@ const SignaturePad: React.FC<SignaturePadProps> = ({ onSave, width = 400, height
   };
 
   return (
-    <div className="signature-pad-container" style={{ position: "relative", border: "1px solid #e5e7eb", borderRadius: "0.5rem", background: "#fff" }}>
+    <div
+      className="signature-pad-container"
+      style={{ position: "relative", border: "1px solid #e5e7eb", borderRadius: "0.5rem", background: "#fff" }}
+    >
       <canvas
         ref={canvasRef}
         width={width}

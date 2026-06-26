@@ -44,20 +44,20 @@ import {
   MdEmail,
   MdFileDownload,
   MdModeEditOutline,
-  MdOutlineCancel,
-  MdOutlineInsertLink,
+  MdCancel,
+  MdInsertLink,
   MdUpload,
 } from "react-icons/md";
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 import 'react-quill/dist/quill.snow.css';
+import styles from "./deep-search.module.css";
 
 interface Category {
   category_name: string;
 }
 
 interface TableItem {
-  sector_category: number;
   id: number;
   name: string;
   category: Category;
@@ -103,8 +103,7 @@ interface ViewDocumentItem {
   attributes: string;
   type: string;
   url: string;
-  enable_external_file_view: number;
-  sector_category: number;
+  enable_external_file_view: number
 }
 
 interface CategoryDropdownItem {
@@ -1681,44 +1680,34 @@ const [generatedID, setGeneratedID] =useState<number>(0);
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Deep Search" color="#444" />
-        </div>
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div className="d-flex flex-column flex-lg-row">
-            <div className="col-12">
-              <div className="input-group mb-3 metaBorder ">
-                <input
-                  type="search"
-                  className="form-control deep-search-input"
-                  placeholder="Type here to search within PDFs, Word, and more..."
-                  aria-label="Type here to search within PDFs, Word, and more..."
-                  aria-describedby="basic-addon2"
-                  style={{
-                    borderTopRightRadius: "0px !important",
-                    borderBottomRightRadius: "0px !important",
-                  }}
-                  onChange={(e) => handleTermSearch(e.target.value)}
-                ></input>
-                <span
-                  className="input-group-text text-white"
-                  id="basic-addon2"
-                  style={{
-                    backgroundColor: "#683ab7",
-                    border: "solid 1px #683ab7 !important",
-                    borderTopLeftRadius: "0px !important",
-                    borderBottomLeftRadius: "0px !important",
-                    fontSize: "14px",
-                  }}
-                  onClick={() => handleSearch()}
-                >
-                  <FiSearch className="me-2" /> Search
-                </span>
-              </div>
-              <p
-                className="text-danger"
-                style={{ fontSize: "14px", fontWeight: "400" }}
-              >
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Deep Search" color="#444" />
+          </div>
+          <div className={`d-flex flex-column ${styles.card}`}>
+            <div className="d-flex flex-column flex-lg-row">
+              <div className="col-12">
+                <div className={`input-group mb-3 ${styles.searchInputGroup}`}>
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Type here to search within PDFs, Word, and more..."
+                    aria-label="Type here to search within PDFs, Word, and more..."
+                    aria-describedby="basic-addon2"
+                    onChange={(e) => handleTermSearch(e.target.value)}
+                  />
+                  <span
+                    className={`input-group-text ${styles.searchBtn}`}
+                    id="basic-addon2"
+                    onClick={() => handleSearch()}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <FiSearch className="me-2" /> Search
+                  </span>
+                </div>
+                <p className={styles.searchHint}>
                 You will receive up to 10 results for each search. The search is
                 not case-sensitive, so searching for &quot;Report&quot; and
                 &quot;report&quot; will return the same results. Common words
@@ -1728,31 +1717,19 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 include results for &quot;running&quot; and &quot;runs.&quot;
                 Supported file types include Word documents, PDFs, Notepad
                 files, and Excel spreadsheets.
-              </p>
+                </p>
             </div>
           </div>
           <div>
             {isLoadingTable && <LoadingBar />}
           </div>
-          <div
-                  style={{
-                    maxHeight: "380px",
-                    minHeight: "320px",
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                  }}
-                  className="custom-scroll"
-                >
-          <div className="row mt-4">
+          <div className={`${styles.resultsWrapper} custom-scroll`}>
+          <div className="row mt-1">
           {paginatedData.length > 0 ? (
   paginatedData.map((item) => (
-    <div key={item.id} className="col-md-12 mb-4">
-    
-    <div className="d-flex justify-content-between align-items-center">
-                <p 
-                  className="mb-2 mt-2"
-                  style={{ fontSize: "16px", color: "#000", fontWeight: "bold" }}
-                >
+    <div key={item.id} className={`col-md-12 ${styles.resultCard}`}>
+    <div className={styles.resultHeader}>
+                <p className={styles.resultTitle}>
                   {item.name}
                 </p>
 
@@ -1776,21 +1753,14 @@ const [generatedID, setGeneratedID] =useState<number>(0);
 
       {item.pages && item.pages.length > 0 ? (
         <div>
-          <p style={{ fontSize: "14px", fontWeight: "bold", color: "#555" }}>
+          <p className={styles.matchedPagesLabel}>
             Matched Pages:
           </p>
-          <div className="d-flex flex-column gap-2">
+          <div className={styles.pagesList}>
             {item.pages.map((pageItem, index) => (
               <div
                 key={index}
-                style={{
-                  backgroundColor: "#f9f9f9",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  color: "#333",
-                  border: "1px solid #ddd",
-                }}
+                className={styles.pageItem}
               >
                 <strong>Page {pageItem.page}</strong>
                 <div
@@ -1803,20 +1773,21 @@ const [generatedID, setGeneratedID] =useState<number>(0);
           </div>
         </div>
       ) : (
-        <p style={{ fontSize: "14px", color: "#888" }}>
+        <p className={styles.noHighlights}>
           No specific highlights found.
         </p>
       )}
     </div>
   ))
 ) : (
-  <div className="text-start w-100 py-3">
-    <Paragraph text="No data available" color="#333" />
+  <div className={styles.noData}>
+    <Paragraph text="No data available" color="#717182" />
   </div>
 )}
 
           </div>
           </div>
+        </div>
         </div>
         {/* Edit Modal */}
         <Modal
@@ -2012,7 +1983,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2424,7 +2395,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2488,7 +2459,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2548,7 +2519,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </Modal.Footer>
@@ -2602,7 +2573,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2693,7 +2664,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -2820,7 +2791,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                   type="file"
                   className="form-control p-1"
                   id="newVersionDocument"
-                  accept=".pdf,.doc,.docx,.png,.jpg,.mp4,.webm,.avi,.mov,.wmv,.mkv,.mp3,.wav,.flac,.ogg"
+                  accept=".pdf,.doc,.docx,.png,.jpg"
                   onChange={handleNewVersionFileChange}
                   required
                 ></input>
@@ -2845,7 +2816,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -4187,7 +4158,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                   }}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> No
+                  <MdCancel fontSize={16} className="me-1" /> No
                 </button>
               </div>
             </div>
@@ -4493,26 +4464,26 @@ const [generatedID, setGeneratedID] =useState<number>(0);
             <div className="d-flex preview-container">
               {viewDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
+                  {/* Image Preview */}
+                  {
+                  ["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
+                          <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
+                              <source src={viewDocument.url} type={`video/${viewDocument.type.toLowerCase() === 'mkv' ? 'webm' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the video tag.
+                          </video>
+                      </div>
+                  ) : 
+                  /* Audio Preview */
+                  ["mp3", "wav", "flac"].includes(viewDocument.type?.toLowerCase()) ? (
+                      <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
+                          <audio controls style={{ width: "100%" }}>
+                              <source src={viewDocument.url} type={`audio/${viewDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : viewDocument.type.toLowerCase()}`} />
+                              Your browser does not support the audio element.
+                          </audio>
+                      </div>
+                  ) :
+                  ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif"].includes(viewDocument.type) ? (
                     <Image
                       src={viewDocument.url}
                       alt={viewDocument.name}
@@ -4559,7 +4530,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
               Document Name : <span style={{ fontWeight: 600 }} >{viewDocument?.name || ""}</span>
             </p>
             <p className="mb-1" style={{ fontSize: "14px" }}>
-              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category.category_name}</span>
+              Category : <span style={{ fontWeight: 600 }} >{viewDocument?.category?.category_name ?? 'No Category'}</span>
             </p>
             <p className="mb-1 " style={{ fontSize: "14px" }}>
               Description : <span style={{ fontWeight: 600 }} >{viewDocument?.description || ""}</span>
@@ -4594,6 +4565,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 ))}
               </p>
             </div>
+
             <div className="d-flex flex-wrap gap-3 py-3">
               {hasPermission(permissions, "All Documents", "Edit Document") && (
                 <button
@@ -4635,48 +4607,42 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 </button>
               )}
 
-              {hasPermission(permissions, "All Documents", "Upload New Version file") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "uploadNewVersionFileModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <MdUpload className="me-2" />
-                  Upload New Version file
-                </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Version History") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "versionHistoryModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <GoHistory className="me-2" />
-                  Version History
-                </button>
-              )}
-              {hasPermission(permissions, "All Documents", "Comment") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "commentModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <BiSolidCommentDetail className="me-2" />
-                  Comment
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "uploadNewVersionFileModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <MdUpload className="me-2" />
+                Upload New Version file
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "versionHistoryModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <GoHistory className="me-2" />
+                Version History
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "commentModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <BiSolidCommentDetail className="me-2" />
+                Comment
+              </button>
 
               {hasPermission(permissions, "All Documents", "Add Reminder") && (
                 <button
@@ -4706,20 +4672,18 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                   Send Email
                 </button>
               )}
-              {hasPermission(permissions, "All Documents", "Remove From Search") && (
-                <button
-                  onClick={() =>
-                    handleOpenModal(
-                      "removeIndexingModel",
-                      viewDocument?.id, viewDocument?.name
-                    )
-                  }
-                  className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                >
-                  <AiOutlineZoomOut className="me-2" />
-                  Remove From Search
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  handleOpenModal(
+                    "removeIndexingModel",
+                    viewDocument?.id, viewDocument?.name
+                  )
+                }
+                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
+              >
+                <AiOutlineZoomOut className="me-2" />
+                Remove From Search
+              </button>
 
               {hasPermission(permissions, "All Documents", "Archive Document") && (
                 <button
@@ -4749,6 +4713,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                   Delete
                 </button>
               )}
+
             </div>
 
           </Modal.Body>
@@ -4769,7 +4734,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                <MdCancel fontSize={16} className="me-1" /> Cancel
               </button>
             </div>
           </Modal.Footer>
@@ -4807,26 +4772,8 @@ const [generatedID, setGeneratedID] =useState<number>(0);
             <div className="d-flex preview-container">
               {oldVersionDocument && (
                 <>
-                  {/* Video Preview */}
-                                        {["mp4", "webm", "ogg", "avi", "mov", "mkv", "wmv"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="video-preview" style={{ width: "100%", textAlign: "center" }}>
-                                                <video controls style={{ maxWidth: "100%", maxHeight: "500px" }}>
-                                                    <source src={oldVersionDocument.url} type={`video/${oldVersionDocument.type.toLowerCase() === 'mkv' ? 'webm' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
-                                        ) : 
-                                        /* Audio Preview */
-                                        ["mp3", "wav", "flac"].includes(oldVersionDocument.type?.toLowerCase()) ? (
-                                            <div className="audio-preview" style={{ width: "100%", padding: "20px", background: "#f8f9fa", borderRadius: "8px", textAlign: "center" }}>
-                                                <audio controls style={{ width: "100%" }}>
-                                                    <source src={oldVersionDocument.url} type={`audio/${oldVersionDocument.type.toLowerCase() === 'mp3' ? 'mpeg' : oldVersionDocument.type.toLowerCase()}`} />
-                                                    Your browser does not support the audio element.
-                                                </audio>
-                                            </div>
-                                        ) : 
-                                        /* Image Preview */
-                                        ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
+                  {/* Image Preview */}
+                  {["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "tiff", "ico", "avif", "tif"].includes(oldVersionDocument.type) ? (
                     <Image
                       src={oldVersionDocument.url}
                       alt={oldVersionDocument.name}
@@ -4877,7 +4824,7 @@ const [generatedID, setGeneratedID] =useState<number>(0);
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Close
+              <MdCancel fontSize={16} className="me-1" /> Close
             </button>
           </Modal.Footer>
         </Modal>

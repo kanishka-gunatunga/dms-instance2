@@ -10,7 +10,7 @@ import { DropdownButton, Dropdown } from "react-bootstrap";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { useRouter } from "next/navigation";
 import { IoSaveOutline } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import ToastMessage from "@/components/common/Toast";
 import { fetchRoleData } from "@/utils/dataFetchFunctions";
 import { RoleDropdownItem } from "@/types/types";
@@ -322,7 +322,7 @@ export default function AllDocTable({ params }: Props) {
               onClick={() => router.push("/users")}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </button>
           </div>
         </div>

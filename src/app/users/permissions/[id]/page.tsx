@@ -8,11 +8,13 @@ import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoSave } from "react-icons/io5";
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import Link from "next/link";
 import { Checkbox, Divider } from "antd";
 import { useParams, useRouter } from 'next/navigation';
 import ToastMessage from "@/components/common/Toast";
+import styles from "../../add-user/add-user.module.css";
+import permStyles from "../permissions.module.css";
 // import { useUserContext } from "@/context/userContext";
 
 interface Props {
@@ -203,79 +205,81 @@ console.log("permission res: ",response)
     return (
         <>
             <DashboardLayout>
-                <div className="d-flex justify-content-between align-items-center pt-2">
-                    <Heading text={`User Page Permission To ${roleName}`} color="#444" />
-                </div>
-                <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
+                <div className={styles.pageWrapper}>
+                    <div className={styles.pageHeader}>
+                        <Heading text={`User Page Permission To ${roleName}`} color="#444" />
+                    </div>
 
-                    <div className="d-flex flex-column  custom-scroll" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-                        <Heading text="Permission" color="#444" />
-                        <div className="mt-2">
-                            <Checkbox
-                                checked={Object.keys(selectedGroups).length === allGroups.length}
-                                indeterminate={
-                                    Object.keys(selectedGroups).length > 0 &&
-                                    Object.keys(selectedGroups).length < allGroups.length
-                                }
-                                onChange={(e) => handleSelectAll(e.target.checked)}
-                            >
-                                Select All
-                            </Checkbox>
-                            <Divider />
+                    <div className={`d-flex flex-column ${styles.card} ${styles.formCard} ${permStyles.cardWithStickyActions}`}>
+                        <div className={`${permStyles.scrollArea} custom-scroll`}>
+                            <Heading text="Permission" color="#444" />
+                            <div className="mt-2">
+                                <Checkbox
+                                    checked={Object.keys(selectedGroups).length === allGroups.length}
+                                    indeterminate={
+                                        Object.keys(selectedGroups).length > 0 &&
+                                        Object.keys(selectedGroups).length < allGroups.length
+                                    }
+                                    onChange={(e) => handleSelectAll(e.target.checked)}
+                                >
+                                    Select All
+                                </Checkbox>
+                                <Divider />
 
-                            {allGroups.map((group, groupIndex) => (
-                                <div key={groupIndex} className="mb-4">
-                                    <Checkbox
-                                        checked={selectedGroups[group.name]?.length === group.items.length}
-                                        indeterminate={
-                                            selectedGroups[group.name]?.length > 0 &&
-                                            selectedGroups[group.name]?.length < group.items.length
-                                        }
-                                        onChange={(e) => handleGroupSelect(e.target.checked, group.name, group.items)}
-                                        style={{ fontWeight: "700" }}
-                                    >
-                                        {group.name}
-                                    </Checkbox>
-                                    <div style={{ marginLeft: "25px" }}>
-                                        {group.items.map((item, itemIndex) => (
-                                            <Checkbox
-                                                key={itemIndex}
-                                                checked={selectedGroups[group.name]?.includes(item)}
-                                                onChange={(e) => handleIndividualSelect(group.name, item, e.target.checked)}
-                                            >
-                                                {item}
-                                            </Checkbox>
-                                        ))}
+                                {allGroups.map((group, groupIndex) => (
+                                    <div key={groupIndex} className="mb-4">
+                                        <Checkbox
+                                            checked={selectedGroups[group.name]?.length === group.items.length}
+                                            indeterminate={
+                                                selectedGroups[group.name]?.length > 0 &&
+                                                selectedGroups[group.name]?.length < group.items.length
+                                            }
+                                            onChange={(e) => handleGroupSelect(e.target.checked, group.name, group.items)}
+                                            style={{ fontWeight: "700" }}
+                                        >
+                                            {group.name}
+                                        </Checkbox>
+                                        <div style={{ marginLeft: "25px" }}>
+                                            {group.items.map((item, itemIndex) => (
+                                                <Checkbox
+                                                    key={itemIndex}
+                                                    checked={selectedGroups[group.name]?.includes(item)}
+                                                    onChange={(e) => handleIndividualSelect(group.name, item, e.target.checked)}
+                                                >
+                                                    {item}
+                                                </Checkbox>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                            <Divider />
-
-                            <div className="d-flex flex-row"
-                            >
-                                <button
-                                    onClick={() => handleAddRolePermission()}
-                                    className="custom-icon-button button-success px-3 py-1 rounded me-2"
-                                >
-                                    <IoSave fontSize={16} className="me-1" /> Yes
-                                </button>
-                                <Link
-                                    href={"/roles"}
-                                    className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
-                                >
-                                    <MdOutlineCancel fontSize={16} className="me-1" /> No
-                                </Link>
+                                ))}
+                                <Divider />
                             </div>
+                        </div>
+
+                        <div className={`${styles.formActions} ${permStyles.stickyActions}`}>
+                            <button
+                                onClick={() => handleAddRolePermission()}
+                                className={styles.btnSave}
+                            >
+                                <IoSave fontSize={16} /> Yes
+                            </button>
+                            <Link
+                                href={"/roles"}
+                                className={styles.btnCancel}
+                                style={{ textDecoration: "none" }}
+                            >
+                                <MdCancel fontSize={16} /> No
+                            </Link>
                         </div>
                     </div>
                 </div>
+                <ToastMessage
+                    message={toastMessage}
+                    show={showToast}
+                    onClose={() => setShowToast(false)}
+                    type={toastType}
+                />
             </DashboardLayout>
-            <ToastMessage
-                message={toastMessage}
-                show={showToast}
-                onClose={() => setShowToast(false)}
-                type={toastType}
-            />
         </>
     );
 }

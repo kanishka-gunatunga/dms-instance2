@@ -1,15 +1,14 @@
 "use client";
 
 import Heading from "@/components/common/Heading";
-import Paragraph from "@/components/common/Paragraph";
 import DashboardLayout from "@/components/DashboardLayout";
 import useAuth from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
-import { Dropdown, DropdownButton, Modal, Table } from "react-bootstrap";
+import { Dropdown, DropdownButton, Modal, Table, Form, Pagination } from "react-bootstrap";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEllipsisV } from "react-icons/fa";
 import { FaKey, FaPlus } from "react-icons/fa6";
-import { MdModeEditOutline, MdOutlineCancel, MdPeople } from "react-icons/md";
+import { MdModeEditOutline, MdCancel, MdPeople } from "react-icons/md";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { IoCheckmark, IoClose, IoSaveOutline } from "react-icons/io5";
@@ -19,6 +18,7 @@ import { fetchAndMapUserTableData } from "@/utils/dataFetchFunctions";
 import ToastMessage from "@/components/common/Toast";
 import { usePermissions } from "@/context/userPermissions";
 import { hasPermission } from "@/utils/permission";
+import styles from "./users.module.css";
 
 export default function AllDocTable() {
   const isAuthenticated = useAuth();
@@ -46,6 +46,10 @@ export default function AllDocTable() {
     null
   );
   const [isAdEnabled, setIsAdEnabled] = useState<string>("0");
+
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
 
 
@@ -187,12 +191,46 @@ export default function AllDocTable() {
     }
   };
 
+  const filteredData = tableData.filter((item) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (item.email || "").toLowerCase().includes(term) ||
+      (item.firstName || "").toLowerCase().includes(term) ||
+      (item.lastName || "").toLowerCase().includes(term) ||
+      (item.mobileNumber || "").toLowerCase().includes(term)
+    );
+  });
+
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePrev = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
   return (
     <>
       <DashboardLayout>
-        <div className="d-flex justify-content-between align-items-center pt-2">
-          <Heading text="Users" color="#444" />
-          {/* {hasPermission(permissions, "User", "Create User") && (
+        <div className={styles.pageWrapper}>
+          <div className={styles.pageHeader}>
+            <Heading text="Users" color="#444" />
+            {/* {hasPermission(permissions, "User", "Create User") && (
             <Link
               href="/users/add-user"
               className="addButton bg-white text-dark border border-success rounded px-3 py-1"
@@ -200,29 +238,30 @@ export default function AllDocTable() {
               <FaPlus /> Add User
             </Link>
           )} */}
+            {isAdEnabled === '0' && hasPermission(permissions, "User", "Create User") && (
+              <Link
+                href="/users/add-user"
+                className={styles.btnAdd}
+              >
+                <FaPlus /> Add User
+              </Link>
+            )}
+          </div>
 
-          {isAdEnabled === '0' && hasPermission(permissions, "User", "Create User") && (
-            <Link
-              href="/users/add-user"
-              className="addButton bg-white text-dark border border-success rounded px-3 py-1"
-            >
-              <FaPlus /> Add User
-            </Link>
-          )}
-
-
-        </div>
-
-        <div className="d-flex flex-column bg-white p-2 p-lg-3 rounded mt-3">
-          <div>
-            <div
-              style={{
-                maxHeight: "380px",
-                overflowY: "auto",
-                overflow: "visible",
-              }}
-              className="custom-scroll"
-            >
+          <div className={styles.card}>
+            <div className="d-flex justify-content-end mb-3">
+              <input
+                type="text"
+                className="form-control w-25"
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <div className={`${styles.tableWrapper} custom-scroll`}>
               {hasPermission(permissions, "User", "View Users") && (
                 <Table hover responsive>
                   <thead className="sticky-header">
@@ -236,8 +275,8 @@ export default function AllDocTable() {
                   </thead>
                   <tbody>
 
-                    {tableData.length > 0 ? (
-                      tableData.map((item) => (
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((item) => (
                         <tr key={item.id}>
                           <td>
                             <DropdownButton
@@ -294,9 +333,11 @@ export default function AllDocTable() {
                         </tr>
                       ))
                     ) : (
-                      <div className="text-start w-100 py-3">
-                        <Paragraph text="No data available" color="#333" />
-                      </div>
+                      <tr>
+                        <td colSpan={5} className={styles.noData}>
+                          No data available
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </Table>
@@ -308,7 +349,7 @@ export default function AllDocTable() {
               show={show}
               onHide={handleClose}
               centered
-              className="smallModel"
+              className={styles.modalContent}
             >
               <Modal.Header closeButton>
                 <Modal.Title>
@@ -323,69 +364,54 @@ export default function AllDocTable() {
                   style={{ maxHeight: "70vh", overflowY: "scroll" }}
                 >
                   <div className="d-flex flex-column w-100">
-                    <div className="d-flex flex-column">
-                      <p className="mb-1" style={{ fontSize: "14px" }}>
-                        Email
-                      </p>
-                      <div className="input-group mb-3">
-                        <input
-                          type="email"
-                          className="form-control"
-                          value={selectedItem?.email || ""}
+                    <div className="d-flex flex-column mb-3">
+                      <p className={`mb-1 ${styles.formLabel}`}>Email</p>
+                      <input
+                        type="email"
+                        className={styles.formInput}
+                        value={selectedItem?.email || ""}
                         // onChange={(e) => setEmail(e.target.value)}
-                        />
-                      </div>
+                        readOnly
+                      />
                     </div>
-                    <div className="d-flex flex-column">
-                      <p className="mb-1" style={{ fontSize: "14px" }}>
-                        Current Password
-                      </p>
-                      <div className="input-group mb-3">
-                        <input
-                          type="password"
-                          className="form-control"
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                        />
-                      </div>
+                    <div className="d-flex flex-column mb-3">
+                      <p className={`mb-1 ${styles.formLabel}`}>Current Password</p>
+                      <input
+                        type="password"
+                        className={styles.formInput}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
                     </div>
-                    <div className="d-flex flex-column">
-                      <p className="mb-1" style={{ fontSize: "14px" }}>
-                        Password
-                      </p>
-                      <div className="input-group mb-3">
-                        <input
-                          type="password"
-                          className="form-control"
-                          onChange={(e) => setPassword(e.target.value)}
-                        />
-                      </div>
+                    <div className="d-flex flex-column mb-3">
+                      <p className={`mb-1 ${styles.formLabel}`}>Password</p>
+                      <input
+                        type="password"
+                        className={styles.formInput}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
                     </div>
-                    <div className="d-flex flex-column">
-                      <p className="mb-1" style={{ fontSize: "14px" }}>
-                        Confirm Password
-                      </p>
-                      <div className="input-group mb-3">
-                        <input
-                          type="password"
-                          className="form-control"
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                        />
-                      </div>
+                    <div className="d-flex flex-column mb-3">
+                      <p className={`mb-1 ${styles.formLabel}`}>Confirm Password</p>
+                      <input
+                        type="password"
+                        className={styles.formInput}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
                     </div>
                   </div>
                   {error && <p className="text-danger">{error}</p>}
-                  <div className="d-flex flex-row mt-2">
+                  <div className={`${styles.modalFooter} mt-2`}>
                     <button
                       onClick={handleResetPassword}
-                      className="custom-icon-button button-success px-3 py-1 rounded me-2"
+                      className={styles.btnSave}
                     >
-                      <IoSaveOutline fontSize={16} className="me-1" /> Save
+                      <IoSaveOutline fontSize={16} /> Save
                     </button>
                     <button
                       onClick={handleClose}
-                      className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+                      className={styles.btnCancel}
                     >
-                      <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                      <MdCancel fontSize={16} /> Cancel
                     </button>
                   </div>
                 </div>
@@ -395,15 +421,13 @@ export default function AllDocTable() {
               centered
               show={modalStates.deleteUserModel}
               onHide={() => handleCloseModal("deleteUserModel")}
+              className={styles.modalContent}
             >
               <Modal.Body>
                 <div className="d-flex flex-column">
                   <div className="d-flex w-100 justify-content-end">
                     <div className="col-11 d-flex flex-row">
-                      <p
-                        className="mb-0 text-danger"
-                        style={{ fontSize: "18px", color: "#333" }}
-                      >
+                      <p className={`mb-0 ${styles.modalConfirmText}`} style={{ color: "#dc3545" }}>
                         Are you sure you want to delete?
                       </p>
                     </div>
@@ -415,15 +439,15 @@ export default function AllDocTable() {
                       />
                     </div>
                   </div>
-                  <div className="d-flex py-3">
+                  <div className="d-flex py-3" style={{ color: "#0A0A0A", fontSize: "0.875rem" }}>
                     {selectedUserEmail || ""}
                   </div>
-                  <div className="d-flex flex-row">
+                  <div className={styles.modalFooter}>
                     <button
                       onClick={() => handleDeleteUser(selectedUserId!)}
-                      className="custom-icon-button button-success px-3 py-1 rounded me-2"
+                      className={styles.btnSave}
                     >
-                      <IoCheckmark fontSize={16} className="me-1" /> Yes
+                      <IoCheckmark fontSize={16} /> Yes
                     </button>
                     <button
                       onClick={() => {
@@ -431,15 +455,15 @@ export default function AllDocTable() {
                         setSelectedUserId(null);
                         setSelectedUserEmail('');
                       }}
-                      className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
+                      className={styles.btnCancel}
                     >
-                      <MdOutlineCancel fontSize={16} className="me-1" /> No
+                      <MdCancel fontSize={16} /> No
                     </button>
                   </div>
                 </div>
               </Modal.Body>
             </Modal>
-            {/* <div className="d-flex flex-column flex-lg-row paginationFooter">
+            <div className="d-flex flex-column flex-lg-row paginationFooter">
               <div className="d-flex justify-content-between align-items-center">
                 <p className="pagintionText mb-0 me-2">Items per page:</p>
                 <Form.Select
@@ -472,7 +496,7 @@ export default function AllDocTable() {
                   />
                 </Pagination>
               </div>
-            </div> */}
+            </div>
             <ToastMessage
               message={toastMessage}
               show={showToast}

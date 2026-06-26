@@ -17,7 +17,7 @@ import {
 import { FaPlus } from "react-icons/fa6";
 import ToastMessage from "@/components/common/Toast";
 import { IoCheckmark, IoClose, IoFolder, IoSaveOutline } from "react-icons/io5";
-import { MdModeEditOutline, MdOutlineCancel } from "react-icons/md";
+import { MdModeEditOutline, MdCancel } from "react-icons/md";
 import {
   fetchFTPData,
 } from "@/utils/dataFetchFunctions";
@@ -666,7 +666,7 @@ export default function AllDocTable() {
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </button>
           </div>
         </Modal.Footer>
@@ -798,7 +798,7 @@ export default function AllDocTable() {
               }}
               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
             >
-              <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+              <MdCancel fontSize={16} className="me-1" /> Cancel
             </button>
           </div>
         </Modal.Footer>
@@ -842,7 +842,7 @@ export default function AllDocTable() {
                 }}
                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
               >
-                <MdOutlineCancel fontSize={16} className="me-1" /> No
+                <MdCancel fontSize={16} className="me-1" /> No
               </button>
             </div>
           </div>

@@ -8,7 +8,7 @@ import useAuth from "@/hooks/useAuth";
 import React, { useEffect, useState } from "react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { IoCheckmark, IoClose, IoSaveOutline } from "react-icons/io5";
-import { MdModeEditOutline, MdOutlineCancel, MdUpload } from "react-icons/md";
+import { MdModeEditOutline, MdCancel, MdUpload } from "react-icons/md";
 import { deleteWithAuth, getWithAuth, postWithAuth } from "@/utils/apiClient";
 import { useUserContext } from "@/context/userContext";
 import ToastMessage from "@/components/common/Toast";
@@ -362,7 +362,7 @@ export default function AllDocTable() {
                     href="/bulk-upload"
                     className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                   >
-                    <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                    <MdCancel fontSize={16} className="me-1" /> Cancel
                   </Link>
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function AllDocTable() {
                     href="/bulk-upload"
                     className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                   >
-                    <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                    <MdCancel fontSize={16} className="me-1" /> Cancel
                   </Link>
                 </div>
               </div>
@@ -770,7 +770,7 @@ export default function AllDocTable() {
                     href="/bulk-upload"
                     className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                   >
-                    <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                    <MdCancel fontSize={16} className="me-1" /> Cancel
                   </Link>
                 </div>
               </div>
@@ -838,7 +838,7 @@ export default function AllDocTable() {
 // import React, { useEffect, useState } from "react";
 // import LoadingSpinner from "@/components/common/LoadingSpinner";
 // import { IoCheckmark, IoClose, IoSaveOutline } from "react-icons/io5";
-// import { MdModeEditOutline, MdOutlineCancel, MdUpload } from "react-icons/md";
+// import { MdModeEditOutline, MdCancel, MdUpload } from "react-icons/md";
 // import { deleteWithAuth, postWithAuth } from "@/utils/apiClient";
 // import { useUserContext } from "@/context/userContext";
 // import ToastMessage from "@/components/common/Toast";
@@ -1432,7 +1432,7 @@ export default function AllDocTable() {
 //                     href="/bulk-upload"
 //                     className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //                   >
-//                     <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+//                     <MdCancel fontSize={16} className="me-1" /> Cancel
 //                   </Link>
 //                 </div>
 //               </div>
@@ -1653,7 +1653,7 @@ export default function AllDocTable() {
 //                     href="/bulk-upload"
 //                     className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //                   >
-//                     <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+//                     <MdCancel fontSize={16} className="me-1" /> Cancel
 //                   </Link>
 //                 </div>
 //               </div>
@@ -1809,7 +1809,7 @@ export default function AllDocTable() {
 //               }
 //               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //             >
-//               <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+//               <MdCancel fontSize={16} className="me-1" /> Cancel
 //             </button>
 //           </div>
 //         </Modal.Footer>
@@ -1983,7 +1983,7 @@ export default function AllDocTable() {
 //               }}
 //               className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //             >
-//               <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+//               <MdCancel fontSize={16} className="me-1" /> Cancel
 //             </button>
 //           </div>
 //         </Modal.Footer>
@@ -2028,7 +2028,7 @@ export default function AllDocTable() {
 //                 }}
 //                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //               >
-//                 <MdOutlineCancel fontSize={16} className="me-1" /> No
+//                 <MdCancel fontSize={16} className="me-1" /> No
 //               </button>
 //             </div>
 //           </div>
@@ -2073,7 +2073,7 @@ export default function AllDocTable() {
 //                 }}
 //                 className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
 //               >
-//                 <MdOutlineCancel fontSize={16} className="me-1" /> No
+//                 <MdCancel fontSize={16} className="me-1" /> No
 //               </button>
 //             </div>
 //           </div>

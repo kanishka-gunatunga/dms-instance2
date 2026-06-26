@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from 'next/dynamic';
 
-import { MdOutlineCancel } from "react-icons/md";
+import { MdCancel } from "react-icons/md";
 import { IoSaveOutline } from "react-icons/io5";
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -82,7 +82,7 @@ export default function PageHelpersEditor({ params }: PageHelpersEditorProps) {
                   onClick={handleCancel}
                   className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                 >
-                  <MdOutlineCancel fontSize={16} className="me-1" /> Cancel
+                  <MdCancel fontSize={16} className="me-1" /> Cancel
                 </button>
               </div>
             </div>

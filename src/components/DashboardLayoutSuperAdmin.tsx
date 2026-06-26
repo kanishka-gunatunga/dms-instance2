@@ -12,12 +12,14 @@ import {
 } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
 import Cookie from "js-cookie";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCompanyProfile } from "@/context/userCompanyProfile";
 import LoadingSpinner from "./common/LoadingSpinner";
 import { TbUsers } from "react-icons/tb";
 import { IoMdTrash } from "react-icons/io";
-import { GiBrain } from "react-icons/gi";
+import {GiBrain} from "react-icons/gi";
+import {AiOutlineMenu} from "react-icons/ai";
+import Footer from "./common/Footer";
 
 
 const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
@@ -25,7 +27,7 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
 
 }) => {
   const { data, loading, } = useCompanyProfile();
-
+  const pathname = usePathname();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -112,13 +114,21 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
 
   const logoUrl = data?.logo_url || '/logo.svg';
 
+  // Helper function to check if a route is active
+  const isActiveRoute = (url: string) => {
+    if (url === "/super-admin-dashboard") {
+      return pathname === "/super-admin-dashboard";
+    }
+    return pathname?.startsWith(url);
+  };
+
   if (loading) return <LoadingSpinner />;
 
 
   return (
     <div
-      className="d-flex flex-column bg-light"
-      style={{ minHeight: "100vh", backgroundColor: "", overflow: "hidden" }}
+      className="d-flex flex-column"
+      style={{ minHeight: "100vh", backgroundColor: "#F0F0FF", overflow: "hidden" }}
     >
       {/* {contextHolder} */}
       {/* =============== Header ===================== */}
@@ -234,47 +244,97 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
           style={{
             width: isSidebarCollapsed ? "70px" : "290px",
             transition: "width 0.3s",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
           }}
         >
           <Nav
-            className="d-flex flex-column p-3 navbarAside custom-scroll"
+            className="d-flex flex-column navbarAside custom-scroll"
             style={{
               minHeight: "100svh",
               height: "100svh",
               overflowY: "scroll",
               overflowX: "hidden",
+              padding: "16px 0px 80px 12px",
             }}
           >
-            <div className="d-flex flex-column mb-5">
-              {navItems.map((item, index) => (
+            <div className="d-flex flex-column mb-4">
+              <div className="px-3 mb-4 d-flex flex-row justify-content-between align-items-center" style={{paddingTop: "8px"}}>
+                <h1 className={`${isSidebarCollapsed ? "d-none" : "d-block"}`}
+                    style={{fontSize: "12px", fontWeight: 600, color: "#9CA3AF", marginBottom: 0, letterSpacing: "0.5px"}}>Menu</h1>
+              </div>
+              {navItems.map((item, index) => {
+                const hasActiveSubItem = item.subItems?.some(subItem => isActiveRoute(subItem.url));
+                const isActive = !item.subItems && isActiveRoute(item.url);
+                const isParentActive = item.subItems && hasActiveSubItem;
+                return (
                 <div key={index}>
                   <Nav.Link
-                    onClick={() =>
-                      item.subItems ? toggleGroup(item.name) : null
-                    }
+                    onClick={() => {
+                      if (item.subItems) {
+                        if (isSidebarCollapsed) {
+                          setIsSidebarCollapsed(false);
+                          setTimeout(() => {
+                            if (!expandedGroups[item.name]) {
+                              toggleGroup(item.name);
+                            }
+                          }, 100);
+                        } else {
+                          toggleGroup(item.name);
+                        }
+                      }
+                    }}
                     href={item.subItems ? undefined : item.url}
-                    className="d-flex align-items-center justify-content-between px-2 pb-4"
+                    className={`d-flex align-items-center justify-content-between ${isActive || isParentActive ? "active-nav-item" : ""}`}
+                    style={{
+                      backgroundColor: isActive || isParentActive ? "#FFF4E8" : "transparent",
+                      borderRadius: "0px",
+                      padding: "12px 0px 12px 16px",
+                      marginBottom: "0px",
+                      transition: "all 0.2s ease",
+                      minHeight: "44px",
+                      display: "flex",
+                      alignItems: "center",
+                      borderRight: isActive || isParentActive ? "4px solid #EA580C" : "4px solid transparent",
+                      position: "relative",
+                    }}
                   >
-                    <div className="d-flex align-items-center">
-                      {item.icon}
+                    <div className="d-flex align-items-center" style={{flex: 1}}>
+                      <span style={{
+                        color: isActive || isParentActive ? "#EA580C" : "#6B7280",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "12px",
+                        fontSize: "20px"
+                      }}>
+                        {item.icon}
+                      </span>
                       <span
-                        className={`ms-2 ${isSidebarCollapsed ? "d-none" : ""}`}
+                        className={isSidebarCollapsed ? "d-none" : ""}
+                        style={{
+                          color: isActive || isParentActive ? "#EA580C" : "#6B7280",
+                          fontWeight: isActive || isParentActive ? 600 : 400,
+                          fontSize: "14px",
+                          lineHeight: "1.5",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
                       >
                         {item.name}
                       </span>
                     </div>
-                    {item.subItems &&
+                    {item.subItems && !isSidebarCollapsed &&
                       (expandedGroups[item.name] ? (
-                        <FiMinus size={16} />
+                        <FiMinus size={18} color={isActive || isParentActive ? "#EA580C" : "#9CA3AF"} style={{display: "flex", alignItems: "center"}} />
                       ) : (
-                        <FiPlus size={16} />
+                        <FiPlus size={18} color={isActive || isParentActive ? "#EA580C" : "#9CA3AF"} style={{display: "flex", alignItems: "center"}} />
                       ))}
                   </Nav.Link>
 
                   <div
                     className="submenu"
                     style={{
-                      height: expandedGroups[item.name]
+                      height: expandedGroups[item.name] && !isSidebarCollapsed
                         ? `${item.subItems?.length
                           ? item.subItems.length * 40
                           : 0
@@ -286,30 +346,50 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
                   >
                     {item.subItems && (
                       <Nav className="flex-column ms-4">
-                        {item.subItems.map((subItem, subIndex) => (
+                        {item.subItems.map((subItem, subIndex) => {
+                          const isSubActive = isActiveRoute(subItem.url);
+                          return (
                           <Nav.Link
                             key={subIndex}
                             href={subItem.url}
-                            className="d-flex align-items-center px-2 pb-2"
+                            className={`d-flex align-items-center ${isSubActive ? "active-nav-item" : ""}`}
+                            style={{
+                              backgroundColor: isSubActive ? "#FFF4E8" : "transparent",
+                              borderRadius: "0px",
+                              padding: "10px 0px 10px 40px",
+                              marginBottom: "0px",
+                              minHeight: "40px",
+                              display: "flex",
+                              alignItems: "center",
+                              transition: "all 0.2s ease",
+                              borderRight: isSubActive ? "4px solid #EA580C" : "4px solid transparent",
+                            }}
                           >
                             <span
-                              className={`ms-2 ${isSidebarCollapsed ? "d-none" : ""
-                                }`}
+                              className={isSidebarCollapsed ? "d-none" : ""}
+                              style={{
+                                color: isSubActive ? "#EA580C" : "#6B7280",
+                                fontWeight: isSubActive ? 600 : 400,
+                                fontSize: "14px",
+                                lineHeight: "1.5",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
                             >
                               {subItem.name}
                             </span>
                           </Nav.Link>
-                        ))}
+                        )})}
                       </Nav>
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </Nav>
         </div>
 
-        <Container fluid className="mt-0">
+        <Container fluid className="mt-0" style={{backgroundColor: "#F0F0FF", padding: "20px"}}>
           {children}
         </Container>
       </div>
@@ -357,37 +437,72 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
             {/* <button onClick={closeDrawer}>X</button> */}
           </div>
           <Nav
-            className="d-flex flex-column p-0 navbarAside custom-scroll"
+            className="d-flex flex-column navbarAside custom-scroll"
             style={{
               minHeight: "100svh",
               height: "100svh",
               overflowY: "scroll",
               overflowX: "hidden",
+              padding: "16px 0px 80px 12px",
             }}
           >
-            <div className="d-flex flex-column mb-5 pb-4">
-              {navItems.map((item, index) => (
+            <div className="d-flex flex-column mb-4">
+              {navItems.map((item, index) => {
+                const hasActiveSubItem = item.subItems?.some(subItem => isActiveRoute(subItem.url));
+                const isActive = !item.subItems && isActiveRoute(item.url);
+                const isParentActive = item.subItems && hasActiveSubItem;
+                return (
                 <div key={index}>
                   <Nav.Link
-                    onClick={() =>
-                      item.subItems ? toggleGroup(item.name) : null
-                    }
+                    onClick={() => {
+                      if (item.subItems) {
+                        toggleGroup(item.name);
+                      }
+                    }}
                     href={item.subItems ? undefined : item.url}
-                    className="d-flex align-items-center justify-content-between px-2 pb-4"
+                    className={`d-flex align-items-center justify-content-between ${isActive || isParentActive ? "active-nav-item" : ""}`}
+                    style={{
+                      backgroundColor: isActive || isParentActive ? "#FFF4E8" : "transparent",
+                      borderRadius: "0px",
+                      padding: "12px 0px 12px 16px",
+                      marginBottom: "0px",
+                      transition: "all 0.2s ease",
+                      minHeight: "44px",
+                      display: "flex",
+                      alignItems: "center",
+                      borderRight: isActive || isParentActive ? "4px solid #EA580C" : "4px solid transparent",
+                      position: "relative",
+                    }}
                   >
-                    <div className="d-flex align-items-center">
-                      {item.icon}
+                    <div className="d-flex align-items-center" style={{flex: 1}}>
+                      <span style={{
+                        color: isActive || isParentActive ? "#EA580C" : "#6B7280",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "12px",
+                        fontSize: "20px"
+                      }}>
+                        {item.icon}
+                      </span>
                       <span
-                        className={`ms-2 ${isSidebarCollapsed ? "d-none" : ""}`}
+                        style={{
+                          color: isActive || isParentActive ? "#EA580C" : "#6B7280",
+                          fontWeight: isActive || isParentActive ? 600 : 400,
+                          fontSize: "14px",
+                          lineHeight: "1.5",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
                       >
                         {item.name}
                       </span>
                     </div>
                     {item.subItems &&
                       (expandedGroups[item.name] ? (
-                        <FiMinus size={16} />
+                        <FiMinus size={18} color={isActive || isParentActive ? "#EA580C" : "#9CA3AF"} style={{display: "flex", alignItems: "center"}} />
                       ) : (
-                        <FiPlus size={16} />
+                        <FiPlus size={18} color={isActive || isParentActive ? "#EA580C" : "#9CA3AF"} style={{display: "flex", alignItems: "center"}} />
                       ))}
                   </Nav.Link>
 
@@ -407,31 +522,52 @@ const DashboardLayoutSuperAdmin: React.FC<{ children: React.ReactNode }> = ({
                   >
                     {item.subItems && (
                       <Nav className="flex-column ms-4">
-                        {item.subItems.map((subItem, subIndex) => (
+                        {item.subItems.map((subItem, subIndex) => {
+                          const isSubActive = isActiveRoute(subItem.url);
+                          return (
                           <Nav.Link
                             key={subIndex}
                             href={subItem.url}
-                            className="d-flex align-items-center px-2 pb-2"
+                            className={`d-flex align-items-center ${isSubActive ? "active-nav-item" : ""}`}
+                            style={{
+                              backgroundColor: isSubActive ? "#FFF4E8" : "transparent",
+                              borderRadius: "0px",
+                              padding: "10px 0px 10px 40px",
+                              marginBottom: "0px",
+                              minHeight: "40px",
+                              display: "flex",
+                              alignItems: "center",
+                              transition: "all 0.2s ease",
+                              borderRight: isSubActive ? "4px solid #EA580C" : "4px solid transparent",
+                            }}
                           >
                             <span
-                              className={`ms-2 ${isSidebarCollapsed ? "d-none" : ""
-                                }`}
+                              className={isSidebarCollapsed ? "d-none" : ""}
+                              style={{
+                                color: isSubActive ? "#EA580C" : "#6B7280",
+                                fontWeight: isSubActive ? 600 : 400,
+                                fontSize: "14px",
+                                lineHeight: "1.5",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
                             >
                               {subItem.name}
                             </span>
                           </Nav.Link>
-                        ))}
+                        )})}
                       </Nav>
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </Nav>
         </div>
 
-        <Container fluid>{children}</Container>
+        <Container fluid style={{backgroundColor: "#F0F0FF", padding: "20px"}}>{children}</Container>
       </div>
+      <Footer />
     </div>
   );
 };

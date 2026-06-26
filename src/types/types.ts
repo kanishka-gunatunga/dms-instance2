@@ -13,7 +13,7 @@ export interface CategoryDropdownItem {
   id: number;
   parent_category: string;
   category_name: string;
-  template: string;
+  template?: string;
 }
 
 export interface Category {

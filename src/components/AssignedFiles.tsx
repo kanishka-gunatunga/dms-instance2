@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {Button, Tag, Table} from 'antd';
 import type {TableProps} from 'antd';
 import {BsEye, BsDownload} from 'react-icons/bs';
@@ -14,7 +14,7 @@ import {useUserContext} from "@/context/userContext";
 import {getWithAuth} from "@/utils/apiClient";
 import {Modal} from "react-bootstrap";
 import {IoClose} from "react-icons/io5";
-import {MdOutlineCancel} from "react-icons/md";
+import {MdCancel} from "react-icons/md";
 // import styles from '../styles/AssignedFiles.module.css';
 
 dayjs.extend(relativeTime);
@@ -49,7 +49,7 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
 
     const columns: TableProps<AssignedDocument>['columns'] = [
         {
-            title: 'DOCUMENT',
+            title: 'Document',
             dataIndex: 'document_name',
             key: 'document_name',
             render: (text, record) => (
@@ -66,13 +66,13 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
             ),
         },
         {
-            title: 'CATEGORY',
+            title: 'Category',
             dataIndex: 'category_name',
             key: 'category_name',
             render: (category) => <Tag>{category}</Tag>,
         },
         {
-            title: 'DUE DATE',
+            title: 'Due Date',
             dataIndex: 'expiration_date',
             key: 'expiration_date',
             render: (dueDate) => {
@@ -90,7 +90,7 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
             },
         },
         {
-            title: 'ACTIONS',
+            title: 'Actions',
             key: 'actions',
             align: 'left',
             render: (_, record) => (
@@ -146,28 +146,23 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
 
     const newFilesCount = documents.filter(doc => doc.is_new === 1).length;
 
+    const handleGetViewData = useCallback(async (id: number) => {
+        try {
+            const response = await getWithAuth(`view-document/${id}/${userId}`);
+            const data = response.data;
+
+            setViewDocument(data);
+        } catch (error) {
+            console.error("Error :", error);
+        }
+    }, [userId, setViewDocument]);
+
     useEffect(() => {
         if (modalStates.viewModel && selectedDocumentId !== null) {
             handleGetViewData(selectedDocumentId);
             // console.log("View Document : ", viewDocument)
         }
-    }, [modalStates.viewModel, selectedDocumentId]);
-
-    const handleGetViewData = async (id: number) => {
-        try {
-            const response = await getWithAuth(`view-document/${id}/${userId}`);
-            const data = response.data;
-
-            // const parsedMetaTags = JSON.parse(data.meta_tags || "[]");
-            // const parsedAttributes = JSON.parse(data.attributes || "[]");
-
-            setViewDocument(data);
-            // setMetaTags(parsedMetaTags);
-            // setAttributes(parsedAttributes);
-        } catch (error) {
-            console.error("Error :", error);
-        }
-    };
+    }, [modalStates.viewModel, selectedDocumentId, handleGetViewData]);
 
     const handleCloseModal = (modalName: keyof typeof modalStates) => {
         setModalStates((prev) => ({...prev, [modalName]: false}));
@@ -188,7 +183,7 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
 
     return (
         <>
-            <div className="bg-white h-100 calendarWrapper">
+            <div className="bg-white calendarWrapper h-100">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="d-flex align-items-center gap-2">
                         <Image src="/jam_document.svg" alt="icon document" width={24} height={24}/>
@@ -319,7 +314,7 @@ const AssignedFiles: React.FC<AssignedFilesProps> = ({documents, userId}) => {
                             }}
                             className="custom-icon-button button-danger text-white bg-danger px-3 py-1 rounded"
                         >
-                            <MdOutlineCancel fontSize={16} className="me-1"/> Cancel
+                            <MdCancel fontSize={16} className="me-1"/> Cancel
                         </button>
                     </div>
                 </Modal.Footer>
