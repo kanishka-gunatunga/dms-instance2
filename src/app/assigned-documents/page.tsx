@@ -90,6 +90,7 @@ import { hasPermission } from "@/utils/permission";
 import Image from "next/image";
 import styles from "./assigned-documents.module.css";
 import { getFlattenedCategories } from "@/utils/commonFunctions";
+import RedactDocumentModal from "@/components/RedactDocumentModal";
 
 interface Category {
   category_name: string;
@@ -103,6 +104,7 @@ interface TableItem {
   created_date: string;
   created_by: string;
   document_preview: string;
+  is_redacted?: number;
   type?: string;
 }
 
@@ -140,6 +142,7 @@ interface ViewDocumentItem {
   type: string;
   url: string;
   enable_external_file_view: number
+  is_redacted?: number;
 }
 
 interface CategoryDropdownItem {
@@ -287,6 +290,7 @@ export default function AllDocTable() {
     reminderDeleteModel: false,
     viewModel: false,
     viewOldDocumentModel: false,
+    redactDocumentModel: false,
     deleteBulkFileModel: false,
   });
 
@@ -493,6 +497,13 @@ export default function AllDocTable() {
     }
   }, [modalStates.viewModel, selectedDocumentId]);
 
+
+
+  useEffect(() => {
+    if (modalStates.redactDocumentModel && selectedDocumentId !== null) {
+      handleGetViewData(selectedDocumentId);
+    }
+  }, [modalStates.redactDocumentModel, selectedDocumentId]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLTableRowElement>) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
@@ -2286,7 +2297,19 @@ export default function AllDocTable() {
                               </Dropdown.Item>
                             )}
 
-                            {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
+                            
+                            {item.type === "pdf" && hasPermission(permissions, "Assigned Documents", "Edit Document") && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal("redactDocumentModel", item.id, item.name)
+                                }
+                                className="py-2"
+                              >
+                                <MdModeEditOutline className="me-2" />
+                                Redact Document
+                              </Dropdown.Item>
+                            )}
+{hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                               <Dropdown.Item
                                 onClick={() =>
                                   handleOpenModal("editModel", item.id, item.name)
@@ -6299,7 +6322,18 @@ export default function AllDocTable() {
             </div>
           </Modal.Body>
         </Modal>
-        {/* view Modal */}
+        
+          {modalStates.redactDocumentModel && selectedDocumentId && viewDocument && (
+            <RedactDocumentModal
+              show={modalStates.redactDocumentModel}
+              onHide={() => handleCloseModal("redactDocumentModel")}
+              documentId={selectedDocumentId}
+              documentUrl={viewDocument.url}
+              onSuccess={() => fetchAssignedDocumentsData(setDummyData)}
+            />
+          )}
+
+{/* view Modal */}
         <Modal
           centered
           show={modalStates.viewModel}
@@ -6433,7 +6467,35 @@ export default function AllDocTable() {
             </div>
 
             <div className="d-flex flex-wrap gap-3 py-3">
-              {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
+
+              {viewDocument?.is_redacted === 1 && (
+                <button
+                  onClick={async () => {
+                    const res = await postWithAuth(`undo-redact-document/${viewDocument.id}`, {});
+                    if(res.status === "success") {
+                       handleCloseModal("viewModel");
+                       fetchAssignedDocumentsData(setDummyData);
+                    }
+                  }}
+                  className="addButton me-2 bg-white text-dark border border-danger rounded px-3 py-1"
+                >
+                  <IoAdd className="me-1 fs-5" /> Undo Redaction
+                </button>
+              )}
+
+              
+                            {item.type === "pdf" && hasPermission(permissions, "Assigned Documents", "Edit Document") && (
+                              <Dropdown.Item
+                                onClick={() =>
+                                  handleOpenModal("redactDocumentModel", item.id, item.name)
+                                }
+                                className="py-2"
+                              >
+                                <MdModeEditOutline className="me-2" />
+                                Redact Document
+                              </Dropdown.Item>
+                            )}
+{hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                 <button
                   onClick={() =>
                     handleOpenModal("editModel", viewDocument?.id, viewDocument?.name)
