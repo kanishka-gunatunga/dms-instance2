@@ -6537,16 +6537,16 @@ export default function AllDocTable() {
               )}
 
               
-                            {item.type === "pdf" && hasPermission(permissions, "All Documents", "Edit Document") && (
-                              <Dropdown.Item
+                            {viewDocument?.type === "pdf" && hasPermission(permissions, "All Documents", "Edit Document") && (
+                              <button
                                 onClick={() =>
-                                  handleOpenModal("redactDocumentModel", item.id, item.name)
+                                  handleOpenModal("redactDocumentModel", viewDocument.id, viewDocument.name)
                                 }
-                                className="py-2"
+                                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
                               >
                                 <MdModeEditOutline className="me-2" />
                                 Redact Document
-                              </Dropdown.Item>
+                              </button>
                             )}
 {hasPermission(permissions, "All Documents", "Edit Document") && (
                 <button
