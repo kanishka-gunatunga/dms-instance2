@@ -6524,7 +6524,7 @@ export default function AllDocTable() {
               {viewDocument?.is_redacted === 1 && (
                 <button
                   onClick={async () => {
-                    const res = await postWithAuth(`undo-redact-document/${viewDocument.id}`, {});
+                    const res = await postWithAuth(`undo-redact-document/${viewDocument.id}`, new FormData());
                     if(res.status === "success") {
                        handleCloseModal("viewModel");
                        fetchDocumentsData(setDummyData);
