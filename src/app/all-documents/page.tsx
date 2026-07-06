@@ -145,7 +145,7 @@ interface ViewDocumentItem {
   type: string;
   url: string;
   enable_external_file_view: number
-  is_redacted?: number;;
+  is_redacted?: number;
 }
 
 interface CategoryDropdownItem {

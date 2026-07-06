@@ -3,8 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Modal, Button, Spinner } from "react-bootstrap";
 import { Document, Page, pdfjs } from "react-pdf";
 import { PDFDocument, rgb } from "pdf-lib";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
 import { postWithAuth } from "@/utils/apiClient";
 import ToastMessage from "@/components/common/Toast";
 
