@@ -53,7 +53,12 @@ const SignRequestsPage = () => {
     try {
       const response = await getWithAuth("pending-signatures");
       if (Array.isArray(response)) {
-        setDocuments(response);
+         const pdfDocuments = response.filter((doc: any) => 
+          doc.type === "pdf" || 
+          doc.type === "application/pdf" || 
+          (doc.name && doc.name.toLowerCase().endsWith(".pdf"))
+        );
+        setDocuments(pdfDocuments);
       } else {
         console.warn("Pending signatures response is not an array:", response);
         setDocuments([]);
