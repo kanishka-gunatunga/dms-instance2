@@ -288,7 +288,7 @@ export default function AllDocTable() {
     reminderViewModel: false,
     reminderDeleteModel: false,
     viewModel: false,
-    viewOldDocumentModel: false
+    viewOldDocumentModel: false,
     deleteBulkFileModel: false,
   });
 
