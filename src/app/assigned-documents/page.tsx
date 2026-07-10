@@ -90,7 +90,6 @@ import { hasPermission } from "@/utils/permission";
 import Image from "next/image";
 import styles from "./assigned-documents.module.css";
 import { getFlattenedCategories } from "@/utils/commonFunctions";
-import RedactDocumentModal from "@/components/RedactDocumentModal";
 
 interface Category {
   category_name: string;
@@ -289,8 +288,7 @@ export default function AllDocTable() {
     reminderViewModel: false,
     reminderDeleteModel: false,
     viewModel: false,
-    viewOldDocumentModel: false,
-    redactDocumentModel: false,
+    viewOldDocumentModel: false
     deleteBulkFileModel: false,
   });
 
@@ -499,11 +497,7 @@ export default function AllDocTable() {
 
 
 
-  useEffect(() => {
-    if (modalStates.redactDocumentModel && selectedDocumentId !== null) {
-      handleGetViewData(selectedDocumentId);
-    }
-  }, [modalStates.redactDocumentModel, selectedDocumentId]);
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLTableRowElement>) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
@@ -2298,17 +2292,7 @@ export default function AllDocTable() {
                             )}
 
                             
-                            {item.type === "pdf" && hasPermission(permissions, "Assigned Documents", "Edit Document") && (
-                              <Dropdown.Item
-                                onClick={() =>
-                                  handleOpenModal("redactDocumentModel", item.id, item.name)
-                                }
-                                className="py-2"
-                              >
-                                <MdModeEditOutline className="me-2" />
-                                Redact Document
-                              </Dropdown.Item>
-                            )}
+                           
 {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                               <Dropdown.Item
                                 onClick={() =>
@@ -6323,15 +6307,7 @@ export default function AllDocTable() {
           </Modal.Body>
         </Modal>
         
-          {modalStates.redactDocumentModel && selectedDocumentId && viewDocument && (
-            <RedactDocumentModal
-              show={modalStates.redactDocumentModel}
-              onHide={() => handleCloseModal("redactDocumentModel")}
-              documentId={selectedDocumentId}
-              documentUrl={viewDocument.url}
-              onSuccess={() => fetchAssignedDocumentsData(setDummyData)}
-            />
-          )}
+          
 
 {/* view Modal */}
         <Modal
@@ -6468,33 +6444,10 @@ export default function AllDocTable() {
 
             <div className="d-flex flex-wrap gap-3 py-3">
 
-              {viewDocument?.is_redacted === 1 && (
-                <button
-                  onClick={async () => {
-                    const res = await postWithAuth(`undo-redact-document/${viewDocument.id}`, {});
-                    if(res.status === "success") {
-                       handleCloseModal("viewModel");
-                       fetchAssignedDocumentsData(setDummyData);
-                    }
-                  }}
-                  className="addButton me-2 bg-white text-dark border border-danger rounded px-3 py-1"
-                >
-                  <IoAdd className="me-1 fs-5" /> Undo Redaction
-                </button>
-              )}
+            
 
               
-                            {item.type === "pdf" && hasPermission(permissions, "Assigned Documents", "Edit Document") && (
-                              <Dropdown.Item
-                                onClick={() =>
-                                  handleOpenModal("redactDocumentModel", item.id, item.name)
-                                }
-                                className="py-2"
-                              >
-                                <MdModeEditOutline className="me-2" />
-                                Redact Document
-                              </Dropdown.Item>
-                            )}
+                          
 {hasPermission(permissions, "Assigned Documents", "Edit Document") && (
                 <button
                   onClick={() =>

@@ -93,7 +93,6 @@ import { useChat } from "@/context/ChatContext";
 import { PiStarFourThin } from "react-icons/pi";
 import styles from "./all-documents.module.css";
 import { getFlattenedCategories } from "@/utils/commonFunctions";
-import RedactDocumentModal from "@/components/RedactDocumentModal";
 
 interface Category {
   category_name: string;
@@ -301,8 +300,7 @@ export default function AllDocTable() {
     deleteBulkFileModel: false,
     allDocShareModel: false,
     viewModel: false,
-    viewOldDocumentModel: false,
-    redactDocumentModel: false,
+    viewOldDocumentModel: false
   });
   const [generatedLink, setGeneratedLink] = useState<string>("");
   const [generatedID, setGeneratedID] = useState<number>(0);
@@ -1454,11 +1452,7 @@ export default function AllDocTable() {
   // };
 
 
-  useEffect(() => {
-    if (modalStates.redactDocumentModel && selectedDocumentId !== null) {
-      handleGetViewData(selectedDocumentId);
-    }
-  }, [modalStates.redactDocumentModel, selectedDocumentId]);
+
 
   const handleMouseMove = (e: React.MouseEvent<HTMLTableRowElement>) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
@@ -6360,16 +6354,7 @@ export default function AllDocTable() {
           </Modal.Footer>
         </Modal>
         
-          {modalStates.redactDocumentModel && selectedDocumentId && viewDocument && (
-            <RedactDocumentModal
-              show={modalStates.redactDocumentModel}
-              onHide={() => handleCloseModal("redactDocumentModel")}
-              documentId={selectedDocumentId}
-              documentUrl={viewDocument.url}
-              onSuccess={() => fetchDocumentsData(setDummyData)}
-            />
-          )}
-
+          
 {/* view Modal */}
         <Modal
           centered
@@ -6521,33 +6506,9 @@ export default function AllDocTable() {
 
             <div className="d-flex flex-wrap gap-3 py-3">
 
-              {viewDocument?.is_redacted === 1 && (
-                <button
-                  onClick={async () => {
-                    const res = await postWithAuth(`undo-redact-document/${viewDocument.id}`, new FormData());
-                    if(res.status === "success") {
-                       handleCloseModal("viewModel");
-                       fetchDocumentsData(setDummyData);
-                    }
-                  }}
-                  className="addButton me-2 bg-white text-dark border border-danger rounded px-3 py-1"
-                >
-                  <IoAdd className="me-1 fs-5" /> Undo Redaction
-                </button>
-              )}
 
               
-                            {viewDocument?.type === "pdf" && hasPermission(permissions, "All Documents", "Edit Document") && (
-                              <button
-                                onClick={() =>
-                                  handleOpenModal("redactDocumentModel", viewDocument.id, viewDocument.name)
-                                }
-                                className="addButton me-2 bg-white text-dark border border-success rounded px-3 py-1"
-                              >
-                                <MdModeEditOutline className="me-2" />
-                                Redact Document
-                              </button>
-                            )}
+                           
 {hasPermission(permissions, "All Documents", "Edit Document") && (
                 <button
                   onClick={() =>
